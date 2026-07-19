@@ -1,7 +1,7 @@
 // state.js — single source of truth + localStorage persistence.
 // Exports one mutable `state` object; every mutation elsewhere calls save().
 
-const STORAGE_KEY = 'dnd-initiative-tracker';
+const STORAGE_KEY = 'dnd-combat-tracker';
 
 export const state = {
   creatures: [], // array of creature objects (see makeCreature)

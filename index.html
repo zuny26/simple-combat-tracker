@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D&amp;D Initiative Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="app-title">Initiative Tracker</h1>
+    <div class="controls">
+      <div class="round" role="status" aria-live="polite">Round: <span id="round-value">0</span></div>
+      <button type="button" id="start-next-btn" class="btn btn-primary">Start</button>
+      <button type="button" id="reset-btn" class="btn btn-secondary">New Combat</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="table-scroll">
+      <table class="combat-table">
+        <thead>
+          <tr>
+            <th class="col-init" title="Initiative">#</th>
+            <th class="col-name">Name</th>
+            <th class="col-num">AC</th>
+            <th class="col-num">Max HP</th>
+            <th class="col-num">Temp HP</th>
+            <th class="col-num">Current HP</th>
+            <th class="col-num">Damage</th>
+            <th class="col-num">Healing</th>
+            <th class="col-text">Conditions</th>
+            <th class="col-text">Other</th>
+            <th class="col-actions"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody id="creature-rows"></tbody>
+      </table>
+    </div>
+    <button type="button" id="add-btn" class="btn btn-add">+ Add creature</button>
+  </main>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

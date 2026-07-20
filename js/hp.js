@@ -24,8 +24,10 @@ export function currentHP(c) {
 }
 
 // True when displayed Current HP is exactly 0 (Max-portion depleted AND no Temp HP).
+// Requires Max HP to actually be set — a freshly-added creature with maxHP 0
+// hasn't been "reduced to 0", it just hasn't had its stats filled in yet.
 export function isDowned(c) {
-  return currentHP(c) === 0;
+  return (c.maxHP || 0) > 0 && currentHP(c) === 0;
 }
 
 // Damage (on Enter): temp-first. Subtract from Temp HP, overflow to damageTaken (clamped).

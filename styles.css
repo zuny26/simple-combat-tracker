@@ -163,13 +163,13 @@ body {
   color: var(--color-accent-800);
   padding: 6px 16px;
   border-radius: 999px;
-  font: 600 13px var(--font-body);
+  font: 600 14px var(--font-body);
   white-space: nowrap;
 }
 
 .round #round-value {
   font-family: var(--font-heading);
-  font-size: 18px;
+  font-size: 16px;
   color: var(--color-accent-700);
 }
 
@@ -270,6 +270,7 @@ body {
   padding: 6px 8px;
   font: inherit;
   font-size: 14px;
+  font-weight: 600;
   color: var(--color-text);
   background: transparent;
   border: 1px solid transparent;
@@ -283,6 +284,7 @@ body {
 }
 .combat-table input::placeholder { color: color-mix(in srgb, var(--color-text) 40%, transparent); }
 
+.combat-table input.f-init { font-family: var(--font-heading); font-weight: 400; }
 .f-name { font-weight: 700; text-align: left; }
 .f-ac, .f-maxhp, .f-temphp { text-align: center; padding-inline: 4px; }
 

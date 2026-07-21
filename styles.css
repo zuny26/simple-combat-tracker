@@ -98,7 +98,8 @@ body {
 }
 
 .app-card {
-  width: 1060px;
+  position: relative;
+  width: 1200px;
   max-width: 100%;
   background: var(--color-bg);
   border-radius: var(--radius-lg);
@@ -226,8 +227,11 @@ body {
 .btn-icon:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
 
 /* ---- Layout ---- */
+/* The table has a hard minimum width from its column sizing, so it
+   scrolls inside the card at any viewport narrower than that. */
 .page {
   padding: var(--space-3) var(--space-4) var(--space-4);
+  overflow-x: auto;
 }
 
 /* ---- Table ---- */
@@ -452,5 +456,4 @@ tr.downed .f-name {
   .controls { width: 100%; justify-content: space-between; }
   .btn-primary { flex: 1; }
   .page { padding: 12px; }
-  .combat-table { display: block; overflow-x: auto; }
 }

@@ -9,7 +9,7 @@ import { state } from './state.js';
 import { sortedRows } from './order.js';
 import { isDowned, clamp } from './hp.js';
 
-const COLUMN_COUNT = 10; // #, Name, AC, Max HP, Temp HP, Current HP, Dmg, Heal, Conditions, remove
+const COLUMN_COUNT = 11; // #, Name, AC, Max HP, Temp HP, Current HP, Dmg, Heal, Conditions, Other, remove
 
 function tbody() {
   return document.getElementById('creature-rows');
@@ -100,6 +100,7 @@ function buildRow(c) {
   tr.appendChild(td(actionInput('f-damage')));
   tr.appendChild(td(actionInput('f-heal')));
   tr.appendChild(td(textInput('f-conditions', c.conditions, { placeholder: '—' })));
+  tr.appendChild(td(textInput('f-other', c.other, { placeholder: '-'})))
   tr.appendChild(removeCell());
   return tr;
 }

@@ -1,7 +1,7 @@
 // main.js — bootstrap + event wiring. Uses event delegation on the table body so
 // dynamically-added rows need no per-row listeners.
 
-import { state, load, save, makeCreature, duplicateCreature, resetState } from './state.js';
+import { state, load, save, makeCreature, duplicateCreature, resetState, isEmptyCreature } from './state.js';
 import { clampDamage, applyDamage, applyHealing } from './hp.js';
 import { parseInit, sortedRows } from './order.js';
 import {
@@ -184,8 +184,11 @@ function onBodyClick(e) {
   const c = creatureById(id);
   if (!c) return;
 
-  const label = c.name ? `"${c.name}"` : 'this creature';
-  if (!window.confirm(`Remove ${label}?`)) return;
+  // An untouched, all-default row is throwaway — remove it without a prompt.
+  if (!isEmptyCreature(c)) {
+    const label = c.name ? `"${c.name}"` : 'this creature';
+    if (!window.confirm(`Remove ${label}?`)) return;
+  }
 
   const wasActive = state.started && state.activeId === id;
   const oldIdx = wasActive ? activeInitiativedIndex() : null; // capture BEFORE removal

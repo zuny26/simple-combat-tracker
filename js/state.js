@@ -26,6 +26,22 @@ export function makeCreature() {
   };
 }
 
+// True when a creature is still at its just-made defaults — every editable field
+// blank/zero (id is ignored). Used to skip the "Remove?" confirm for throwaway rows.
+export function isEmptyCreature(c) {
+  if (!c) return false;
+  return (
+    c.init === '' &&
+    c.name === '' &&
+    c.ac === '' &&
+    toNum(c.maxHP) === 0 &&
+    toNum(c.tempHP) === 0 &&
+    toNum(c.damageTaken) === 0 &&
+    c.conditions === '' &&
+    c.other === ''
+  );
+}
+
 export function save() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));

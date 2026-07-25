@@ -85,7 +85,7 @@
 
   /* Secondary accent = Green (healthy HP); Cyan stands in for the temp-HP segment. */
   --color-accent-2-100: #20392b;
-  --color-accent-2-300: #8be9fd; /* Cyan — temp-HP shield segment */
+  --color-accent-2-300: #a7ffbd; /* temp-HP shield segment */
   --color-accent-2-500: #50fa7b; /* Green — healthy HP fill */
   --color-accent-2-800: #b8fccb;
 
@@ -96,6 +96,41 @@
   --downed-ink: #282a36;
   --shadow-md: 0 10px 30px rgba(9, 6, 22, .55);
   --page-bg: #21222c;      /* the darker Dracula background, behind the card */
+}
+
+/* "Alucard" — the light counterpart to Dracula, from the same spec
+   (https://draculatheme.com/spec). Same semantic mapping as [data-theme="dracula"]
+   — Purple chrome, Green healthy HP, Cyan temp-HP, Pink bloodied, Red downed —
+   but oriented for a light surface, so the scale runs 100 = lightest tint →
+   800 = darkest ink, using Alucard's deeper shades of each Dracula hue. */
+[data-theme="alucard"] {
+  --color-bg: #fffbeb;      /* Background — the app card */
+  --color-surface: #e9e4cd; /* line-highlight cream — topbar, inputs, pills */
+  --color-text: #1f1f1f;    /* Foreground */
+  --color-divider: color-mix(in srgb, #1f1f1f 16%, transparent);
+
+  /* Primary accent = Purple. 100 = lightest tint, 800 = darkest ink. */
+  --color-accent: #644ac9;
+  --color-accent-100: #eae6fa; /* pill / active-row / callout background */
+  --color-accent-300: #c9bff0; /* callout border */
+  --color-accent-500: #a3144d; /* Pink — bloodied HP fill (a hurt, not the base hue) */
+  --color-accent-600: #543dac; /* primary-button hover */
+  --color-accent-700: #4a3699; /* icons / accent text */
+  --color-accent-800: #38287a; /* pill text, headings, active initiative */
+
+  /* Secondary accent = Green (healthy HP); Cyan stands in for the temp-HP segment. */
+  --color-accent-2-100: #e3f2df;
+  --color-accent-2-300: #508a49; /* temp-HP shield segment */
+  --color-accent-2-500: #14710a; /* Green — healthy HP fill */
+  --color-accent-2-800: #0c4a06;
+
+  --color-neutral-100: #f7f4e6;
+  --color-neutral-800: #3d3a2e;
+
+  --downed: #cb3a2a;       /* Red — downed tag */
+  --downed-ink: #fffbeb;
+  --shadow-md: 0 3px 12px color-mix(in srgb, #3a2f5e 14%, transparent);
+  --page-bg: #d5cfb6;      /* warm tan behind the card */
 }
 
 * { box-sizing: border-box; }

@@ -28,9 +28,14 @@
       <header class="topbar">
         <h1 class="app-title">D&amp;D Combat Tracker</h1>
         <div class="controls">
-          <div class="theme-picker" role="group" aria-label="Theme">
-            <button type="button" id="theme-day-btn" class="theme-opt">Day</button>
-            <button type="button" id="theme-night-btn" class="theme-opt">Night</button>
+          <div class="theme-picker" id="theme-picker">
+            <button type="button" id="theme-trigger" class="theme-trigger"
+                    aria-haspopup="listbox" aria-expanded="false" aria-label="Theme">
+              <span class="theme-swatch"></span>
+              <span class="theme-trigger-label">Organic Day</span>
+              <svg class="theme-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <ul id="theme-menu" class="theme-menu" role="listbox" aria-label="Theme" hidden></ul>
           </div>
           <div class="round" role="status" aria-live="polite">Round <span id="round-value">0</span></div>
           <button type="button" id="start-next-btn" class="btn btn-primary">Start</button>

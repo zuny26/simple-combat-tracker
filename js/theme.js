@@ -1,21 +1,32 @@
-// theme.js — Day/Night theme, persisted separately from combat state so
+// theme.js — theme registry + persistence. Kept separate from combat state so
 // "New combat" never touches it. Applied as data-theme on <html>.
 
 const KEY = 'dnd-ct-theme';
 
+// Single source of truth for selectable themes. `id` is the data-theme value on
+// <html> (and what's persisted); the swatch colors are the little preview dot
+// shown in the picker. Add a theme here and it appears in the dropdown for free.
+export const THEMES = [
+  { id: 'light', label: 'Organic Day',   swatchBg: '#ebddc5', swatchDot: '#c67139' },
+  { id: 'dark',  label: 'Organic Night', swatchBg: '#2d2921', swatchDot: '#e58f52' },
+];
+
+const VALID = new Set(THEMES.map((t) => t.id));
+
 export function loadTheme() {
-  let t = 'light';
+  let t = THEMES[0].id;
   try {
     const v = localStorage.getItem(KEY);
-    if (v === 'light' || v === 'dark') t = v;
+    if (VALID.has(v)) t = v;
   } catch (e) {
-    // Storage unavailable — fall back to light.
+    // Storage unavailable — fall back to the default theme.
   }
   document.documentElement.dataset.theme = t;
   return t;
 }
 
 export function setTheme(t) {
+  if (!VALID.has(t)) return;
   document.documentElement.dataset.theme = t;
   try {
     localStorage.setItem(KEY, t);

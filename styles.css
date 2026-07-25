@@ -134,27 +134,109 @@ body {
   gap: var(--space-3);
 }
 
-/* Theme picker (Day / Night segmented control) */
+/* Theme picker (dropdown) */
 .theme-picker {
-  display: inline-flex;
-  border: 1px solid var(--color-divider);
-  border-radius: 999px;
-  overflow: hidden;
+  position: relative;
 }
 
-.theme-opt {
-  padding: 6px 14px;
-  font: 600 12px var(--font-body);
-  border: none;
-  background: transparent;
+.theme-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 12px;
+  border: 1px solid var(--color-divider);
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: 600 13px var(--font-body);
+  cursor: pointer;
+}
+.theme-trigger:hover { background: color-mix(in srgb, var(--color-text) 5%, transparent); }
+.theme-trigger:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.theme-caret {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.7;
+  transition: transform 0.12s ease;
+}
+.theme-picker.is-open .theme-caret { transform: rotate(180deg); }
+
+/* Preview dot for a theme: a circle in the theme's surface tone with an accent
+   dot. Colors come from --sw-bg / --sw-dot set per-theme (see themePicker.js). */
+.theme-swatch {
+  position: relative;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--sw-bg, var(--color-surface));
+  border: 1px solid color-mix(in srgb, #000 18%, transparent);
+}
+.theme-swatch::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  bottom: 3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--sw-dot, var(--color-accent));
+}
+
+.theme-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  min-width: 220px;
+  margin: 0;
+  padding: var(--space-2);
+  list-style: none;
+  background: var(--color-bg);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+.theme-menu[hidden] { display: none; }
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font: 600 14px var(--font-body);
   color: var(--color-text);
   cursor: pointer;
 }
-
-.theme-opt.is-on {
-  background: var(--color-accent);
-  color: var(--color-bg);
+.theme-option:hover,
+.theme-option:focus {
+  background: color-mix(in srgb, var(--color-text) 7%, transparent);
+  outline: none;
 }
+.theme-option-label { flex: 1; }
+
+.theme-check {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+}
+.theme-option[aria-selected="true"] .theme-check { opacity: 1; }
 
 .round {
   display: inline-flex;

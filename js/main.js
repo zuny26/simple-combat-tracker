@@ -11,7 +11,8 @@ import {
 import {
   renderTable, renderHighlight, updateHpCell, currentRowOrder, reorderRows,
 } from './render.js';
-import { loadTheme, setTheme } from './theme.js';
+import { loadTheme } from './theme.js';
+import { initThemePicker } from './themePicker.js';
 import { initUsageCallout } from './usage.js';
 
 // Index of the active creature's # captured when its # field gains focus, so that
@@ -224,17 +225,6 @@ function onReset() {
   renderTable();
 }
 
-// ---- Theme picker ----
-function updateThemeButtons(theme) {
-  document.getElementById('theme-day-btn').classList.toggle('is-on', theme === 'light');
-  document.getElementById('theme-night-btn').classList.toggle('is-on', theme === 'dark');
-}
-
-function onThemeChange(theme) {
-  setTheme(theme);
-  updateThemeButtons(theme);
-}
-
 // ---- Wiring ----
 function wireEvents() {
   const body = document.getElementById('creature-rows');
@@ -247,12 +237,10 @@ function wireEvents() {
   document.getElementById('start-next-btn').addEventListener('click', onStartNext);
   document.getElementById('add-btn').addEventListener('click', onAdd);
   document.getElementById('reset-btn').addEventListener('click', onReset);
-  document.getElementById('theme-day-btn').addEventListener('click', () => onThemeChange('light'));
-  document.getElementById('theme-night-btn').addEventListener('click', () => onThemeChange('dark'));
 }
 
 function init() {
-  updateThemeButtons(loadTheme());
+  initThemePicker(loadTheme());
   load();
   renderTable();
   wireEvents();

@@ -266,7 +266,7 @@ body {
 .col-hpnum { width: 74px; text-align: center; }
 .col-current { min-width: 190px; }
 .col-text { min-width: 150px; }
-.col-actions { width: 44px; }
+.col-actions { width: 92px; } /* holds the duplicate + remove buttons */
 
 /* ---- Inline-editable fields (borderless, reveal on interaction) ---- */
 .combat-table input {
@@ -405,8 +405,15 @@ tr.downed .f-name {
 /* Conditions */
 .f-conditions { text-align: left; }
 
-/* ---- Remove button ---- */
+/* ---- Row actions (duplicate + remove) ---- */
 .cell-actions { text-align: center; }
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.btn-dupe,
 .btn-remove {
   width: 36px;
   height: 36px;
@@ -418,12 +425,18 @@ tr.downed .f-name {
   font-size: 1rem;
   line-height: 1;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
+.btn-dupe:hover,
 .btn-remove:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+.btn-dupe:focus-visible,
 .btn-remove:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+  outline: 1px solid var(--color-accent);
+  outline-offset: 1px;
 }
+.btn-dupe svg { width: 17px; height: 17px; }
 
 /* ---- Empty state ---- */
 .empty-row td {

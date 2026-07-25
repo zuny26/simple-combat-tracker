@@ -101,7 +101,7 @@ function buildRow(c) {
   tr.appendChild(td(actionInput('f-heal')));
   tr.appendChild(td(textInput('f-conditions', c.conditions, { placeholder: '—' })));
   tr.appendChild(td(textInput('f-other', c.other, { placeholder: '-'})))
-  tr.appendChild(removeCell());
+  tr.appendChild(actionsCell());
   return tr;
 }
 
@@ -239,14 +239,38 @@ function hpCellContent(c) {
   return wrap;
 }
 
-function removeCell() {
+// Duplicate + remove buttons, grouped in the widened Actions column.
+function actionsCell() {
   const cell = document.createElement('td');
   cell.className = 'cell-actions';
+  const group = document.createElement('div');
+  group.className = 'row-actions';
+  group.append(dupeButton(), removeButton()); // duplicate sits left of remove
+  cell.appendChild(group);
+  return cell;
+}
+
+// Lucide "copy" glyph — a static constant with no user data, so innerHTML is safe here.
+const DUPE_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" ' +
+  'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>' +
+  '<path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>';
+
+function dupeButton() {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'btn-dupe';
+  b.setAttribute('aria-label', 'Duplicate creature');
+  b.innerHTML = DUPE_ICON;
+  return b;
+}
+
+function removeButton() {
   const b = document.createElement('button');
   b.type = 'button';
   b.className = 'btn-remove';
   b.textContent = '✕'; // ✕
   b.setAttribute('aria-label', 'Remove creature');
-  cell.appendChild(b);
-  return cell;
+  return b;
 }

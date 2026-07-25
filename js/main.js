@@ -1,7 +1,7 @@
 // main.js — bootstrap + event wiring. Uses event delegation on the table body so
 // dynamically-added rows need no per-row listeners.
 
-import { state, load, save, makeCreature, resetState } from './state.js';
+import { state, load, save, makeCreature, duplicateCreature, resetState } from './state.js';
 import { clampDamage, applyDamage, applyHealing } from './hp.js';
 import { parseInit, sortedRows } from './order.js';
 import {
@@ -163,8 +163,19 @@ function onKeyDown(e) {
   }
 }
 
-// ---- Remove a creature (confirm guard) ----
+// ---- Duplicate / remove a creature (delegated on the table body) ----
 function onBodyClick(e) {
+  const dupeBtn = e.target.closest && e.target.closest('.btn-dupe');
+  if (dupeBtn) {
+    const id = rowIdFromEvent(e);
+    if (id == null) return;
+    // Adds a copy right after the source; leaves round/turn state untouched (like Add).
+    duplicateCreature(id);
+    save();
+    renderTable();
+    return;
+  }
+
   const btn = e.target.closest && e.target.closest('.btn-remove');
   if (!btn) return;
   const id = rowIdFromEvent(e);

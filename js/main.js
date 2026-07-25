@@ -12,6 +12,7 @@ import {
   renderTable, renderHighlight, updateHpCell, currentRowOrder, reorderRows,
 } from './render.js';
 import { loadTheme, setTheme } from './theme.js';
+import { initUsageCallout } from './usage.js';
 
 // Index of the active creature's # captured when its # field gains focus, so that
 // clearing that field mid-combat can move the highlight to the correct "next down".
@@ -244,6 +245,7 @@ function init() {
   load();
   renderTable();
   wireEvents();
+  initUsageCallout();
 }
 
 // Modules are deferred, so the DOM is ready — but guard just in case.

@@ -10,6 +10,10 @@
       try {
         var t = localStorage.getItem('dnd-ct-theme');
         if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+        // Hide the usage callout before first paint if it was dismissed previously.
+        if (localStorage.getItem('sct-usage-dismissed') === '1') {
+          document.documentElement.classList.add('usage-dismissed');
+        }
       } catch (e) {}
     })();
   </script>
@@ -31,8 +35,20 @@
           <div class="round" role="status" aria-live="polite">Round <span id="round-value">0</span></div>
           <button type="button" id="start-next-btn" class="btn btn-primary">Start</button>
           <button type="button" id="reset-btn" class="btn btn-secondary">New Combat</button>
+          <button type="button" id="usage-help-btn" class="btn btn-secondary btn-icon" aria-label="Show how to run a fight" title="How to run a fight">?</button>
         </div>
       </header>
+
+      <div class="usage-callout">
+        <button type="button" id="usage-dismiss-btn" class="usage-dismiss" aria-label="Dismiss">✕</button>
+        <h2>How to run a fight</h2>
+        <p class="lead">Add everyone in the encounter, then run it round by round — the table keeps initiative order, hit points and conditions all in one place.</p>
+        <ol class="usage-list usage-list-num">
+          <li><span class="num">1</span><span><b>Add creatures</b> and type each one's initiative — rows sort highest-first automatically.</span></li>
+          <li><span class="num">2</span><span>Hit <b>Start</b> to begin; <b>Next turn</b> advances the marker and counts rounds.</span></li>
+          <li><span class="num">3</span><span>Log hits in <b>Dmg / Heal</b> and press Enter — the HP bar updates live.</span></li>
+        </ol>
+      </div>
 
       <main class="page">
         <table class="combat-table">

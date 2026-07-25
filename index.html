@@ -8,8 +8,12 @@
     // Set the theme before first paint to avoid a light/dark flash.
     (function () {
       try {
+        // Apply whatever id is stored, without listing valid themes here (that
+        // lives in theme.js). An unknown id simply falls back to the default
+        // :root theme and theme.js reconciles it on load — so adding a theme
+        // needs no change to this script.
         var t = localStorage.getItem('dnd-ct-theme');
-        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+        if (t) document.documentElement.dataset.theme = t;
         // Hide the usage callout before first paint if it was dismissed previously.
         if (localStorage.getItem('sct-usage-dismissed') === '1') {
           document.documentElement.classList.add('usage-dismissed');

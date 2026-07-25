@@ -62,6 +62,42 @@
   --page-bg: #16130f;
 }
 
+/* "Dracula" — a dark theme adapted from the Dracula editor palette
+   (https://draculatheme.com/spec). Dracula is a syntax-highlighting scheme, so
+   its colors are mapped onto this app's *semantic* HP/turn tokens rather than
+   copied 1:1: Purple drives the UI chrome (buttons, focus, turn flag, active
+   row), Green is the healthy HP bar, Cyan the temp-HP "shield" segment, Pink
+   the bloodied bar, and Red the downed tag — a green→pink→red severity ramp. */
+[data-theme="dracula"] {
+  --color-bg: #282a36;      /* Background — the app card */
+  --color-surface: #44475a; /* Current Line / Selection — topbar, inputs, pills */
+  --color-text: #f8f8f2;    /* Foreground */
+  --color-divider: color-mix(in srgb, #f8f8f2 15%, transparent);
+
+  /* Primary accent = Purple. 100 = dark tinted background, 800 = brightest ink. */
+  --color-accent: #bd93f9;
+  --color-accent-100: #322b4f; /* pill / active-row / callout background */
+  --color-accent-300: #6c5aa0; /* callout border */
+  --color-accent-500: #ff79c6; /* Pink — bloodied HP fill (a hurt, not the base hue) */
+  --color-accent-600: #cba6fb; /* primary-button hover */
+  --color-accent-700: #d3b3fc; /* icons / accent text */
+  --color-accent-800: #e9ddfe; /* pill text, headings, active initiative */
+
+  /* Secondary accent = Green (healthy HP); Cyan stands in for the temp-HP segment. */
+  --color-accent-2-100: #20392b;
+  --color-accent-2-300: #8be9fd; /* Cyan — temp-HP shield segment */
+  --color-accent-2-500: #50fa7b; /* Green — healthy HP fill */
+  --color-accent-2-800: #b8fccb;
+
+  --color-neutral-100: #343746;
+  --color-neutral-800: #d6d5e4;
+
+  --downed: #ff5555;       /* Red — downed tag */
+  --downed-ink: #282a36;
+  --shadow-md: 0 10px 30px rgba(9, 6, 22, .55);
+  --page-bg: #21222c;      /* the darker Dracula background, behind the card */
+}
+
 * { box-sizing: border-box; }
 
 html, body {

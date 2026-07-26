@@ -30,7 +30,7 @@ export function isDowned(c) {
   return (c.maxHP || 0) > 0 && currentHP(c) === 0;
 }
 
-// Damage (on Enter): temp-first. Subtract from Temp HP, overflow to damageTaken (clamped).
+// Damage (on Dmg click): temp-first. Subtract from Temp HP, overflow to damageTaken (clamped).
 // e.g. Temp 5, 8 damage -> Temp 0, +3 to damageTaken. `n` is assumed > 0.
 export function applyDamage(c, n) {
   let remaining = n;
@@ -44,7 +44,7 @@ export function applyDamage(c, n) {
   clampDamage(c);
 }
 
-// Healing (on Enter): reduce damageTaken only, floored at 0. Never touches Temp HP.
+// Healing (on Heal click): reduce damageTaken only, floored at 0. Never touches Temp HP.
 // `n` is assumed > 0.
 export function applyHealing(c, n) {
   c.damageTaken = (c.damageTaken || 0) - n;

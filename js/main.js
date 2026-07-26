@@ -138,9 +138,10 @@ function onFocusOut(e) {
 }
 
 // ---- Damage / Heal: apply the row's pending amount, then clear the field ----
-// Both buttons and Enter funnel through here. The refresh is in-place (updateHpCell)
-// and deliberately NOT a rebuild: that would destroy the field the DM is typing in
-// (or the button they just clicked) and break Tab out of the control.
+// Only the Dmg / Heal buttons apply the amount — typing it (including pressing Enter)
+// never does. The refresh is in-place (updateHpCell) and deliberately NOT a rebuild:
+// that would destroy the field the DM is typing in (or the button they just clicked)
+// and break Tab out of the control.
 function applyAdjust(c, input, kind) {
   const n = toNum(input.value);
   if (n > 0) {
@@ -152,22 +153,19 @@ function applyAdjust(c, input, kind) {
   updateHpCell(c.id); // Current HP + any Temp HP the damage just consumed
 }
 
-// ---- Enter in the amount field = Damage (the common in-combat case) ----
-// Healing is a button click; the buttons are the primary affordance for both.
+// ---- Enter in the amount field does nothing ----
+// Applying damage/healing is an explicit button click only, so a stray Enter while
+// typing an amount can never take HP off the wrong creature.
 function onKeyDown(e) {
   if (e.key !== 'Enter') return;
   if (!hasClass(e.target, 'f-adjust')) return;
-  const id = rowIdFromEvent(e);
-  if (id == null) return;
-  const c = creatureById(id);
-  if (!c) return;
   e.preventDefault();
-  applyAdjust(c, e.target, 'damage');
 }
 
 // ---- Duplicate / remove a creature (delegated on the table body) ----
 function onBodyClick(e) {
   // Dmg / Heal — both buttons read the one amount field sharing their pill.
+  // This is the ONLY path into applyAdjust; Enter in the field is inert on purpose.
   const adjustBtn = e.target.closest && e.target.closest('.r-dmg, .r-heal');
   if (adjustBtn) {
     const id = rowIdFromEvent(e);

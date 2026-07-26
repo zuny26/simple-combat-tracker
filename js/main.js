@@ -19,6 +19,7 @@ import { openPicker } from './tags.js';
 import { loadTheme } from './theme.js';
 import { initThemePicker } from './themePicker.js';
 import { initUsageCallout } from './usage.js';
+import { initConfirmDialog, askConfirm } from './confirmDialog.js';
 
 // Index of the active creature's # captured when its # field gains focus, so that
 // clearing that field mid-combat can move the highlight to the correct "next down".
@@ -214,25 +215,29 @@ function onBodyClick(e) {
   const c = creatureById(id);
   if (!c) return;
 
+  const performRemove = () => {
+    const wasActive = state.started && state.activeId === id;
+    const oldIdx = wasActive ? activeInitiativedIndex() : null; // capture BEFORE removal
+
+    const i = state.creatures.findIndex((x) => x.id === id);
+    if (i !== -1) state.creatures.splice(i, 1);
+
+    if (wasActive) {
+      reassignActiveAfterLeaving(oldIdx);
+    } else {
+      maybeRevertToPreCombat();
+    }
+    save();
+    renderTable();
+  };
+
   // An untouched, all-default row is throwaway — remove it without a prompt.
-  if (!isEmptyCreature(c)) {
-    const label = c.name ? `"${c.name}"` : 'this creature';
-    if (!window.confirm(`Remove ${label}?`)) return;
+  if (isEmptyCreature(c)) {
+    performRemove();
+    return;
   }
-
-  const wasActive = state.started && state.activeId === id;
-  const oldIdx = wasActive ? activeInitiativedIndex() : null; // capture BEFORE removal
-
-  const i = state.creatures.findIndex((x) => x.id === id);
-  if (i !== -1) state.creatures.splice(i, 1);
-
-  if (wasActive) {
-    reassignActiveAfterLeaving(oldIdx);
-  } else {
-    maybeRevertToPreCombat();
-  }
-  save();
-  renderTable();
+  const label = c.name ? `"${c.name}"` : 'this creature';
+  askConfirm(`Remove ${label}?`, "This can't be undone.", 'Remove', performRemove);
 }
 
 // ---- Header / footer controls ----
@@ -253,9 +258,17 @@ function onAdd() {
 }
 
 function onReset() {
-  if (!window.confirm('Start a new combat? This clears all creatures and resets the round.')) return;
-  resetState();
-  renderTable();
+  // Nothing meaningful to lose — no dialog, no-op.
+  if (state.creatures.length === 0 && !state.started) return;
+  askConfirm(
+    'Start a new combat?',
+    "This clears every creature and resets the round counter. This can't be undone.",
+    'Start new combat',
+    () => {
+      resetState();
+      renderTable();
+    },
+  );
 }
 
 // ---- Wiring ----
@@ -278,6 +291,7 @@ function init() {
   renderTable();
   wireEvents();
   initUsageCallout();
+  initConfirmDialog();
 }
 
 // Modules are deferred, so the DOM is ready — but guard just in case.

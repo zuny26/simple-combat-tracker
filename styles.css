@@ -456,6 +456,15 @@ body {
   background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 }
 
+/* Destructive confirm action — reuses the "downed" semantic red, no new hue. */
+.btn-danger {
+  background: var(--downed);
+  color: var(--downed-ink);
+}
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--downed) 85%, black);
+}
+
 /* Round twin of the theme trigger — see .theme-trigger for the pairing. */
 .btn-icon {
   width: var(--control-h-sm);
@@ -1081,6 +1090,47 @@ tr.downed .f-name {
 .usage-dismiss:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+/* ---- Confirm dialog (replaces window.confirm for New Combat / Remove creature) ---- */
+/* Markup lives once in index.html, hidden by default, and is toggled by
+   js/confirmDialog.js rather than being built/torn down per call site. */
+.confirm-backdrop[hidden] {
+  display: none;
+}
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: color-mix(in srgb, #000 40%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.confirm-dialog {
+  width: 380px;
+  max-width: 100%;
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-6);
+}
+.confirm-title {
+  margin: 0 0 8px;
+  font: 400 21px var(--font-heading);
+  color: var(--color-text);
+}
+.confirm-body {
+  margin: 0;
+  font: 400 14px/1.5 var(--font-body);
+  color: var(--color-neutral-800);
+}
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: var(--space-4);
 }
 
 @media (max-width: 640px) {

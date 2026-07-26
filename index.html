@@ -30,21 +30,35 @@
   <div class="app-shell">
     <div class="app-card">
       <header class="topbar">
-        <h1 class="app-title">D&amp;D Combat Tracker</h1>
-        <div class="controls">
+        <!-- Tier 1: identity + global settings, kept clear of combat actions. -->
+        <div class="tier1">
+          <h1 class="app-title">D&amp;D Combat Tracker</h1>
+          <span class="spacer"></span>
           <div class="theme-picker" id="theme-picker">
             <button type="button" id="theme-trigger" class="theme-trigger"
                     aria-haspopup="listbox" aria-expanded="false" aria-label="Theme">
-              <span class="theme-swatch"></span>
+              <!-- Paint palette. One path with fill-rule="evenodd" so the four
+                   wells are real holes, not background-colored dots — the pill
+                   changes fill on hover, and painted-on dots would show it. -->
+              <svg class="theme-palette" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill-rule="evenodd" d="M12 22C6.49 22 2 17.51 2 12S6.49 2 12 2s10 4.04 10 9c0 3.31-2.69 6-6 6h-1.77c-.28 0-.5.22-.5.5 0 .12.05.23.13.33.41.47.64 1.06.64 1.67 0 1.38-1.12 2.5-2.5 2.5zM6.5 10a1.5 1.5 0 1 0 0 3 1.5 1.5 0 1 0 0-3zM9.5 6a1.5 1.5 0 1 0 0 3 1.5 1.5 0 1 0 0-3zM14.5 6a1.5 1.5 0 1 0 0 3 1.5 1.5 0 1 0 0-3zM17.5 10a1.5 1.5 0 1 0 0 3 1.5 1.5 0 1 0 0-3z"/>
+              </svg>
               <span class="theme-trigger-label">Organic Day</span>
               <svg class="theme-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
             </button>
             <ul id="theme-menu" class="theme-menu" role="listbox" aria-label="Theme" hidden></ul>
           </div>
-          <div class="round" role="status" aria-live="polite">Round <span id="round-value">0</span></div>
+          <button type="button" id="usage-help-btn" class="btn btn-icon" aria-label="Show how to run a fight" title="How to run a fight">?</button>
+        </div>
+        <!-- Tier 2: everything you touch during a fight. New Combat is anchored
+             far right, away from the frequent actions, because it's destructive. -->
+        <div class="tier2">
           <button type="button" id="start-next-btn" class="btn btn-primary">Start</button>
+          <div class="round" role="status" aria-live="polite">Round <span id="round-value">0</span></div>
+          <span class="sep" aria-hidden="true"></span>
+          <button type="button" id="add-btn" class="btn btn-add">+ Add creature</button>
+          <span class="spacer"></span>
           <button type="button" id="reset-btn" class="btn btn-secondary">New Combat</button>
-          <button type="button" id="usage-help-btn" class="btn btn-secondary btn-icon" aria-label="Show how to run a fight" title="How to run a fight">?</button>
         </div>
       </header>
 
@@ -77,7 +91,6 @@
           </thead>
           <tbody id="creature-rows"></tbody>
         </table>
-        <button type="button" id="add-btn" class="btn btn-add">+ Add creature</button>
       </main>
     </div>
   </div>

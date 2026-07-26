@@ -24,12 +24,11 @@ function buildMenu() {
     </li>`).join('');
 }
 
-// Reflect the current theme in the trigger (swatch + label) and the menu's selected mark.
+// Reflect the current theme in the trigger label and the menu's selected mark.
+// The trigger itself carries a fixed brush icon, not a swatch — only the menu
+// options preview each theme's colors.
 function reflect() {
   const t = themeById(current);
-  const sw = trigger.querySelector('.theme-swatch');
-  sw.style.setProperty('--sw-bg', t.swatchBg);
-  sw.style.setProperty('--sw-dot', t.swatchDot);
   trigger.querySelector('.theme-trigger-label').textContent = t.label;
   options().forEach((li) => li.setAttribute('aria-selected', String(li.dataset.themeId === current)));
 }

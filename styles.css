@@ -36,6 +36,13 @@
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 28px;
+
+  /* Header control heights. Set explicitly so every pill on a tier lines up
+     regardless of its font, padding or border width — the tier-2 controls mix
+     14px Caprasimo, 16px body text and a 1.5px dashed border, which otherwise
+     resolve to three slightly different heights. */
+  --control-h: 38px;
+  --control-h-sm: 36px; /* tier 1 — theme picker and help */
 }
 
 [data-theme="dark"] {
@@ -58,7 +65,7 @@
   --color-neutral-800: #d8cdb8;
   --downed: #e06a4f;
   --downed-ink: #211e19;
-  --shadow-md: 0 10px 30px rgba(0, 0, 0, .5);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.5);
   --page-bg: #16130f;
 }
 
@@ -69,9 +76,9 @@
    row), Green is the healthy HP bar, Cyan the temp-HP "shield" segment, Pink
    the bloodied bar, and Red the downed tag — a green→pink→red severity ramp. */
 [data-theme="dracula"] {
-  --color-bg: #282a36;      /* Background — the app card */
+  --color-bg: #282a36; /* Background — the app card */
   --color-surface: #44475a; /* Current Line / Selection — topbar, inputs, pills */
-  --color-text: #f8f8f2;    /* Foreground */
+  --color-text: #f8f8f2; /* Foreground */
   --color-divider: color-mix(in srgb, #f8f8f2 15%, transparent);
 
   /* Primary accent = Purple. 100 = dark tinted background, 800 = brightest ink. */
@@ -92,10 +99,10 @@
   --color-neutral-100: #343746;
   --color-neutral-800: #d6d5e4;
 
-  --downed: #ff5555;       /* Red — downed tag */
+  --downed: #ff5555; /* Red — downed tag */
   --downed-ink: #282a36;
-  --shadow-md: 0 10px 30px rgba(9, 6, 22, .55);
-  --page-bg: #21222c;      /* the darker Dracula background, behind the card */
+  --shadow-md: 0 10px 30px rgba(9, 6, 22, 0.55);
+  --page-bg: #21222c; /* the darker Dracula background, behind the card */
 }
 
 /* "Alucard" — the light counterpart to Dracula, from the same spec
@@ -104,9 +111,9 @@
    but oriented for a light surface, so the scale runs 100 = lightest tint →
    800 = darkest ink, using Alucard's deeper shades of each Dracula hue. */
 [data-theme="alucard"] {
-  --color-bg: #fffbeb;      /* Background — the app card */
+  --color-bg: #fffbeb; /* Background — the app card */
   --color-surface: #e9e4cd; /* line-highlight cream — topbar, inputs, pills */
-  --color-text: #1f1f1f;    /* Foreground */
+  --color-text: #1f1f1f; /* Foreground */
   --color-divider: color-mix(in srgb, #1f1f1f 16%, transparent);
 
   /* Primary accent = Purple. 100 = lightest tint, 800 = darkest ink. */
@@ -127,15 +134,18 @@
   --color-neutral-100: #f7f4e6;
   --color-neutral-800: #3d3a2e;
 
-  --downed: #cb3a2a;       /* Red — downed tag */
+  --downed: #cb3a2a; /* Red — downed tag */
   --downed-ink: #fffbeb;
   --shadow-md: 0 3px 12px color-mix(in srgb, #3a2f5e 14%, transparent);
-  --page-bg: #d5cfb6;      /* warm tan behind the card */
+  --page-bg: #d5cfb6; /* warm tan behind the card */
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
 }
@@ -150,8 +160,10 @@ body {
 
 .sr-only {
   position: absolute;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
@@ -181,13 +193,60 @@ body {
 }
 
 /* ---- Top bar ---- */
+/* Two tiers: identity + global settings on top, the combat action bar below.
+   Each tier paints its own surface; this only backs the area if they wrap. */
 .topbar {
+  background: var(--color-surface);
+}
+
+/* Tier 1 — title, theme picker, help. */
+.tier1 {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
   background: var(--color-surface);
+}
+
+/* Tier 2 — Start/Next turn, Round, Add creature, New Combat. The accent tint
+   separates the in-fight controls from the identity strip above. */
+.tier2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-accent-100);
+  border-bottom: 1px solid var(--color-divider);
+}
+
+/* Pushes everything after it to the right end of its tier. */
+.spacer {
+  flex: 1;
+}
+
+/* Hairline rule between the turn controls and Add creature. */
+.sep {
+  flex: none;
+  width: 1px;
+  height: var(--space-6);
+  background: var(--color-divider);
+}
+
+/* Round keeps its shared baseline between the label and the number, so it can't
+   use align-items to centre itself in the taller box. align-content centres the
+   whole baseline row instead — which only takes effect on a wrapping container,
+   hence flex-wrap. flex: none keeps it from ever actually wrapping. */
+.tier2 .round {
+  flex: none;
+  flex-wrap: wrap;
+  align-content: center;
+}
+
+.tier2 .btn,
+.tier2 .round {
+  height: var(--control-h);
 }
 
 .app-title {
@@ -197,35 +256,44 @@ body {
   font-size: 24px;
 }
 
-.controls {
-  margin-left: auto;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
-}
-
 /* Theme picker (dropdown) */
 .theme-picker {
   position: relative;
 }
 
+/* Paired with the help button: same height, same outline + fill, so the two
+   read as one utility set. Height is fixed rather than derived from padding
+   so the pill can't drift out of step with the round help button. */
 .theme-trigger {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 6px;
-  border: 1px solid var(--color-divider);
+  height: var(--control-h-sm);
+  padding: 0 var(--space-3);
+  border: 1.5px solid var(--color-divider);
   border-radius: 999px;
   background: var(--color-bg);
   color: var(--color-text);
   font: 600 13px var(--font-body);
   cursor: pointer;
 }
-.theme-trigger:hover { background: color-mix(in srgb, var(--color-text) 5%, transparent); }
+.theme-trigger:hover {
+  background: color-mix(in srgb, var(--color-text) 5%, transparent);
+}
 .theme-trigger:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+/* The trigger's leading mark. It stands for "theme" generically rather than
+   previewing the current one — the per-theme swatches live in the menu below.
+   Tinted with the accent so it still shifts with the active theme. Solid, unlike
+   the stroked caret/check icons, so the knocked-out paint wells stay legible. */
+.theme-palette {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: var(--color-accent-700);
 }
 
 .theme-caret {
@@ -239,10 +307,13 @@ body {
   opacity: 0.7;
   transition: transform 0.12s ease;
 }
-.theme-picker.is-open .theme-caret { transform: rotate(180deg); }
+.theme-picker.is-open .theme-caret {
+  transform: rotate(180deg);
+}
 
 /* Preview dot for a theme: a circle in the theme's surface tone with an accent
-   dot. Colors come from --sw-bg / --sw-dot set per-theme (see themePicker.js). */
+   dot. Colors come from --sw-bg / --sw-dot set per-theme (see themePicker.js).
+   Menu options only — the collapsed trigger shows .theme-palette instead. */
 .theme-swatch {
   position: relative;
   flex: none;
@@ -277,7 +348,9 @@ body {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
 }
-.theme-menu[hidden] { display: none; }
+.theme-menu[hidden] {
+  display: none;
+}
 
 .theme-option {
   display: flex;
@@ -294,7 +367,9 @@ body {
   background: color-mix(in srgb, var(--color-text) 7%, transparent);
   outline: none;
 }
-.theme-option-label { flex: 1; }
+.theme-option-label {
+  flex: 1;
+}
 
 .theme-check {
   flex: none;
@@ -307,7 +382,9 @@ body {
   stroke-linejoin: round;
   opacity: 0;
 }
-.theme-option[aria-selected="true"] .theme-check { opacity: 1; }
+.theme-option[aria-selected="true"] .theme-check {
+  opacity: 1;
+}
 
 .round {
   display: inline-flex;
@@ -317,13 +394,12 @@ body {
   color: var(--color-accent-800);
   padding: 6px 16px;
   border-radius: 999px;
-  font: 600 14px var(--font-body);
+  font: 400 14px var(--font-heading);
   white-space: nowrap;
 }
 
 .round #round-value {
-  font-family: var(--font-heading);
-  font-size: 16px;
+  font-weight: 600;
   color: var(--color-accent-700);
 }
 
@@ -335,12 +411,14 @@ body {
   gap: 6px;
   font: 400 14px var(--font-heading);
   padding: var(--space-2) calc(var(--space-3) * 1.2);
-  border: 1px solid transparent;
+  border: 1.5px solid transparent;
   border-radius: 999px;
   cursor: pointer;
   background: transparent;
   color: var(--color-text);
-  transition: background-color 0.12s ease, border-color 0.12s ease;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease;
 }
 .btn:focus-visible {
   outline: 2px solid var(--color-accent);
@@ -352,33 +430,46 @@ body {
   color: var(--color-bg);
   min-width: 104px;
 }
-.btn-primary:hover { background: var(--color-accent-600); }
-.btn-primary:active { background: var(--color-accent-700); }
+.btn-primary:hover {
+  background: var(--color-accent-600);
+}
+.btn-primary:active {
+  background: var(--color-accent-700);
+}
 
 .btn-secondary {
   border-color: var(--color-divider);
 }
-.btn-secondary:hover { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
-.btn-secondary:active { background: color-mix(in srgb, var(--color-text) 14%, transparent); }
+.btn-secondary:hover {
+  background: color-mix(in srgb, var(--color-text) 7%, transparent);
+}
+.btn-secondary:active {
+  background: color-mix(in srgb, var(--color-text) 14%, transparent);
+}
 
 .btn-add {
-  margin-top: var(--space-3);
-  width: 220px;
   border: 1.5px dashed color-mix(in srgb, var(--color-accent) 55%, transparent);
   color: var(--color-accent-700);
   background: transparent;
 }
-.btn-add:hover { background: color-mix(in srgb, var(--color-accent) 8%, transparent); }
+.btn-add:hover {
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
 
+/* Round twin of the theme trigger — see .theme-trigger for the pairing. */
 .btn-icon {
-  width: 36px;
-  height: 36px;
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
   padding: 0;
+  border-color: var(--color-divider);
   border-radius: 999px;
+  background: var(--color-bg);
   font-size: 18px;
   color: var(--color-accent-700);
 }
-.btn-icon:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+.btn-icon:hover {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
 
 /* ---- Layout ---- */
 /* The table has a hard minimum width from its column sizing, so it
@@ -413,16 +504,37 @@ body {
 }
 
 /* Column sizing */
-.col-init { width: 72px; text-align: center; }
-.col-name { min-width: 150px; }
-.col-ac { width: 70px; text-align: center; }
-.col-hpnum { width: 74px; text-align: center; }
-.col-current { min-width: 190px; }
-.col-adjust { width: 200px; }
+.col-init {
+  width: 72px;
+  text-align: center;
+}
+.col-name {
+  min-width: 150px;
+}
+.col-ac {
+  width: 70px;
+  text-align: center;
+}
+.col-hpnum {
+  width: 74px;
+  text-align: center;
+}
+.col-current {
+  min-width: 190px;
+}
+.col-adjust {
+  width: 200px;
+}
 /* The one centered header — it labels a single centered control, not a column of text. */
-.combat-table thead th.col-adjust { text-align: center; }
-.col-text { min-width: 150px; }
-.col-actions { width: 92px; } /* holds the duplicate + remove buttons */
+.combat-table thead th.col-adjust {
+  text-align: center;
+}
+.col-text {
+  min-width: 150px;
+}
+.col-actions {
+  width: 92px;
+} /* holds the duplicate + remove buttons */
 
 /* ---- Inline-editable fields (borderless, reveal on interaction) ---- */
 .combat-table input {
@@ -437,17 +549,32 @@ body {
   border: 1px solid transparent;
   border-radius: 999px;
 }
-.combat-table input:hover { border-color: var(--color-divider); }
+.combat-table input:hover {
+  border-color: var(--color-divider);
+}
 .combat-table input:focus {
   outline: none;
   border-color: var(--color-accent);
   background: var(--color-surface);
 }
-.combat-table input::placeholder { color: color-mix(in srgb, var(--color-text) 40%, transparent); }
+.combat-table input::placeholder {
+  color: color-mix(in srgb, var(--color-text) 40%, transparent);
+}
 
-.combat-table input.f-init { font-family: var(--font-heading); font-weight: 400; }
-.f-name { font-weight: 700; text-align: left; }
-.f-ac, .f-maxhp, .f-temphp { text-align: center; padding-inline: 4px; }
+.combat-table input.f-init {
+  font-family: var(--font-heading);
+  font-weight: 400;
+}
+.f-name {
+  font-weight: 700;
+  text-align: left;
+}
+.f-ac,
+.f-maxhp,
+.f-temphp {
+  text-align: center;
+  padding-inline: 4px;
+}
 
 .cell-init {
   text-align: center;
@@ -478,21 +605,29 @@ body {
   padding: 2px 6px;
   border-radius: 999px;
 }
-tr.active .turn-flag { display: inline-block; }
-tr.active .f-init { color: var(--color-accent-800); }
-tr.downed:not(.active) .f-init { opacity: .5; }
+tr.active .turn-flag {
+  display: inline-block;
+}
+tr.active .f-init {
+  color: var(--color-accent-800);
+}
+tr.downed:not(.active) .f-init {
+  opacity: 0.5;
+}
 
 tr.downed .f-name {
   text-decoration: line-through;
   text-decoration-color: color-mix(in srgb, var(--color-text) 40%, transparent);
-  opacity: .7;
+  opacity: 0.7;
 }
 
 /* ---- Damage / Heal — one amount field + two apply buttons, joined into one pill ---- */
 /* Left to right (= the Tab order): amount, Dmg, Heal. Hairlines between the three
    segments are drawn by the segments themselves; the wrapper only supplies the outer
    border and clips the ends to the pill radius. */
-.cell-adjust { text-align: center; }
+.cell-adjust {
+  text-align: center;
+}
 
 .r-ctl {
   display: inline-flex;
@@ -523,9 +658,13 @@ tr.downed .f-name {
   outline: none;
   background: var(--color-surface);
 }
-.combat-table input.r-amt::placeholder { color: color-mix(in srgb, var(--color-text) 35%, transparent); }
+.combat-table input.r-amt::placeholder {
+  color: color-mix(in srgb, var(--color-text) 35%, transparent);
+}
 /* Rest on the active row's tint so the field doesn't punch a hole in the highlight. */
-.combat-table tbody tr.active input.r-amt { background: var(--color-accent-100); }
+.combat-table tbody tr.active input.r-amt {
+  background: var(--color-accent-100);
+}
 
 .r-side {
   display: inline-flex;
@@ -539,9 +678,16 @@ tr.downed .f-name {
   cursor: pointer;
   transition: background-color 0.12s ease;
 }
-.r-side + .r-side { border-left: 1px solid var(--color-divider); }
-.r-side svg { width: 14px; height: 14px; }
-.r-side:last-child { border-radius: 0 999px 999px 0; } /* the pill's right end */
+.r-side + .r-side {
+  border-left: 1px solid var(--color-divider);
+}
+.r-side svg {
+  width: 14px;
+  height: 14px;
+}
+.r-side:last-child {
+  border-radius: 0 999px 999px 0;
+} /* the pill's right end */
 
 /* Tabbing runs through all three segments, so all three get the same indicator: an
    inset ring rather than an outline. An outline is a plain rectangle drawn outside the
@@ -553,10 +699,20 @@ tr.downed .f-name {
   box-shadow: inset 0 0 0 2px var(--color-accent);
 }
 
-.r-dmg { color: var(--downed); background: color-mix(in srgb, var(--downed) 9%, transparent); }
-.r-dmg:hover { background: color-mix(in srgb, var(--downed) 20%, transparent); }
-.r-heal { color: var(--color-accent-2-800); background: color-mix(in srgb, var(--color-accent-2-500) 16%, transparent); }
-.r-heal:hover { background: color-mix(in srgb, var(--color-accent-2-500) 30%, transparent); }
+.r-dmg {
+  color: var(--downed);
+  background: color-mix(in srgb, var(--downed) 9%, transparent);
+}
+.r-dmg:hover {
+  background: color-mix(in srgb, var(--downed) 20%, transparent);
+}
+.r-heal {
+  color: var(--color-accent-2-800);
+  background: color-mix(in srgb, var(--color-accent-2-500) 16%, transparent);
+}
+.r-heal:hover {
+  background: color-mix(in srgb, var(--color-accent-2-500) 30%, transparent);
+}
 
 /* ---- Current HP cell (three states) ---- */
 .hp-cell {
@@ -586,7 +742,9 @@ tr.downed .f-name {
   height: 100%;
   background: var(--color-accent-2-500);
 }
-.hp-fill-bloodied { background: var(--color-accent-500); }
+.hp-fill-bloodied {
+  background: var(--color-accent-500);
+}
 .hp-temp-seg {
   height: 100%;
   background: var(--color-accent-2-300);
@@ -596,7 +754,9 @@ tr.downed .f-name {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.hp-cur-bloodied { color: var(--color-accent-700); }
+.hp-cur-bloodied {
+  color: var(--color-accent-700);
+}
 .hp-max-of {
   color: color-mix(in srgb, var(--color-text) 45%, transparent);
   font-weight: 400;
@@ -634,7 +794,7 @@ tr.downed .f-name {
   border-radius: 999px;
   font: 600 12px var(--font-body);
   white-space: nowrap;
-  border: 1.5px solid color-mix(in srgb, var(--color-accent) 45%, transparent)
+  border: 1.5px solid color-mix(in srgb, var(--color-accent) 45%, transparent);
 }
 .cond-x {
   width: 17px;
@@ -651,7 +811,9 @@ tr.downed .f-name {
   align-items: center;
   justify-content: center;
 }
-.cond-x:hover { background: color-mix(in srgb, var(--color-accent) 20%, transparent); }
+.cond-x:hover {
+  background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
 /* Inset ring, not an outline: the X sits tucked inside the pill, so an offset outline
    would collide with the pill's own border. Same trick as the Dmg/Heal segments. */
 .cond-x:focus-visible {
@@ -673,16 +835,25 @@ tr.downed .f-name {
   justify-content: center;
   gap: 3px;
 }
-.cond-add:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+.cond-add:hover {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
 /* Matches the row-action buttons' indicator (see `.btn-dupe`/`.btn-remove` below). */
 .cond-add:focus-visible {
   outline: 1px solid var(--color-accent);
   outline-offset: 1px;
 }
-.cond-add-plus { font-size: 15px; line-height: 1; }
+.cond-add-plus {
+  font-size: 15px;
+  line-height: 1;
+}
 
 /* Picker popover (appended to <body>, fixed-positioned under the + Add button). */
-.cond-backdrop { position: fixed; inset: 0; z-index: 40; }
+.cond-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
 .cond-pop {
   position: fixed;
   z-index: 41;
@@ -703,8 +874,13 @@ tr.downed .f-name {
   font: 600 13px var(--font-body);
   margin-bottom: 6px;
 }
-.cond-search:focus { outline: none; border-color: var(--color-accent); }
-.cond-search::placeholder { color: color-mix(in srgb, var(--color-text) 42%, transparent); }
+.cond-search:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+.cond-search::placeholder {
+  color: color-mix(in srgb, var(--color-text) 42%, transparent);
+}
 .cond-list {
   max-height: 232px;
   overflow-y: auto;
@@ -727,10 +903,20 @@ tr.downed .f-name {
   cursor: pointer;
   text-align: left;
 }
-.cond-opt:hover { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
-.cond-opt.is-applied { color: var(--color-accent-800); background: var(--color-accent-100); }
-.cond-opt-custom { color: var(--color-accent-700); justify-content: flex-start; }
-.cond-opt-custom b { font-weight: 700; }
+.cond-opt:hover {
+  background: color-mix(in srgb, var(--color-text) 7%, transparent);
+}
+.cond-opt.is-applied {
+  color: var(--color-accent-800);
+  background: var(--color-accent-100);
+}
+.cond-opt-custom {
+  color: var(--color-accent-700);
+  justify-content: flex-start;
+}
+.cond-opt-custom b {
+  font-weight: 700;
+}
 .cond-check {
   flex: none;
   width: 15px;
@@ -742,7 +928,9 @@ tr.downed .f-name {
   stroke-linejoin: round;
   opacity: 0;
 }
-.cond-opt.is-applied .cond-check { opacity: 1; }
+.cond-opt.is-applied .cond-check {
+  opacity: 1;
+}
 .cond-empty {
   padding: 10px 11px;
   font: 600 13px var(--font-body);
@@ -750,7 +938,9 @@ tr.downed .f-name {
 }
 
 /* ---- Row actions (duplicate + remove) ---- */
-.cell-actions { text-align: center; }
+.cell-actions {
+  text-align: center;
+}
 .row-actions {
   display: inline-flex;
   align-items: center;
@@ -774,13 +964,18 @@ tr.downed .f-name {
   justify-content: center;
 }
 .btn-dupe:hover,
-.btn-remove:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+.btn-remove:hover {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
 .btn-dupe:focus-visible,
 .btn-remove:focus-visible {
   outline: 1px solid var(--color-accent);
   outline-offset: 1px;
 }
-.btn-dupe svg { width: 17px; height: 17px; }
+.btn-dupe svg {
+  width: 17px;
+  height: 17px;
+}
 
 /* ---- Empty state ---- */
 .empty-row td {
@@ -820,7 +1015,9 @@ tr.downed .f-name {
   border-radius: var(--radius-md);
 }
 /* Hidden at first paint (inline script sets this on <html>) and after dismissal. */
-.usage-dismissed .usage-callout { display: none; }
+.usage-dismissed .usage-callout {
+  display: none;
+}
 
 .usage-callout h2 {
   margin: 0 0 4px;
@@ -848,7 +1045,9 @@ tr.downed .f-name {
   font: 400 13.5px/1.45 var(--font-body);
   color: var(--color-text);
 }
-.usage-list li b { font-weight: 700; }
+.usage-list li b {
+  font-weight: 700;
+}
 .usage-list-num .num {
   flex: none;
   width: 24px;
@@ -876,16 +1075,27 @@ tr.downed .f-name {
   line-height: 1;
   cursor: pointer;
 }
-.usage-dismiss:hover { background: color-mix(in srgb, var(--color-accent) 14%, transparent); }
+.usage-dismiss:hover {
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
 .usage-dismiss:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
 @media (max-width: 640px) {
-  .app-shell { padding: 12px; }
-  .app-title { width: 100%; }
-  .controls { width: 100%; justify-content: space-between; }
-  .btn-primary { flex: 1; }
-  .page { padding: 12px; }
+  .app-shell {
+    padding: 12px;
+  }
+  /* Title takes its own line; the spacer then right-aligns theme + help below it. */
+  .app-title {
+    width: 100%;
+  }
+  .tier1,
+  .tier2 {
+    row-gap: var(--space-2);
+  }
+  .page {
+    padding: 12px;
+  }
 }

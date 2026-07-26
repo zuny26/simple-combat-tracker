@@ -1,7 +1,10 @@
 // main.js — bootstrap + event wiring. Uses event delegation on the table body so
 // dynamically-added rows need no per-row listeners.
 
-import { state, load, save, makeCreature, duplicateCreature, resetState, isEmptyCreature } from './state.js';
+import {
+  state, load, save, makeCreature, duplicateCreature, resetState, isEmptyCreature,
+  removeTag,
+} from './state.js';
 import { clampDamage, applyDamage, applyHealing } from './hp.js';
 import { parseInit, sortedRows } from './order.js';
 import {
@@ -9,8 +12,10 @@ import {
   reassignActiveAfterLeaving, activeInitiativedIndex,
 } from './turns.js';
 import {
-  renderTable, renderHighlight, updateHpCell, currentRowOrder, reorderRows,
+  renderTable, renderHighlight, updateHpCell, updateTagsCell,
+  currentRowOrder, reorderRows,
 } from './render.js';
+import { openPicker } from './tags.js';
 import { loadTheme } from './theme.js';
 import { initThemePicker } from './themePicker.js';
 import { initUsageCallout } from './usage.js';
@@ -62,10 +67,6 @@ function onInput(e) {
   } else if (hasClass(t, 'f-temphp')) {
     c.tempHP = toNum(t.value);
     updateHpCell(id);
-  } else if (hasClass(t, 'f-conditions')) {
-    c.conditions = t.value;
-  } else if (hasClass(t, 'f-other')) {
-    c.other = t.value;
   } else {
     return; // f-damage / f-heal are action inputs — no model change on input
   }
@@ -166,6 +167,25 @@ function onKeyDown(e) {
 
 // ---- Duplicate / remove a creature (delegated on the table body) ----
 function onBodyClick(e) {
+  // Remove one tag pill (the ✕ carries its field + value in data-field / data-tag).
+  const tagX = e.target.closest && e.target.closest('.cond-x');
+  if (tagX) {
+    const id = rowIdFromEvent(e);
+    if (id == null) return;
+    removeTag(id, tagX.dataset.field, tagX.dataset.tag); // helper persists
+    updateTagsCell(id, tagX.dataset.field);
+    return;
+  }
+
+  // Open the tag picker (Conditions or Other) anchored under the + Add button.
+  const tagAdd = e.target.closest && e.target.closest('.cond-add');
+  if (tagAdd) {
+    const id = rowIdFromEvent(e);
+    if (id == null) return;
+    openPicker(tagAdd.dataset.field, id, tagAdd);
+    return;
+  }
+
   const dupeBtn = e.target.closest && e.target.closest('.btn-dupe');
   if (dupeBtn) {
     const id = rowIdFromEvent(e);

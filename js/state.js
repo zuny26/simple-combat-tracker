@@ -21,8 +21,8 @@ export function makeCreature() {
     maxHP: 0,
     tempHP: 0,
     damageTaken: 0, // running accumulator, kept in [0, maxHP] by hp.js
-    conditions: '',
-    other: '',
+    conditions: [], // status conditions — a string[] of tags (see tags.js / the helpers below)
+    other: [],      // freeform notes — same string[] tag model, no predefined list
   };
 }
 
@@ -37,9 +37,45 @@ export function isEmptyCreature(c) {
     toNum(c.maxHP) === 0 &&
     toNum(c.tempHP) === 0 &&
     toNum(c.damageTaken) === 0 &&
-    c.conditions === '' &&
-    c.other === ''
+    (c.conditions == null || c.conditions.length === 0) && // [] (or a legacy '') = no status
+    (c.other == null || c.other.length === 0)              // ...same for freeform notes
   );
+}
+
+// ---- Tags: the array fields (`conditions`, `other`) edited as pills ----
+// Both share one model — a string[] of trimmed, case-insensitively unique tags — so
+// the helpers take the field name. Each mutation calls save() like every other field.
+
+// Case-insensitive membership test on a creature's tag field.
+export function hasTag(c, field, name) {
+  const key = String(name).toLowerCase();
+  return Array.isArray(c[field]) && c[field].some((x) => x.toLowerCase() === key);
+}
+
+// Add a trimmed tag, ignoring blanks and case-insensitive duplicates.
+export function addTag(id, field, name) {
+  const c = state.creatures.find((x) => x.id === id);
+  if (!c) return;
+  const clean = String(name).trim();
+  if (clean && !hasTag(c, field, clean)) c[field].push(clean);
+  save();
+}
+
+// Remove a tag by name (case-insensitive).
+export function removeTag(id, field, name) {
+  const c = state.creatures.find((x) => x.id === id);
+  if (!c) return;
+  const key = String(name).toLowerCase();
+  c[field] = c[field].filter((x) => x.toLowerCase() !== key);
+  save();
+}
+
+// Remove if present, add if absent.
+export function toggleTag(id, field, name) {
+  const c = state.creatures.find((x) => x.id === id);
+  if (!c) return;
+  if (hasTag(c, field, name)) removeTag(id, field, name);
+  else addTag(id, field, name);
 }
 
 export function save() {
@@ -116,8 +152,8 @@ export function duplicateCreature(id) {
     maxHP: src.maxHP,
     tempHP: 0,        // duplicate enters without temporary HP
     damageTaken: 0,   // ...and at full Current HP
-    conditions: '',   // cleared — a fresh copy carries no status
-    other: '',        // cleared
+    conditions: [],   // cleared — a fresh copy carries no status
+    other: [],        // cleared
   };
   state.creatures.splice(i + 1, 0, copy);
   return copy;
@@ -171,9 +207,24 @@ function normalizeCreature(c) {
     maxHP: toNum(c.maxHP),
     tempHP: toNum(c.tempHP),
     damageTaken: toNum(c.damageTaken),
-    conditions: c.conditions == null ? '' : String(c.conditions),
-    other: c.other == null ? '' : String(c.other),
+    // Both tag fields normalize to a string[]. Conditions came from a comma-separated
+    // string, so a legacy string is split; Other was one freeform note, so it stays
+    // whole (splitting would mangle a note that contains commas).
+    conditions: normalizeTags(c.conditions, true),
+    other: normalizeTags(c.other, false),
   };
+}
+
+// Coerce a tag field to a string[] of trimmed, non-empty values. Arrays pass through;
+// a legacy string is split on commas when `split`, otherwise kept as a single tag;
+// anything else becomes an empty list.
+function normalizeTags(v, split) {
+  const parts = Array.isArray(v)
+    ? v.map((x) => String(x))
+    : typeof v === 'string'
+      ? (split ? v.split(',') : [v])
+      : [];
+  return parts.map((x) => x.trim()).filter((x) => x !== '');
 }
 
 function toNum(v) {

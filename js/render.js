@@ -83,6 +83,18 @@ export function updateHpCell(id) {
   tr.classList.toggle('downed', isDowned(c));
 }
 
+// Rewrite one row's tag cell (`conditions` or `other`) in place — used when a pill is
+// added/removed via the picker or its ✕. Only touches this cell, so table inputs
+// elsewhere keep focus.
+export function updateTagsCell(id, field) {
+  const tr = tbody().querySelector(`tr[data-id="${id}"]`);
+  if (!tr) return;
+  const c = state.creatures.find((x) => x.id === id);
+  if (!c) return;
+  const cell = tr.querySelector(`.cond-cell[data-field="${field}"]`);
+  if (cell) cell.replaceWith(tagsContent(c, field));
+}
+
 // ---- Row construction (DOM API => values are set as .value, never parsed as HTML) ----
 
 function buildRow(c) {
@@ -99,8 +111,8 @@ function buildRow(c) {
   tr.appendChild(currentCell(c));
   tr.appendChild(td(actionInput('f-damage')));
   tr.appendChild(td(actionInput('f-heal')));
-  tr.appendChild(td(textInput('f-conditions', c.conditions, { placeholder: '—' })));
-  tr.appendChild(td(textInput('f-other', c.other, { placeholder: '-'})))
+  tr.appendChild(tagsCell(c, 'conditions'));
+  tr.appendChild(tagsCell(c, 'other'));
   tr.appendChild(actionsCell());
   return tr;
 }
@@ -237,6 +249,68 @@ function hpCellContent(c) {
 
   wrap.append(track, number);
   return wrap;
+}
+
+// ---- Tag cell (Conditions + Other): removable pills + an Add button ----
+// The two columns share this builder and the `.cond-*` styling; they differ only in
+// which array field they render and what the picker offers. Clicks (pill ✕, + Add) are
+// handled by delegation in main.js; the picker popover itself lives in tags.js.
+
+// Human label for the field, used only for accessible button/pill wording.
+const TAG_NOUN = { conditions: 'condition', other: 'note' };
+
+function tagsCell(c, field) {
+  const cell = document.createElement('td');
+  cell.appendChild(tagsContent(c, field));
+  return cell;
+}
+
+// The flex-wrap row of pills followed by the Add button. Rebuilt wholesale by
+// updateTagsCell() on every add/remove (cheap — a handful of nodes). The `data-field`
+// lets updateTagsCell() and main.js target the right cell/field.
+function tagsContent(c, field) {
+  const wrap = document.createElement('div');
+  wrap.className = 'cond-cell';
+  wrap.dataset.field = field;
+  const tags = Array.isArray(c[field]) ? c[field] : [];
+  for (const name of tags) wrap.appendChild(tagPill(field, name));
+  wrap.appendChild(tagAddButton(field, tags.length === 0)); // "+ Add" label only when empty
+  return wrap;
+}
+
+function tagPill(field, name) {
+  const pill = document.createElement('span');
+  pill.className = 'cond-pill';
+  pill.appendChild(document.createTextNode(name)); // user text — set as text, never HTML
+  const x = document.createElement('button');
+  x.type = 'button';
+  x.className = 'cond-x';
+  x.dataset.field = field; // main.js reads field + tag to know what to remove
+  x.dataset.tag = name;
+  x.setAttribute('aria-label', `Remove ${name}`);
+  x.textContent = '✕';
+  pill.appendChild(x);
+  return pill;
+}
+
+// The word "Add" is shown only on an otherwise-empty row; rows with pills get a
+// compact "+" so the button stays small.
+function tagAddButton(field, showLabel) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'cond-add';
+  b.dataset.field = field; // main.js reads this to open the right picker
+  b.setAttribute('aria-label', `Add ${TAG_NOUN[field] || 'tag'}`);
+  const plus = document.createElement('span');
+  plus.className = 'cond-add-plus';
+  plus.textContent = '+';
+  b.appendChild(plus);
+  if (showLabel) {
+    const label = document.createElement('span');
+    label.textContent = 'Add';
+    b.appendChild(label);
+  }
+  return b;
 }
 
 // Duplicate + remove buttons, grouped in the widened Actions column.

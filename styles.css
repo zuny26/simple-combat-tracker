@@ -652,6 +652,12 @@ tr.downed .f-name {
   justify-content: center;
 }
 .cond-x:hover { background: color-mix(in srgb, var(--color-accent) 20%, transparent); }
+/* Inset ring, not an outline: the X sits tucked inside the pill, so an offset outline
+   would collide with the pill's own border. Same trick as the Dmg/Heal segments. */
+.cond-x:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--color-accent);
+}
 .cond-add {
   min-width: 27px;
   height: 27px;
@@ -668,6 +674,11 @@ tr.downed .f-name {
   gap: 3px;
 }
 .cond-add:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+/* Matches the row-action buttons' indicator (see `.btn-dupe`/`.btn-remove` below). */
+.cond-add:focus-visible {
+  outline: 1px solid var(--color-accent);
+  outline-offset: 1px;
+}
 .cond-add-plus { font-size: 15px; line-height: 1; }
 
 /* Picker popover (appended to <body>, fixed-positioned under the + Add button). */

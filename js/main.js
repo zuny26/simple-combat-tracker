@@ -13,9 +13,10 @@ import {
 } from './turns.js';
 import {
   renderTable, renderHighlight, updateHpCell, updateTagsCell,
-  currentRowOrder, reorderRows,
+  currentRowOrder, reorderRows, DUPE_ICON, TRASH_ICON,
 } from './render.js';
 import { openPicker } from './tags.js';
+import { openRowMenu } from './rowMenu.js';
 import { loadTheme } from './theme.js';
 import { initThemePicker } from './themePicker.js';
 import { initUsageCallout } from './usage.js';
@@ -201,10 +202,19 @@ function onBodyClick(e) {
   if (dupeBtn) {
     const id = rowIdFromEvent(e);
     if (id == null) return;
-    // Adds a copy right after the source; leaves round/turn state untouched (like Add).
-    duplicateCreature(id);
-    save();
-    renderTable();
+    duplicateRow(id);
+    return;
+  }
+
+  // The card layout's ⋮ — the same two actions as the buttons above, behind one tap.
+  const menuBtn = e.target.closest && e.target.closest('.btn-menu');
+  if (menuBtn) {
+    const id = rowIdFromEvent(e);
+    if (id == null) return;
+    openRowMenu(menuBtn, [
+      { label: 'Duplicate', icon: DUPE_ICON, run: () => duplicateRow(id) },
+      { label: 'Remove', icon: TRASH_ICON, danger: true, run: () => removeRow(id) },
+    ]);
     return;
   }
 
@@ -212,6 +222,17 @@ function onBodyClick(e) {
   if (!btn) return;
   const id = rowIdFromEvent(e);
   if (id == null) return;
+  removeRow(id);
+}
+
+// Adds a copy right after the source; leaves round/turn state untouched (like Add).
+function duplicateRow(id) {
+  duplicateCreature(id);
+  save();
+  renderTable();
+}
+
+function removeRow(id) {
   const c = creatureById(id);
   if (!c) return;
 

@@ -74,7 +74,7 @@ export function updateHpCell(id) {
   // Damage is applied temp-first, so the Temp HP field can change underneath the DM.
   // Keep it in sync, but never clobber it while they're typing in it.
   const temp = tr.querySelector('.f-temphp');
-  if (temp && document.activeElement !== temp) temp.value = c.tempHP;
+  if (temp && document.activeElement !== temp) temp.value = blankIfZero(c.tempHP);
   const cell = tr.querySelector('.cell-current');
   if (cell) {
     cell.innerHTML = '';
@@ -105,9 +105,11 @@ function buildRow(c) {
 
   tr.appendChild(initCell(c)); // # (may be negative)
   tr.appendChild(td(textInput('f-name', c.name, { placeholder: 'Name' }), 'cell-name'));
-  tr.appendChild(td(numInput('f-ac', c.ac, { placeholder: '—' }), 'cell-ac', 'AC'));
-  tr.appendChild(td(numInput('f-maxhp', c.maxHP, { placeholder: '—' }), 'cell-maxhp', 'Max HP'));
-  tr.appendChild(td(numInput('f-temphp', c.tempHP, { placeholder: '—' }), 'cell-temphp', 'Temp HP'));
+  tr.appendChild(acCell(c));
+  // 0 shows as the '—' placeholder, not as "0": zero Max HP means "not configured yet"
+  // (see hp.js) and zero Temp HP means "none" — an em dash reads as either, a 0 doesn't.
+  tr.appendChild(td(numInput('f-maxhp', blankIfZero(c.maxHP), { placeholder: '—' }), 'cell-maxhp', 'Max HP'));
+  tr.appendChild(td(numInput('f-temphp', blankIfZero(c.tempHP), { placeholder: '—' }), 'cell-temphp', 'Temp HP'));
   tr.appendChild(currentCell(c));
   tr.appendChild(adjustCell());
   tr.appendChild(tagsCell(c, 'conditions'));
@@ -153,6 +155,34 @@ function initCell(c) {
   wrap.appendChild(flag);
   cell.appendChild(wrap);
   return cell;
+}
+
+// Lucide "shield" glyph — a static constant with no user data, so innerHTML is safe.
+// Only visible in the card layout, where it labels the AC pill in place of the (hidden)
+// column header; the desktop table hides it and keeps its "AC" <th>.
+const SHIELD_ICON =
+  '<svg class="ac-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+  'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 ' +
+  '1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></svg>';
+
+// AC gets its own wrapper so the card layout can draw the icon + value as one shield
+// pill; on desktop the wrapper is transparent and only the input shows.
+function acCell(c) {
+  const cell = document.createElement('td');
+  cell.className = 'cell-ac';
+  cell.dataset.label = 'AC';
+  const wrap = document.createElement('div');
+  wrap.className = 'ac-wrap';
+  wrap.innerHTML = SHIELD_ICON; // static markup only — the input is appended as a node
+  wrap.appendChild(numInput('f-ac', c.ac, { placeholder: '—' }));
+  cell.appendChild(wrap);
+  return cell;
+}
+
+// '' for 0 so a numeric field falls back to its '—' placeholder instead of reading "0".
+function blankIfZero(n) {
+  return n ? n : '';
 }
 
 function numInput(cls, value, opts = {}) {
@@ -361,13 +391,15 @@ function tagAddButton(field, showLabel) {
   return b;
 }
 
-// Duplicate + remove buttons, grouped in the widened Actions column.
+// Duplicate + remove buttons, grouped in the widened Actions column — plus the ⋮ that
+// stands in for the pair in the card layout, where the header line has no room for two
+// buttons (CSS decides which of the two affordances is visible; see rowMenu.js).
 function actionsCell() {
   const cell = document.createElement('td');
   cell.className = 'cell-actions';
   const group = document.createElement('div');
   group.className = 'row-actions';
-  group.append(dupeButton(), removeButton()); // duplicate sits left of remove
+  group.append(dupeButton(), removeButton(), menuButton()); // duplicate sits left of remove
   cell.appendChild(group);
   return cell;
 }
@@ -396,3 +428,30 @@ function removeButton() {
   b.setAttribute('aria-label', 'Remove creature');
   return b;
 }
+
+// Lucide "ellipsis-vertical" — static, no user data, so innerHTML is safe.
+export const MENU_DOTS_ICON =
+  '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+  '<circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle>' +
+  '<circle cx="12" cy="19" r="2"></circle></svg>';
+
+// The card layout's action button: opens the duplicate/remove menu (main.js wires the
+// click). Hidden on desktop, where both actions are already visible as their own buttons.
+function menuButton() {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'btn-menu';
+  b.setAttribute('aria-label', 'Creature actions');
+  b.setAttribute('aria-haspopup', 'menu');
+  b.innerHTML = MENU_DOTS_ICON;
+  return b;
+}
+
+// The two menu entries' icons, exported so main.js can label the menu items with the same
+// glyphs the desktop buttons use.
+export { DUPE_ICON };
+export const TRASH_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+  'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0-1 14a1 1 0 0 1-1 1H7a1 1 0 0 ' +
+  '1-1-1L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>';

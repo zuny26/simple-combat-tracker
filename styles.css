@@ -585,6 +585,15 @@ body {
   padding-inline: 4px;
 }
 
+/* AC wrapper: inert on desktop (the column header labels the field). The shield only
+   appears in the card layout, where it replaces that header — see the card block. */
+.ac-wrap {
+  display: block;
+}
+.ac-shield {
+  display: none;
+}
+
 .cell-init {
   text-align: center;
 }
@@ -986,6 +995,56 @@ tr.downed .f-name {
   height: 17px;
 }
 
+/* The ⋮ and its menu belong to the card layout — the desktop table shows the duplicate and
+   remove buttons themselves, so the collapsed version stays hidden (and out of the tab
+   order) here. The card block flips which of the two is shown. */
+.btn-menu {
+  display: none;
+}
+.row-menu {
+  position: fixed;
+  z-index: 41;
+  width: 184px;
+  padding: var(--space-1);
+  background: var(--color-bg);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+.row-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 11px 13px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font: 600 14px var(--font-body);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+}
+.row-menu-item svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--color-accent-700);
+}
+.row-menu-item:hover,
+.row-menu-item:focus-visible {
+  outline: none;
+  background: color-mix(in srgb, var(--color-text) 7%, transparent);
+}
+.row-menu-item.is-danger,
+.row-menu-item.is-danger svg {
+  color: var(--downed);
+}
+.row-menu-item.is-danger:hover,
+.row-menu-item.is-danger:focus-visible {
+  background: color-mix(in srgb, var(--downed) 12%, transparent);
+}
+
 /* ---- Empty state ---- */
 .empty-row td {
   padding: 36px var(--space-2);
@@ -1139,7 +1198,22 @@ tr.downed .f-name {
    pure CSS reflow — the DOM is still a real <table>/<tr>/<td> (see render.js), just
    redisplayed as flex boxes, so every `tr[data-id]` / `.cell-*` selector main.js and
    render.js rely on keeps working untouched. `data-label` (set in render.js) feeds the
-   `::before` field captions that stand in for the now-hidden column headers. */
+   `::before` field captions that stand in for the now-hidden column headers.
+
+   The card reads top-to-bottom as one creature, grouped by what you look at together:
+
+     [18] [Name……] [TURN]        [shield AC] [dupe ✕]   <- identity + actions
+     [=========HP bar=========]  32 / 45                 <- how hurt it is
+     [ MAX HP ] [ TEMP HP ]                              <- the HP inputs
+     [ amount | − Dmg | + Heal ]                         <- the action
+     CONDITIONS  [pills…]                                <- status
+     OTHER       [pills…]
+
+   Two things differ from the desktop table on purpose. Captions are dropped wherever the
+   control already says what it is (the initiative disc, the HP bar, the Dmg/Heal pill) —
+   a caption on each of ten fields is what made the card hard to scan. And every field
+   carries a visible filled outline rather than revealing one on hover: a touch screen has
+   no hover, so an invisible field edge is an invisible field. */
 @media (max-width: 1400px) {
   /* Edge-to-edge: no floating card, no page margin — the app fills the viewport. */
   .app-shell {
@@ -1166,28 +1240,42 @@ tr.downed .f-name {
     display: none;
   }
 
+  /* ---- The card itself ---- */
   .combat-table tbody tr {
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-start;
-    column-gap: var(--space-3);
+    align-items: center;
+    column-gap: var(--space-2);
     row-gap: var(--space-3);
-    padding: var(--space-4);
+    padding: var(--space-3) var(--space-4) var(--space-4);
     margin-bottom: var(--space-3);
     background: var(--color-surface);
-    border: 1px solid var(--color-divider);
+    border: 1.5px solid var(--color-divider);
     border-radius: var(--radius-md);
   }
   .combat-table tbody tr:last-child {
     margin-bottom: 0;
   }
-  /* The desktop active indicator lives on the first cell (see the base rule above); in
-     card view that cell is small, so move the accent bar to the whole card instead. */
+  /* Whose turn it is: the accent tint plus the TURN pill on the header line carry it, so
+     the desktop 4px edge bar is dropped — it lived on the first cell, which no longer
+     generates a box at all (see the display:contents note below). */
   .combat-table tbody tr.active td:first-child {
     box-shadow: none;
   }
   .combat-table tbody tr.active {
-    box-shadow: inset 4px 0 0 0 var(--color-accent);
+    background: var(--color-accent-100);
+    border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+  }
+  /* Which card you're editing. On a phone the caret is easy to lose track of, and cards
+     are tall enough that the focused field can be the only thing on screen. */
+  .combat-table tbody tr:focus-within {
+    border-color: var(--color-accent);
+  }
+  /* Downed: mixed into the surface rather than layered over it as a translucent wash,
+     which on a card would just tint the page background showing through. */
+  .combat-table tbody tr.downed:not(.active) {
+    background: color-mix(in srgb, var(--color-text) 7%, var(--color-surface));
+    border-color: color-mix(in srgb, var(--downed) 30%, transparent);
   }
   .combat-table tbody tr.empty-row {
     display: block;
@@ -1205,70 +1293,230 @@ tr.downed .f-name {
     min-width: 0;
   }
 
-  /* Card "header" line: initiative, name, then row actions pinned to the right. */
-  .cell-init {
+  /* ---- Fields: filled pills, sized for thumbs ---- */
+  /* Deliberately keyed on `tbody td input` (three type selectors) so it outranks the base
+     `.combat-table input` rules without needing !important, while still losing to the
+     two-class rules that style the special-cased fields below (.r-amt, .f-init, .f-ac). */
+  .combat-table tbody td input {
+    min-height: 46px;
+    padding: 0 var(--space-3);
+    /* 16px is the threshold below which iOS Safari zooms the page on focus. */
+    font-size: 16px;
+    text-align: center;
+    background: color-mix(in srgb, var(--color-text) 5%, transparent);
+    border: 1.5px solid color-mix(in srgb, var(--color-text) 13%, transparent);
+  }
+  .combat-table tbody td input:hover {
+    border-color: color-mix(in srgb, var(--color-text) 25%, transparent);
+  }
+  .combat-table tbody td input:focus {
+    border-color: var(--color-accent);
+    background: var(--color-bg);
+  }
+  .combat-table tbody td input.f-name {
+    text-align: left;
+  }
+
+  /* ---- Header line: [disc] [name] [TURN] ....... [AC] [actions] ---- */
+  /* The initiative disc and the TURN pill need to sit on either side of the name, but
+     they're both inside the init cell — so that cell (and its wrapper) dissolve with
+     display:contents, making the disc and the flag flex items of the card itself, free to
+     be ordered independently. Everything main.js and render.js query still resolves: the
+     <td> and the inputs are all still in the DOM, only their boxes are gone. */
+  .cell-init,
+  .cell-init .init-wrap {
+    display: contents;
+  }
+  .combat-table input.f-init {
     order: 1;
     flex: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    width: 46px;
+    height: 46px;
+    min-height: 0;
+    padding: 0;
+    text-align: center;
+    font: 400 19px var(--font-heading);
+    border: 1.5px solid color-mix(in srgb, var(--color-text) 18%, transparent);
+    background: var(--color-bg);
   }
+  .combat-table tbody tr.active input.f-init {
+    border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
+    background: var(--color-bg);
+  }
+  .combat-table input.f-init:focus {
+    border-color: var(--color-accent);
+  }
+  /* Small basis on purpose: flex wraps on the basis, not the shrunk size, so a bigger one
+     would bump AC + actions onto a second line on a narrow phone. The name still grows
+     into whatever the header line has left over. */
   .cell-name {
     order: 2;
-    flex: 1 1 120px;
+    flex: 1 1 44px;
     min-width: 0;
+    max-width: 420px;
   }
-  .cell-actions {
+  .turn-flag {
     order: 3;
+    flex: none;
+    font-size: 9px;
+    padding: 3px 8px;
+  }
+
+  /* AC becomes a shield pill: the icon replaces the caption, and the wrapper (not the
+     input) carries the outline so icon and value read as one control. */
+  .cell-ac {
+    order: 4;
+    flex: none;
+    margin-left: auto; /* AC + actions hug the right end of the header line */
+  }
+  .ac-wrap {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 38px;
+    padding: 0 9px 0 11px;
+    border-radius: 999px;
+    border: 1.5px solid color-mix(in srgb, var(--color-text) 13%, transparent);
+    background: color-mix(in srgb, var(--color-text) 5%, transparent);
+    color: var(--color-accent-700);
+  }
+  .ac-wrap:focus-within {
+    border-color: var(--color-accent);
+  }
+  .ac-shield {
+    display: block;
+    flex: none;
+    width: 14px;
+    height: 14px;
+  }
+  .combat-table td.cell-ac input.f-ac {
+    width: 28px;
+    min-height: 0;
+    padding: 0;
+    font-size: 16px;
+    color: var(--color-text);
+    background: transparent;
+    border-color: transparent;
+  }
+
+  /* Its own auto margin as well, so if the header line does wrap on a very narrow phone,
+     the action pair right-aligns on the next line instead of stranding itself mid-card. */
+  .cell-actions {
+    order: 5;
     flex: none;
     margin-left: auto;
   }
-
-  .cell-ac {
-    order: 4;
-    flex: 1 1 76px;
+  /* One ⋮ instead of the duplicate + remove pair: the pair costs ~30px more than the
+     header line can spare on a narrow phone (it pushed the actions onto a second line and
+     squeezed the name field), and it puts the destructive action behind a deliberate tap
+     rather than under a thumb. Both live in every row; only the visible one changes. */
+  .cell-actions .btn-dupe,
+  .cell-actions .btn-remove {
+    display: none;
   }
-  .cell-maxhp {
-    order: 5;
-    flex: 1 1 76px;
+  .btn-menu {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 38px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: color-mix(in srgb, var(--color-text) 60%, transparent);
+    cursor: pointer;
+  }
+  .btn-menu svg {
+    width: 18px;
+    height: 18px;
+  }
+  .btn-menu:hover {
+    background: color-mix(in srgb, var(--color-text) 8%, transparent);
+  }
+  .btn-menu:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+
+  /* ---- HP bar: full width, its own line, no caption ---- */
+  .cell-current {
+    order: 6;
+    flex: 1 1 100%;
+  }
+  .cell-current .hp-track {
+    height: 11px;
+  }
+  .cell-current .hp-number {
+    font-size: 15px;
+  }
+
+  /* ---- The two HP inputs, side by side. Capped so a wide card (this layout starts at
+     1400px) doesn't stretch two number fields across half a screen each. ---- */
+  .cell-maxhp,
+  .cell-temphp {
+    order: 7;
+    flex: 1 1 40%;
+    max-width: 240px;
   }
   .cell-temphp {
-    order: 6;
-    flex: 1 1 76px;
+    order: 8;
   }
 
-  .cell-current {
-    order: 7;
-    flex: 1 1 100%;
-  }
+  /* ---- Damage / Heal: full-width pill, same cap as the HP inputs above ---- */
   .cell-adjust {
-    order: 8;
+    order: 9;
     flex: 1 1 100%;
+    text-align: left; /* the desktop rule centres the pill under its column header */
   }
   .cell-adjust .r-ctl {
     width: 100%;
+    max-width: 496px; /* 2 × the 240px field cap + the two gaps between them */
   }
+  .combat-table tbody td input.r-amt {
+    min-height: 48px;
+    font-size: 16px;
+  }
+  .cell-adjust .r-side {
+    min-height: 48px;
+    padding: 0 var(--space-3);
+    font-size: 12px;
+  }
+
+  /* ---- Conditions / Other: pills, one field per line ---- */
   .cell-conditions {
-    order: 9;
-    flex: 1 1 100%;
-  }
-  .cell-other {
     order: 10;
     flex: 1 1 100%;
   }
+  .cell-other {
+    order: 11;
+    flex: 1 1 100%;
+  }
+  .cond-pill {
+    padding: 4px 5px 4px 12px;
+    font-size: 13px;
+  }
+  .cond-x {
+    width: 20px;
+    height: 20px;
+  }
+  .cond-add {
+    min-width: 31px;
+    height: 31px;
+    font-size: 13px;
+  }
 
-  /* Field captions, since <thead> (the source of these labels on desktop) is hidden. */
-  .cell-init::before,
-  .cell-ac::before,
+  /* Field captions, since <thead> (the source of these labels on desktop) is hidden.
+     Only the fields whose control isn't self-explanatory get one — see the block comment
+     above this media query. */
   .cell-maxhp::before,
   .cell-temphp::before,
-  .cell-current::before,
-  .cell-adjust::before,
   .cell-conditions::before,
   .cell-other::before {
     content: attr(data-label);
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
+    padding-left: 2px;
     font: 700 10px var(--font-body);
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -1277,18 +1525,41 @@ tr.downed .f-name {
 }
 
 @media (max-width: 640px) {
-  .app-shell {
-    padding: 12px;
-  }
-  /* Title takes its own line; the spacer then right-aligns theme + help below it. */
-  .app-title {
-    width: 100%;
-  }
   .tier1,
   .tier2 {
     row-gap: var(--space-2);
   }
   .page {
     padding: 12px;
+  }
+  /* Buy back the horizontal room the header line needs on a small phone: with the TURN pill
+     present, this padding and column gap are the difference between one header line and
+     two (at 320px the line otherwise overflows by a fraction of a pixel). Row gap — the
+     card's vertical rhythm — is untouched. */
+  .combat-table tbody tr {
+    padding-inline: var(--space-3);
+    column-gap: 6px;
+  }
+}
+
+/* Very narrow phones (320px class). Everything on the header line except the name is
+   fixed-width, so the name is what pays for them — shaving a few px off each of the disc,
+   the TURN pill and the AC pill is what keeps a name like "Aldric" readable there. */
+@media (max-width: 360px) {
+  .combat-table input.f-init {
+    width: 42px;
+    height: 42px;
+    font-size: 18px;
+  }
+  .turn-flag {
+    font-size: 8px;
+    padding: 2px 6px;
+  }
+  .ac-wrap {
+    height: 36px;
+    padding: 0 7px 0 9px;
+  }
+  .combat-table td.cell-ac input.f-ac {
+    width: 26px;
   }
 }

@@ -104,10 +104,10 @@ function buildRow(c) {
   if (isDowned(c)) tr.classList.add('downed');
 
   tr.appendChild(initCell(c)); // # (may be negative)
-  tr.appendChild(td(textInput('f-name', c.name, { placeholder: 'Name' })));
-  tr.appendChild(td(numInput('f-ac', c.ac, { placeholder: '—' })));
-  tr.appendChild(td(numInput('f-maxhp', c.maxHP, { placeholder: '—' })));
-  tr.appendChild(td(numInput('f-temphp', c.tempHP, { placeholder: '—' })));
+  tr.appendChild(td(textInput('f-name', c.name, { placeholder: 'Name' }), 'cell-name'));
+  tr.appendChild(td(numInput('f-ac', c.ac, { placeholder: '—' }), 'cell-ac', 'AC'));
+  tr.appendChild(td(numInput('f-maxhp', c.maxHP, { placeholder: '—' }), 'cell-maxhp', 'Max HP'));
+  tr.appendChild(td(numInput('f-temphp', c.tempHP, { placeholder: '—' }), 'cell-temphp', 'Temp HP'));
   tr.appendChild(currentCell(c));
   tr.appendChild(adjustCell());
   tr.appendChild(tagsCell(c, 'conditions'));
@@ -126,8 +126,13 @@ function emptyRow() {
   return tr;
 }
 
-function td(child) {
+// `cls`/`label` are only needed for the card layout (narrow screens): `cls` gives the
+// card CSS something to position on, `label` feeds the `::before` field caption that
+// stands in for the (hidden) column header.
+function td(child, cls, label) {
   const cell = document.createElement('td');
+  if (cls) cell.className = cls;
+  if (label) cell.dataset.label = label;
   cell.appendChild(child);
   return cell;
 }
@@ -138,6 +143,7 @@ function td(child) {
 function initCell(c) {
   const cell = document.createElement('td');
   cell.className = 'cell-init';
+  cell.dataset.label = 'Init';
   const wrap = document.createElement('div');
   wrap.className = 'init-wrap';
   wrap.appendChild(numInput('f-init', c.init, { placeholder: '—' }));
@@ -196,6 +202,7 @@ const PLUS_ICON =
 function adjustCell() {
   const cell = document.createElement('td');
   cell.className = 'cell-adjust';
+  cell.dataset.label = 'Damage / Heal';
   const ctl = document.createElement('div');
   ctl.className = 'r-ctl';
   ctl.append(
@@ -221,6 +228,7 @@ function applyButton(cls, label, icon) {
 function currentCell(c) {
   const cell = document.createElement('td');
   cell.className = 'cell-current';
+  cell.dataset.label = 'Current HP';
   cell.appendChild(hpCellContent(c));
   return cell;
 }
@@ -299,6 +307,8 @@ const TAG_NOUN = { conditions: 'condition', other: 'note' };
 
 function tagsCell(c, field) {
   const cell = document.createElement('td');
+  cell.className = field === 'conditions' ? 'cell-conditions' : 'cell-other';
+  cell.dataset.label = field === 'conditions' ? 'Conditions' : 'Other';
   cell.appendChild(tagsContent(c, field));
   return cell;
 }

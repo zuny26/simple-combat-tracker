@@ -1133,6 +1133,149 @@ tr.downed .f-name {
   margin-top: var(--space-4);
 }
 
+/* ---- Mobile layout: card rows instead of a table ---- */
+/* Below the app-card's own natural width, there's no room for ten columns anyway, so the
+   card goes edge-to-edge and every creature row becomes a self-contained card. This is a
+   pure CSS reflow — the DOM is still a real <table>/<tr>/<td> (see render.js), just
+   redisplayed as flex boxes, so every `tr[data-id]` / `.cell-*` selector main.js and
+   render.js rely on keeps working untouched. `data-label` (set in render.js) feeds the
+   `::before` field captions that stand in for the now-hidden column headers. */
+@media (max-width: 1400px) {
+  /* Edge-to-edge: no floating card, no page margin — the app fills the viewport. */
+  .app-shell {
+    padding: 0;
+    min-height: 100vh;
+    align-items: stretch;
+  }
+  .app-card {
+    width: 100%;
+    min-height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .page {
+    overflow-x: visible;
+  }
+
+  .combat-table,
+  .combat-table tbody {
+    display: block;
+    width: 100%;
+  }
+  .combat-table thead {
+    display: none;
+  }
+
+  .combat-table tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    column-gap: var(--space-3);
+    row-gap: var(--space-3);
+    padding: var(--space-4);
+    margin-bottom: var(--space-3);
+    background: var(--color-surface);
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-md);
+  }
+  .combat-table tbody tr:last-child {
+    margin-bottom: 0;
+  }
+  /* The desktop active indicator lives on the first cell (see the base rule above); in
+     card view that cell is small, so move the accent bar to the whole card instead. */
+  .combat-table tbody tr.active td:first-child {
+    box-shadow: none;
+  }
+  .combat-table tbody tr.active {
+    box-shadow: inset 4px 0 0 0 var(--color-accent);
+  }
+  .combat-table tbody tr.empty-row {
+    display: block;
+    background: none;
+    border: none;
+    padding: 36px 0;
+  }
+
+  .combat-table tbody td {
+    padding: 0;
+    border-bottom: none;
+    /* Flex items refuse to shrink below their content's natural width by default; without
+       this, the Damage/Heal pill (and other cells) can push their card wider than the
+       viewport instead of the fields inside them wrapping/shrinking to fit. */
+    min-width: 0;
+  }
+
+  /* Card "header" line: initiative, name, then row actions pinned to the right. */
+  .cell-init {
+    order: 1;
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .cell-name {
+    order: 2;
+    flex: 1 1 120px;
+    min-width: 0;
+  }
+  .cell-actions {
+    order: 3;
+    flex: none;
+    margin-left: auto;
+  }
+
+  .cell-ac {
+    order: 4;
+    flex: 1 1 76px;
+  }
+  .cell-maxhp {
+    order: 5;
+    flex: 1 1 76px;
+  }
+  .cell-temphp {
+    order: 6;
+    flex: 1 1 76px;
+  }
+
+  .cell-current {
+    order: 7;
+    flex: 1 1 100%;
+  }
+  .cell-adjust {
+    order: 8;
+    flex: 1 1 100%;
+  }
+  .cell-adjust .r-ctl {
+    width: 100%;
+  }
+  .cell-conditions {
+    order: 9;
+    flex: 1 1 100%;
+  }
+  .cell-other {
+    order: 10;
+    flex: 1 1 100%;
+  }
+
+  /* Field captions, since <thead> (the source of these labels on desktop) is hidden. */
+  .cell-init::before,
+  .cell-ac::before,
+  .cell-maxhp::before,
+  .cell-temphp::before,
+  .cell-current::before,
+  .cell-adjust::before,
+  .cell-conditions::before,
+  .cell-other::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 4px;
+    font: 700 10px var(--font-body);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  }
+}
+
 @media (max-width: 640px) {
   .app-shell {
     padding: 12px;

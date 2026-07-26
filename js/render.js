@@ -9,7 +9,7 @@ import { state } from './state.js';
 import { sortedRows } from './order.js';
 import { isDowned, clamp } from './hp.js';
 
-const COLUMN_COUNT = 11; // #, Name, AC, Max HP, Temp HP, Current HP, Dmg, Heal, Conditions, Other, remove
+const COLUMN_COUNT = 10; // #, Name, AC, Max HP, Temp HP, Current HP, Damage/Heal, Conditions, Other, remove
 
 function tbody() {
   return document.getElementById('creature-rows');
@@ -109,8 +109,7 @@ function buildRow(c) {
   tr.appendChild(td(numInput('f-maxhp', c.maxHP, { placeholder: '—' })));
   tr.appendChild(td(numInput('f-temphp', c.tempHP, { placeholder: '—' })));
   tr.appendChild(currentCell(c));
-  tr.appendChild(td(actionInput('f-damage')));
-  tr.appendChild(td(actionInput('f-heal')));
+  tr.appendChild(adjustCell());
   tr.appendChild(tagsCell(c, 'conditions'));
   tr.appendChild(tagsCell(c, 'other'));
   tr.appendChild(actionsCell());
@@ -169,7 +168,8 @@ function textInput(cls, value, opts = {}) {
   return i;
 }
 
-// Damage/Healing: transient action inputs — always start empty, never store a value.
+// Damage/Healing amount: a transient action input — always starts empty, never stores
+// a value.
 function actionInput(cls) {
   const i = document.createElement('input');
   i.type = 'text';
@@ -178,6 +178,44 @@ function actionInput(cls) {
   i.value = '';
   i.placeholder = '0';
   return i;
+}
+
+// Lucide minus / plus glyphs — static constants with no user data, so innerHTML is safe.
+const MINUS_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" ' +
+  'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<path d="M5 12h14"></path></svg>';
+const PLUS_ICON =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" ' +
+  'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<path d="M12 5v14M5 12h14"></path></svg>';
+
+// Damage / Heal: one shared amount field plus the two apply buttons, joined into a
+// single pill. Appended in Tab order — amount → Dmg → Heal — which is also their
+// left-to-right reading order, so tabbing never has to reach back.
+function adjustCell() {
+  const cell = document.createElement('td');
+  cell.className = 'cell-adjust';
+  const ctl = document.createElement('div');
+  ctl.className = 'r-ctl';
+  ctl.append(
+    actionInput('r-amt f-adjust'), // r-amt styles the segment; f-adjust is what main.js routes on
+    applyButton('r-dmg', 'Dmg', MINUS_ICON),
+    applyButton('r-heal', 'Heal', PLUS_ICON),
+  );
+  cell.appendChild(ctl);
+  return cell;
+}
+
+// One of the two colored apply buttons. Its visible label is its accessible name;
+// main.js finds the amount to apply via the shared `.r-ctl` wrapper.
+function applyButton(cls, label, icon) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = `r-side ${cls}`;
+  b.innerHTML = icon;
+  b.appendChild(document.createTextNode(label));
+  return b;
 }
 
 function currentCell(c) {

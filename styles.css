@@ -170,7 +170,7 @@ body {
 
 .app-card {
   position: relative;
-  width: 1200px;
+  width: 1400px;
   max-width: 100%;
   background: var(--color-bg);
   border-radius: var(--radius-lg);
@@ -418,6 +418,9 @@ body {
 .col-ac { width: 70px; text-align: center; }
 .col-hpnum { width: 74px; text-align: center; }
 .col-current { min-width: 190px; }
+.col-adjust { width: 200px; }
+/* The one centered header — it labels a single centered control, not a column of text. */
+.combat-table thead th.col-adjust { text-align: center; }
 .col-text { min-width: 150px; }
 .col-actions { width: 92px; } /* holds the duplicate + remove buttons */
 
@@ -485,19 +488,75 @@ tr.downed .f-name {
   opacity: .7;
 }
 
-/* Dmg / Heal — filled pills so they read as actions */
-.f-damage, .f-heal {
-  width: 60px;
-  text-align: center;
-  background: var(--color-surface);
+/* ---- Damage / Heal — one amount field + two apply buttons, joined into one pill ---- */
+/* Left to right (= the Tab order): amount, Dmg, Heal. Hairlines between the three
+   segments are drawn by the segments themselves; the wrapper only supplies the outer
+   border and clips the ends to the pill radius. */
+.cell-adjust { text-align: center; }
+
+.r-ctl {
+  display: inline-flex;
+  align-items: stretch;
+  width: 194px;
   border: 1px solid var(--color-divider);
-  margin-inline: auto;
+  border-radius: 999px;
+  overflow: hidden;
 }
-.f-damage:hover, .f-heal:hover { border-color: var(--color-divider); }
-.f-damage:focus, .f-heal:focus {
-  border-color: var(--color-accent);
+
+/* The amount opts out of the shared inline-field look (`.combat-table input`): it is a
+   segment of the pill, not a standalone rounded field. Hence `input.r-amt` — the extra
+   specificity is what lets these win over the base rules above. */
+.combat-table input.r-amt {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  min-height: 36px;
+  text-align: center;
+  font: 700 15px var(--font-body);
+  color: var(--color-text);
+  background: var(--color-bg);
+  border: none;
+  border-right: 1px solid var(--color-divider);
+  border-radius: 999px 0 0 999px; /* the pill's left end — see the focus ring below */
+}
+.combat-table input.r-amt:focus {
+  outline: none;
   background: var(--color-surface);
 }
+.combat-table input.r-amt::placeholder { color: color-mix(in srgb, var(--color-text) 35%, transparent); }
+/* Rest on the active row's tint so the field doesn't punch a hole in the highlight. */
+.combat-table tbody tr.active input.r-amt { background: var(--color-accent-100); }
+
+.r-side {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 11px;
+  min-height: 36px;
+  border: none;
+  font: 600 11px var(--font-body);
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+.r-side + .r-side { border-left: 1px solid var(--color-divider); }
+.r-side svg { width: 14px; height: 14px; }
+.r-side:last-child { border-radius: 0 999px 999px 0; } /* the pill's right end */
+
+/* Tabbing runs through all three segments, so all three get the same indicator: an
+   inset ring rather than an outline. An outline is a plain rectangle drawn outside the
+   segment, which squares off the pill's rounded ends; a ring is drawn inside, follows
+   each segment's own radius, and so traces the pill's silhouette at both ends. */
+.combat-table input.r-amt:focus-visible,
+.r-side:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--color-accent);
+}
+
+.r-dmg { color: var(--downed); background: color-mix(in srgb, var(--downed) 9%, transparent); }
+.r-dmg:hover { background: color-mix(in srgb, var(--downed) 20%, transparent); }
+.r-heal { color: var(--color-accent-2-800); background: color-mix(in srgb, var(--color-accent-2-500) 16%, transparent); }
+.r-heal:hover { background: color-mix(in srgb, var(--color-accent-2-500) 30%, transparent); }
 
 /* ---- Current HP cell (three states) ---- */
 .hp-cell {

@@ -68,7 +68,7 @@ function onInput(e) {
     c.tempHP = toNum(t.value);
     updateHpCell(id);
   } else {
-    return; // f-damage / f-heal are action inputs — no model change on input
+    return; // f-adjust is an action input — no model change on input
   }
   save();
 }
@@ -137,36 +137,48 @@ function onFocusOut(e) {
   resortPreservingFocus(e); // name is the tie-break, so it can reorder too
 }
 
-// ---- Enter applies Damage / Healing, then clears the action cell ----
+// ---- Damage / Heal: apply the row's pending amount, then clear the field ----
+// Both buttons and Enter funnel through here. The refresh is in-place (updateHpCell)
+// and deliberately NOT a rebuild: that would destroy the field the DM is typing in
+// (or the button they just clicked) and break Tab out of the control.
+function applyAdjust(c, input, kind) {
+  const n = toNum(input.value);
+  if (n > 0) {
+    if (kind === 'heal') applyHealing(c, n);
+    else applyDamage(c, n);
+  }
+  input.value = '';
+  save();
+  updateHpCell(c.id); // Current HP + any Temp HP the damage just consumed
+}
+
+// ---- Enter in the amount field = Damage (the common in-combat case) ----
+// Healing is a button click; the buttons are the primary affordance for both.
 function onKeyDown(e) {
   if (e.key !== 'Enter') return;
-  const t = e.target;
+  if (!hasClass(e.target, 'f-adjust')) return;
   const id = rowIdFromEvent(e);
   if (id == null) return;
   const c = creatureById(id);
   if (!c) return;
-
-  if (hasClass(t, 'f-damage')) {
-    e.preventDefault();
-    const n = toNum(t.value);
-    if (n > 0) applyDamage(c, n);
-    t.value = '';
-    save();
-    // In-place refresh (Current HP + the Temp HP damage just consumed). Deliberately
-    // NOT a rebuild: that would destroy this field and break Tab out of it.
-    updateHpCell(id);
-  } else if (hasClass(t, 'f-heal')) {
-    e.preventDefault();
-    const n = toNum(t.value);
-    if (n > 0) applyHealing(c, n);
-    t.value = '';
-    save();
-    updateHpCell(id);
-  }
+  e.preventDefault();
+  applyAdjust(c, e.target, 'damage');
 }
 
 // ---- Duplicate / remove a creature (delegated on the table body) ----
 function onBodyClick(e) {
+  // Dmg / Heal — both buttons read the one amount field sharing their pill.
+  const adjustBtn = e.target.closest && e.target.closest('.r-dmg, .r-heal');
+  if (adjustBtn) {
+    const id = rowIdFromEvent(e);
+    if (id == null) return;
+    const c = creatureById(id);
+    if (!c) return;
+    const input = adjustBtn.closest('.r-ctl').querySelector('.f-adjust');
+    if (input) applyAdjust(c, input, adjustBtn.classList.contains('r-heal') ? 'heal' : 'damage');
+    return;
+  }
+
   // Remove one tag pill (the ✕ carries its field + value in data-field / data-tag).
   const tagX = e.target.closest && e.target.closest('.cond-x');
   if (tagX) {

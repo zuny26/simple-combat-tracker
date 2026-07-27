@@ -22,13 +22,17 @@ export function initUsageCallout() {
 
   const helpBtn = document.getElementById('usage-help-btn');
   if (helpBtn) {
-    helpBtn.addEventListener('click', () => {
-      document.documentElement.classList.remove('usage-dismissed');
-      try {
-        localStorage.removeItem(KEY);
-      } catch (e) {
-        // Storage unavailable — the callout still re-shows for this session.
-      }
-    });
+    helpBtn.addEventListener('click', showUsageCallout);
+  }
+}
+
+// Re-show the callout and forget the dismissal. Exported so the ☰ app menu's "How to run
+// a fight" row runs exactly this body rather than a second copy of it.
+export function showUsageCallout() {
+  document.documentElement.classList.remove('usage-dismissed');
+  try {
+    localStorage.removeItem(KEY);
+  } catch (e) {
+    // Storage unavailable — the callout still re-shows for this session.
   }
 }

@@ -139,20 +139,21 @@ function td(child, cls, label) {
   return cell;
 }
 
-// Boot glyph — the initiative twin of SHIELD_ICON below. Hand-authored (Lucide has no
-// boot) in the same stroke language, so the two card pills read as one set: 24 viewBox,
-// 2px round stroke. Static markup with no user data, so innerHTML is safe.
-const BOOT_ICON =
-  '<svg class="init-boot" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+// Lucide "sport-shoe" glyph — the initiative twin of SHIELD_ICON below, same stroke
+// language so the two card pills read as one set: 24 viewBox, 2px round stroke. Static
+// markup with no user data, so innerHTML is safe.
+const SHOE_ICON =
+  '<svg class="init-shoe" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
   'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-  '<path d="M6 2.5h4.5v8.5c1.4 1 3 1.5 4.6 1.9C18.5 13.9 20.5 16.2 20.5 19.5H6Z"></path>' +
-  '<path d="M6 16.5h13.5"></path></svg>';
+  '<path d="m15 10.42 4.8-5.07"></path><path d="M19 18h3"></path>' +
+  '<path d="M9.5 22 21.414 9.415A2 2 0 0 0 21.2 6.4l-5.61-4.208A1 1 0 0 0 14 3v2a2 2 0 0 ' +
+  '1-1.394 1.906L8.677 8.053A1 1 0 0 0 8 9c-.155 6.393-2.082 9-4 9a2 2 0 0 0 0 4h14"></path></svg>';
 
 // # (initiative) sits in its own cell alongside the TURN flag, which is always
 // present and shown purely via CSS (tr.active .turn-flag) — no extra render work
 // needed when the highlight moves via renderHighlight().
 //
-// The wrapper is inert on desktop; in the card layout it becomes the boot pill (the
+// The wrapper is inert on desktop; in the card layout it becomes the shoe pill (the
 // icon standing in for the hidden "Initiative" column header), and the flag positions
 // itself against the card rather than against the wrapper — see the card block in
 // styles.css.
@@ -162,7 +163,7 @@ function initCell(c) {
   cell.dataset.label = 'Init';
   const wrap = document.createElement('div');
   wrap.className = 'init-wrap';
-  wrap.innerHTML = BOOT_ICON; // static markup only — the input is appended as a node
+  wrap.innerHTML = SHOE_ICON; // static markup only — the input is appended as a node
   wrap.appendChild(numInput('f-init', c.init, { placeholder: '—' }));
   const flag = document.createElement('span');
   flag.className = 'turn-flag';

@@ -603,10 +603,10 @@ body {
   align-items: center;
   gap: 3px;
 }
-/* Boot: the initiative twin of .ac-shield, and inert here for the same reason — the
+/* Shoe: the initiative twin of .ac-shield, and inert here for the same reason — the
    "Initiative" column header labels the field on desktop. It only appears in the card
    layout, where it replaces that header. */
-.init-boot {
+.init-shoe {
   display: none;
 }
 .f-init {
@@ -1221,6 +1221,13 @@ tr.downed .f-name {
    carries a visible filled outline rather than revealing one on hover: a touch screen has
    no hover, so an invisible field edge is an invisible field. */
 @media (max-width: 1400px) {
+  /* One height for everything on a card's header line — the shoe pill, the name field,
+     the shield pill and the ⋮ — so the line reads as a single band rather than three
+     controls of three sizes. Every one of them sizes off this token; don't hard-code a
+     height on any of them, or they drift apart again. */
+  :root {
+    --card-field-h: 46px;
+  }
   /* Edge-to-edge: no floating card, no page margin — the app fills the viewport. */
   .app-shell {
     padding: 0;
@@ -1306,7 +1313,7 @@ tr.downed .f-name {
      `.combat-table input` rules without needing !important, while still losing to the
      two-class rules that style the special-cased fields below (.r-amt, .f-init, .f-ac). */
   .combat-table tbody td input {
-    min-height: 46px;
+    min-height: var(--card-field-h);
     padding: 0 var(--space-3);
     /* 16px is the threshold below which iOS Safari zooms the page on focus. */
     font-size: 16px;
@@ -1335,12 +1342,12 @@ tr.downed .f-name {
   }
   /* Initiative becomes the twin of the AC shield pill — same height, fill, outline and
      focus treatment — so the two bookend the name. Note the direction flip: the desktop
-     wrapper stacks the disc over the TURN flag, the card lays the boot beside the value. */
+     wrapper stacks the disc over the TURN flag, the card lays the shoe beside the value. */
   .init-wrap {
     order: 1;
     flex: none;
     flex-direction: row;
-    height: 38px;
+    height: var(--card-field-h);
     padding: 0 9px 0 11px;
     border-radius: 999px;
     border: 1.5px solid color-mix(in srgb, var(--color-text) 13%, transparent);
@@ -1354,11 +1361,11 @@ tr.downed .f-name {
     border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
     background: var(--color-bg);
   }
-  .init-boot {
+  .init-shoe {
     display: block;
     flex: none;
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
   }
   .combat-table td.cell-init input.f-init {
     /* 30px, where AC gets 28: initiative can be negative, so "-3" has to fit. */
@@ -1381,7 +1388,7 @@ tr.downed .f-name {
   }
   /* TURN comes off the header line entirely and becomes a tab straddling the card's top
      border, so the name gets back the width the pill used to spend. It's still a DOM
-     child of .init-wrap, but position:absolute takes it out of flow — so the boot pill
+     child of .init-wrap, but position:absolute takes it out of flow — so the shoe pill
      doesn't contain it — and its containing block is the nearest *positioned* ancestor.
      .init-wrap isn't positioned, so that resolves to the <tr>: the tab anchors to the
      card, not to the pill. Still a pure tr.active toggle, so renderHighlight() is
@@ -1406,7 +1413,7 @@ tr.downed .f-name {
     display: flex;
     align-items: center;
     gap: 3px;
-    height: 38px;
+    height: var(--card-field-h);
     padding: 0 9px 0 11px;
     border-radius: 999px;
     border: 1.5px solid color-mix(in srgb, var(--color-text) 13%, transparent);
@@ -1419,8 +1426,8 @@ tr.downed .f-name {
   .ac-shield {
     display: block;
     flex: none;
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
   }
   .combat-table td.cell-ac input.f-ac {
     width: 28px;
@@ -1452,7 +1459,7 @@ tr.downed .f-name {
     align-items: center;
     justify-content: center;
     width: 32px;
-    height: 38px;
+    height: var(--card-field-h);
     padding: 0;
     border: none;
     border-radius: 999px;
@@ -1588,19 +1595,19 @@ tr.downed .f-name {
     padding-inline: var(--space-3);
     column-gap: 6px;
   }
-  /* Track the card's narrower padding so the tab stays flush with the boot pill below it. */
+  /* Track the card's narrower padding so the tab stays flush with the shoe pill below it. */
   .turn-flag {
     left: var(--space-3);
   }
 }
 
 /* Very narrow phones (320px class). Everything on the header line except the name is
-   fixed-width, so the name is what pays for them — shaving a few px off each of the boot
+   fixed-width, so the name is what pays for them — shaving a few px off each of the shoe
    pill and the AC pill is what keeps a name like "Aldric" readable there. (TURN is off
-   the header line now, so it costs the name nothing and isn't trimmed here.) */
+   the header line now, so it costs the name nothing and isn't trimmed here.) Width only:
+   the heights stay on --card-field-h so the three pills keep matching. */
 @media (max-width: 360px) {
   .init-wrap {
-    height: 36px;
     padding: 0 7px 0 9px;
   }
   .combat-table td.cell-init input.f-init {
@@ -1611,7 +1618,6 @@ tr.downed .f-name {
     padding: 2px 6px;
   }
   .ac-wrap {
-    height: 36px;
     padding: 0 7px 0 9px;
   }
   .combat-table td.cell-ac input.f-ac {

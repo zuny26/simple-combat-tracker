@@ -404,6 +404,27 @@ body {
   color: var(--color-accent-700);
 }
 
+/* The turn button and the round counter, wrapped so the 640px block can weld them into a
+   single pill. `display: contents` means the wrapper contributes no box here, so the wide
+   bar lays out exactly as it did before it existed. */
+.turn-group {
+  display: contents;
+}
+
+/* The ↻ that stands in for the "New Combat" label below 640px. Both are always in the DOM
+   and CSS picks one — the same contract the card layout's ⋮ already follows. Stroked in the
+   idiom of the other header icons: 24 viewBox, stroke-width 2, round caps and joins. */
+.icon-reset {
+  display: none;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 /* ---- Buttons ---- */
 .btn {
   display: inline-flex;
@@ -1709,6 +1730,93 @@ tr.downed .f-name {
   /* Track the card's narrower padding so the tab stays flush with the shoe pill below it. */
   .turn-flag {
     left: var(--space-3);
+  }
+
+  /* Tier 2 on one line: [ Next turn │ 2 ]—stretches—  [ + Add ]  │  [ ↻ ]
+     Ordered with `order` rather than by moving nodes — the card layout's idiom — so the
+     single hairline already in the markup moves from after Round to just before New Combat,
+     where it keeps the destructive control visibly out of the group beside it. */
+  .tier2 {
+    flex-wrap: nowrap;
+    gap: var(--space-2);
+  }
+  .tier2 .spacer {
+    display: none;
+  }
+  .turn-group {
+    display: flex;
+    order: 1;
+    flex: 1;
+    min-width: 0;
+    align-items: stretch;
+    height: var(--control-h);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  #add-btn {
+    order: 2;
+  }
+  .tier2 .sep {
+    order: 3;
+  }
+  #reset-btn {
+    order: 4;
+  }
+
+  /* The counter welds on as the button's darker right-hand segment, so the pair reads as
+     one object — "advance the fight". The pill is the only flexible item on the line, which
+     makes the control pressed dozens of times per fight the largest target and means a
+     three-digit round or a tight viewport comes out of its label side rather than wrapping
+     the line. */
+  .turn-group #start-next-btn {
+    flex: 1;
+    min-width: 0;
+    height: auto;
+    border-radius: 0;
+  }
+  .turn-group .round {
+    /* Absent until combat starts: state.round is 0 pre-combat, and a permanently visible
+       counter would read a meaningless "0". Pressing Start grows the segment showing 1;
+       New Combat collapses it again. */
+    display: none;
+    flex: none;
+    height: auto;
+    align-items: center;
+    padding: 0 var(--space-3);
+    border-radius: 0;
+    background: var(--color-accent-700);
+    color: var(--color-bg);
+  }
+  html.combat-started .turn-group .round {
+    display: inline-flex;
+  }
+  .turn-group .round #round-value {
+    color: inherit;
+  }
+
+  /* Labels the narrow line has no room for. Clipped rather than display: none — same
+     treatment as .sr-only, repeated here because that class is unconditional and these are
+     width-conditional — so the buttons' accessible names and the round live region's
+     announcement ("Round 3") are identical at every width. */
+  .lbl-long,
+  .round-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  #reset-btn {
+    flex: none;
+    width: var(--control-h);
+    padding: 0;
+  }
+  .icon-reset {
+    display: block;
   }
 }
 

@@ -57,15 +57,29 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
           </button>
         </div>
-        <!-- Tier 2: everything you touch during a fight. New Combat is anchored
-             far right, away from the frequent actions, because it's destructive. -->
+        <!-- Tier 2: everything you touch during a fight. New Combat is anchored far right,
+             away from the frequent actions, because it's destructive. Below 640px the whole
+             tier reflows to one line with `order` (see styles.css) — the hairline moves from
+             after Round to just before New Combat, and every shrunken label is clipped
+             rather than removed, so the accessibility tree is identical at every width. -->
         <div class="tier2">
-          <button type="button" id="start-next-btn" class="btn btn-primary">Start</button>
-          <div class="round" role="status" aria-live="polite">Round <span id="round-value">0</span></div>
+          <!-- display: contents on the wide bar, so this wrapper contributes no box there.
+               Below 640px it becomes the welded turn pill: button + round segment as one
+               object. The counter stays a SIBLING of the button — renderHeader() writes the
+               button label with textContent, which would destroy any nested element. -->
+          <div class="turn-group">
+            <button type="button" id="start-next-btn" class="btn btn-primary">Start</button>
+            <div class="round" role="status" aria-live="polite">
+              <span class="round-label">Round </span><span id="round-value">0</span>
+            </div>
+          </div>
           <span class="sep" aria-hidden="true"></span>
-          <button type="button" id="add-btn" class="btn btn-add">+ Add creature</button>
+          <button type="button" id="add-btn" class="btn btn-add">+ Add<span class="lbl-long"> creature</span></button>
           <span class="spacer"></span>
-          <button type="button" id="reset-btn" class="btn btn-secondary">New Combat</button>
+          <button type="button" id="reset-btn" class="btn btn-secondary">
+            <svg class="icon-reset" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>
+            <span class="lbl-long">New Combat</span>
+          </button>
         </div>
       </header>
 

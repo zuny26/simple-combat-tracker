@@ -40,6 +40,7 @@ function rows() {
 function sectionLabel(text) {
   const el = document.createElement('div');
   el.className = 'app-menu-section';
+  el.setAttribute('role', 'presentation'); // a menu may only own menuitem/group/separator children
   el.textContent = text;
   return el;
 }

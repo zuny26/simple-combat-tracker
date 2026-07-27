@@ -51,14 +51,18 @@ export function reorderRows() {
 
 // Update the Round counter and Start/Next button label.
 export function renderHeader() {
-  document.getElementById('round-value').textContent = state.round;
-  document.getElementById('start-next-btn').textContent = state.started ? 'Next turn' : 'Start';
   // Below 640px the counter is welded onto the turn button and hidden until the fight
-  // starts, so a pre-combat "Round 0" never shows. This is already the single place the
+  // starts, so a pre-combat "Round 0" never shows. Toggle that visibility BEFORE writing
+  // the round number: on the 0 -> 1 transition, writing the value first would land it in a
+  // still-hidden live region, and assistive tech may not announce "Round 1" (rounds 2+ are
+  // unaffected either way, since the region is already visible by then). Not a confirmed
+  // defect, just cheap insurance to order it this way. This is already the single place the
   // round number and the Start/Next label are written, and it runs on every start, advance,
   // reset and auto-stop — so no other call site needs a hook. <html> is the same element
   // the pre-paint script flags with `usage-dismissed`.
   document.documentElement.classList.toggle('combat-started', state.started);
+  document.getElementById('round-value').textContent = state.round;
+  document.getElementById('start-next-btn').textContent = state.started ? 'Next turn' : 'Start';
 }
 
 // Move the highlight without rebuilding rows (preserves any in-progress field edits).

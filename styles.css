@@ -313,7 +313,8 @@ body {
 
 /* Preview dot for a theme: a circle in the theme's surface tone with an accent
    dot. Colors come from --sw-bg / --sw-dot set per-theme (see themePicker.js).
-   Menu options only — the collapsed trigger shows .theme-palette instead. */
+   Used by the picker's menu options and the ☰ panel's theme rows — the collapsed picker
+   trigger shows .theme-palette instead. */
 .theme-swatch {
   position: relative;
   flex: none;
@@ -1083,6 +1084,67 @@ tr.downed .f-name {
 .row-menu-item.is-danger:hover,
 .row-menu-item.is-danger:focus-visible {
   background: color-mix(in srgb, var(--downed) 12%, transparent);
+}
+
+/* ☰ panel — the same fixed panel + backdrop shape as .row-menu, one tier up. Clamped to
+   the viewport so a future longer theme label makes it wider, not broken. */
+.app-menu {
+  position: fixed;
+  z-index: 41;
+  width: 224px;
+  max-width: calc(100vw - 16px);
+  padding: var(--space-1);
+  background: var(--color-bg);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+.app-menu-section {
+  padding: 8px 13px 4px;
+  font: 700 10px var(--font-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+}
+.app-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 11px 13px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font: 600 14px var(--font-body);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+}
+.app-menu-item:hover,
+.app-menu-item:focus-visible {
+  outline: none;
+  background: color-mix(in srgb, var(--color-text) 7%, transparent);
+}
+.app-menu-label {
+  flex: 1;
+}
+.app-menu-mark {
+  flex: none;
+  width: 18px;
+  text-align: center;
+  font-size: 16px;
+  color: var(--color-accent-700);
+}
+/* .theme-check ships opacity: 0 and reveals on the picker's aria-selected; these rows are
+   role="menuitemradio", so they reveal on aria-checked instead. */
+.app-menu-item[aria-checked="true"] .theme-check {
+  opacity: 1;
+}
+.app-menu-sep {
+  height: 1px;
+  margin: var(--space-1) 0;
+  border: 0;
+  background: var(--color-divider);
 }
 
 /* ---- Empty state ---- */

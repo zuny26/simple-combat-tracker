@@ -49,6 +49,13 @@
             <ul id="theme-menu" class="theme-menu" role="listbox" aria-label="Theme" hidden></ul>
           </div>
           <button type="button" id="usage-help-btn" class="btn btn-icon" aria-label="Show how to run a fight" title="How to run a fight">?</button>
+          <!-- Below 640px this replaces the theme pill and "?" above (see styles.css).
+               Both variants are always in the DOM and CSS picks one, so nothing here
+               depends on the viewport. -->
+          <button type="button" id="app-menu-btn" class="app-menu-trigger"
+                  aria-haspopup="menu" aria-expanded="false" aria-label="Menu">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
         </div>
         <!-- Tier 2: everything you touch during a fight. New Combat is anchored
              far right, away from the frequent actions, because it's destructive. -->

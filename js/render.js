@@ -53,6 +53,12 @@ export function reorderRows() {
 export function renderHeader() {
   document.getElementById('round-value').textContent = state.round;
   document.getElementById('start-next-btn').textContent = state.started ? 'Next turn' : 'Start';
+  // Below 640px the counter is welded onto the turn button and hidden until the fight
+  // starts, so a pre-combat "Round 0" never shows. This is already the single place the
+  // round number and the Start/Next label are written, and it runs on every start, advance,
+  // reset and auto-stop — so no other call site needs a hook. <html> is the same element
+  // the pre-paint script flags with `usage-dismissed`.
+  document.documentElement.classList.toggle('combat-started', state.started);
 }
 
 // Move the highlight without rebuilding rows (preserves any in-progress field edits).

@@ -19,6 +19,7 @@ import { openPicker } from './tags.js';
 import { openRowMenu } from './rowMenu.js';
 import { loadTheme } from './theme.js';
 import { initThemePicker } from './themePicker.js';
+import { initAppMenu } from './appMenu.js';
 import { initUsageCallout } from './usage.js';
 import { initConfirmDialog, askConfirm } from './confirmDialog.js';
 
@@ -308,6 +309,7 @@ function wireEvents() {
 
 function init() {
   initThemePicker(loadTheme());
+  initAppMenu();
   load();
   renderTable();
   wireEvents();

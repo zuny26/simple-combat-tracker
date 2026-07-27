@@ -42,7 +42,7 @@
      14px Caprasimo, 16px body text and a 1.5px dashed border, which otherwise
      resolve to three slightly different heights. */
   --control-h: 38px;
-  --control-h-sm: 36px; /* tier 1 — theme picker and help */
+  --control-h-sm: 36px; /* tier 1 — theme picker, help, and the ☰ app-menu trigger */
 }
 
 [data-theme="dark"] {
@@ -1114,6 +1114,8 @@ tr.downed .f-name {
   z-index: 41;
   width: 224px;
   max-width: calc(100vw - 16px);
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
   padding: var(--space-1);
   background: var(--color-bg);
   border: 1px solid var(--color-divider);
@@ -1199,7 +1201,7 @@ tr.downed .f-name {
    automatically via --color-* tokens — no theme-specific overrides needed. */
 .usage-callout {
   position: relative;
-  margin: var(--space-4) var(--space-4) 0;
+  margin: var(--space-4) 0 var(--space-4) 0;
   padding: var(--space-4) var(--space-6);
   background: var(--color-accent-100);
   border: 1px solid var(--color-accent-300);
@@ -1603,7 +1605,7 @@ tr.downed .f-name {
      enough for two per line — so the break is explicit. Zero height, and the negative
      margin on the cells below cancels the row-gap its own flex line would add. */
   .combat-table tbody tr::after {
-    content: '';
+    content: "";
     order: 6;
     flex: 0 0 100%;
     height: 0;
@@ -1716,6 +1718,7 @@ tr.downed .f-name {
     min-width: 0;
     font-size: 20px;
   }
+
   .page {
     padding: 12px;
   }
@@ -1759,13 +1762,10 @@ tr.downed .f-name {
   .tier2 .sep {
     order: 3;
   }
-  #reset-btn {
-    order: 4;
-  }
 
-  /* The counter welds on as the button's darker right-hand segment, so the pair reads as
-     one object — "advance the fight". The pill is the only flexible item on the line, which
-     makes the control pressed dozens of times per fight the largest target and means a
+  /* The counter welds on as the button's contrasting right-hand segment, so the pair reads
+     as one object — "advance the fight". The pill is the only flexible item on the line,
+     which makes the control pressed dozens of times per fight the largest target and means a
      three-digit round or a tight viewport comes out of its label side rather than wrapping
      the line. */
   .turn-group #start-next-btn {
@@ -1773,6 +1773,16 @@ tr.downed .f-name {
     min-width: 0;
     height: auto;
     border-radius: 0;
+  }
+  /* The welded pill clips its children, so .btn:focus-visible's outward ring would be cut
+     away entirely. Draw it inside the button's own box instead — and recolor it: the
+     button is filled with var(--color-accent), the same token .btn:focus-visible outlines
+     with, so an inset ring left at that color would sit invisibly on top of its own fill.
+     var(--color-bg) is what .btn-primary already uses as its own text ink for exactly this
+     contrast (see .btn-primary above), so it reads clearly in every theme here too. */
+  .turn-group #start-next-btn:focus-visible {
+    outline-color: var(--color-bg);
+    outline-offset: -3px;
   }
   .turn-group .round {
     /* Absent until combat starts: state.round is 0 pre-combat, and a permanently visible
@@ -1811,6 +1821,7 @@ tr.downed .f-name {
     border: 0;
   }
   #reset-btn {
+    order: 4;
     flex: none;
     width: var(--control-h);
     padding: 0;

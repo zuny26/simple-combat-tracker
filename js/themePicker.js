@@ -97,10 +97,18 @@ function closeMenu(focusTrigger) {
   if (focusTrigger) trigger.focus();
 }
 
-function choose(id) {
+// Apply a theme and reflect it in the trigger label and the menu's check mark, without
+// touching the dropdown's open state. Exported so appMenu.js can route through the picker
+// instead of calling setTheme() directly — that is what keeps the desktop pill's label
+// correct if the phone is later rotated or the window widened.
+export function selectTheme(id) {
   current = id;
   setTheme(id);
   reflect();
+}
+
+function choose(id) {
+  selectTheme(id);
   closeMenu(true);
 }
 

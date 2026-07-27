@@ -603,6 +603,12 @@ body {
   align-items: center;
   gap: 3px;
 }
+/* Boot: the initiative twin of .ac-shield, and inert here for the same reason — the
+   "Initiative" column header labels the field on desktop. It only appears in the card
+   layout, where it replaces that header. */
+.init-boot {
+  display: none;
+}
 .f-init {
   width: 54px;
   text-align: center;
@@ -1245,6 +1251,8 @@ tr.downed .f-name {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    /* Containing block for the TURN tab on the top border — see .turn-flag below. */
+    position: relative;
     column-gap: var(--space-2);
     row-gap: var(--space-3);
     padding: var(--space-3) var(--space-4) var(--space-4);
@@ -1317,34 +1325,50 @@ tr.downed .f-name {
     text-align: left;
   }
 
-  /* ---- Header line: [disc] [name] [TURN] ....... [AC] [actions] ---- */
-  /* The initiative disc and the TURN pill need to sit on either side of the name, but
-     they're both inside the init cell — so that cell (and its wrapper) dissolve with
-     display:contents, making the disc and the flag flex items of the card itself, free to
-     be ordered independently. Everything main.js and render.js query still resolves: the
-     <td> and the inputs are all still in the DOM, only their boxes are gone. */
-  .cell-init,
-  .cell-init .init-wrap {
+  /* ---- Header line: [init] [name] ....... [AC] [actions], TURN on the card's edge ---- */
+  /* The init cell dissolves with display:contents so its wrapper becomes a direct flex
+     item of the card, orderable alongside the name and AC. Everything main.js and
+     render.js query still resolves: the <td> and the inputs are all still in the DOM,
+     only the cell's box is gone. */
+  .cell-init {
     display: contents;
   }
-  .combat-table input.f-init {
+  /* Initiative becomes the twin of the AC shield pill — same height, fill, outline and
+     focus treatment — so the two bookend the name. Note the direction flip: the desktop
+     wrapper stacks the disc over the TURN flag, the card lays the boot beside the value. */
+  .init-wrap {
     order: 1;
     flex: none;
-    width: 46px;
-    height: 46px;
-    min-height: 0;
-    padding: 0;
-    text-align: center;
-    font: 400 19px var(--font-heading);
-    border: 1.5px solid color-mix(in srgb, var(--color-text) 18%, transparent);
-    background: var(--color-bg);
+    flex-direction: row;
+    height: 38px;
+    padding: 0 9px 0 11px;
+    border-radius: 999px;
+    border: 1.5px solid color-mix(in srgb, var(--color-text) 13%, transparent);
+    background: color-mix(in srgb, var(--color-text) 5%, transparent);
+    color: var(--color-accent-700);
   }
-  .combat-table tbody tr.active input.f-init {
+  .init-wrap:focus-within {
+    border-color: var(--color-accent);
+  }
+  .combat-table tbody tr.active .init-wrap {
     border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
     background: var(--color-bg);
   }
-  .combat-table input.f-init:focus {
-    border-color: var(--color-accent);
+  .init-boot {
+    display: block;
+    flex: none;
+    width: 14px;
+    height: 14px;
+  }
+  .combat-table td.cell-init input.f-init {
+    /* 30px, where AC gets 28: initiative can be negative, so "-3" has to fit. */
+    width: 30px;
+    min-height: 0;
+    padding: 0;
+    font: 400 17px var(--font-heading);
+    color: var(--color-text);
+    background: transparent;
+    border-color: transparent;
   }
   /* Small basis on purpose: flex wraps on the basis, not the shrunk size, so a bigger one
      would bump AC + actions onto a second line on a narrow phone. The name still grows
@@ -1355,9 +1379,18 @@ tr.downed .f-name {
     min-width: 0;
     max-width: 420px;
   }
+  /* TURN comes off the header line entirely and becomes a tab straddling the card's top
+     border, so the name gets back the width the pill used to spend. It's still a DOM
+     child of .init-wrap, but position:absolute takes it out of flow — so the boot pill
+     doesn't contain it — and its containing block is the nearest *positioned* ancestor.
+     .init-wrap isn't positioned, so that resolves to the <tr>: the tab anchors to the
+     card, not to the pill. Still a pure tr.active toggle, so renderHighlight() is
+     unaffected, and it sits in the existing gap between cards, costing no height. */
   .turn-flag {
-    order: 3;
-    flex: none;
+    position: absolute;
+    top: 0;
+    left: var(--space-4);
+    transform: translateY(-50%);
     font-size: 9px;
     padding: 3px 8px;
   }
@@ -1439,16 +1472,17 @@ tr.downed .f-name {
     outline-offset: 1px;
   }
 
-  /* ---- HP bar: full width, its own line, no caption ---- */
-  .cell-current {
+  /* Closes the header line. The full-width HP bar used to sit here and did this
+     implicitly; with the bar moved below the HP inputs, nothing stopped Max HP wrapping
+     up beside the ⋮ on a wide card (a tablet leaves ~500px spare there), orphaning Temp
+     HP on the next line. A percentage basis can't fix that — Max HP has to stay narrow
+     enough for two per line — so the break is explicit. Zero height, and the negative
+     margin on the cells below cancels the row-gap its own flex line would add. */
+  .combat-table tbody tr::after {
+    content: '';
     order: 6;
-    flex: 1 1 100%;
-  }
-  .cell-current .hp-track {
-    height: 11px;
-  }
-  .cell-current .hp-number {
-    font-size: 15px;
+    flex: 0 0 100%;
+    height: 0;
   }
 
   /* ---- The two HP inputs, side by side. Capped so a wide card (this layout starts at
@@ -1458,14 +1492,28 @@ tr.downed .f-name {
     order: 7;
     flex: 1 1 40%;
     max-width: 240px;
+    margin-top: calc(var(--space-3) * -1); /* see the break above */
   }
   .cell-temphp {
     order: 8;
   }
 
+  /* ---- HP bar: full width, its own line, no caption. Sits below the two HP inputs and
+     directly above Damage / Heal, so the bar is adjacent to the controls that move it. ---- */
+  .cell-current {
+    order: 9;
+    flex: 1 1 100%;
+  }
+  .cell-current .hp-track {
+    height: 11px;
+  }
+  .cell-current .hp-number {
+    font-size: 15px;
+  }
+
   /* ---- Damage / Heal: full-width pill, same cap as the HP inputs above ---- */
   .cell-adjust {
-    order: 9;
+    order: 10;
     flex: 1 1 100%;
     text-align: left; /* the desktop rule centres the pill under its column header */
   }
@@ -1485,11 +1533,11 @@ tr.downed .f-name {
 
   /* ---- Conditions / Other: pills, one field per line ---- */
   .cell-conditions {
-    order: 10;
+    order: 11;
     flex: 1 1 100%;
   }
   .cell-other {
-    order: 11;
+    order: 12;
     flex: 1 1 100%;
   }
   .cond-pill {
@@ -1540,16 +1588,23 @@ tr.downed .f-name {
     padding-inline: var(--space-3);
     column-gap: 6px;
   }
+  /* Track the card's narrower padding so the tab stays flush with the boot pill below it. */
+  .turn-flag {
+    left: var(--space-3);
+  }
 }
 
 /* Very narrow phones (320px class). Everything on the header line except the name is
-   fixed-width, so the name is what pays for them — shaving a few px off each of the disc,
-   the TURN pill and the AC pill is what keeps a name like "Aldric" readable there. */
+   fixed-width, so the name is what pays for them — shaving a few px off each of the boot
+   pill and the AC pill is what keeps a name like "Aldric" readable there. (TURN is off
+   the header line now, so it costs the name nothing and isn't trimmed here.) */
 @media (max-width: 360px) {
-  .combat-table input.f-init {
-    width: 42px;
-    height: 42px;
-    font-size: 18px;
+  .init-wrap {
+    height: 36px;
+    padding: 0 7px 0 9px;
+  }
+  .combat-table td.cell-init input.f-init {
+    width: 28px;
   }
   .turn-flag {
     font-size: 8px;

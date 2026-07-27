@@ -139,15 +139,30 @@ function td(child, cls, label) {
   return cell;
 }
 
+// Boot glyph — the initiative twin of SHIELD_ICON below. Hand-authored (Lucide has no
+// boot) in the same stroke language, so the two card pills read as one set: 24 viewBox,
+// 2px round stroke. Static markup with no user data, so innerHTML is safe.
+const BOOT_ICON =
+  '<svg class="init-boot" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+  'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<path d="M6 2.5h4.5v8.5c1.4 1 3 1.5 4.6 1.9C18.5 13.9 20.5 16.2 20.5 19.5H6Z"></path>' +
+  '<path d="M6 16.5h13.5"></path></svg>';
+
 // # (initiative) sits in its own cell alongside the TURN flag, which is always
 // present and shown purely via CSS (tr.active .turn-flag) — no extra render work
 // needed when the highlight moves via renderHighlight().
+//
+// The wrapper is inert on desktop; in the card layout it becomes the boot pill (the
+// icon standing in for the hidden "Initiative" column header), and the flag positions
+// itself against the card rather than against the wrapper — see the card block in
+// styles.css.
 function initCell(c) {
   const cell = document.createElement('td');
   cell.className = 'cell-init';
   cell.dataset.label = 'Init';
   const wrap = document.createElement('div');
   wrap.className = 'init-wrap';
+  wrap.innerHTML = BOOT_ICON; // static markup only — the input is appended as a node
   wrap.appendChild(numInput('f-init', c.init, { placeholder: '—' }));
   const flag = document.createElement('span');
   flag.className = 'turn-flag';

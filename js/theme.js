@@ -20,7 +20,7 @@ export function loadTheme() {
   try {
     const v = localStorage.getItem(KEY);
     if (VALID.has(v)) t = v;
-  } catch (e) {
+  } catch {
     // Storage unavailable — fall back to the default theme.
   }
   document.documentElement.dataset.theme = t;
@@ -32,7 +32,7 @@ export function setTheme(t) {
   document.documentElement.dataset.theme = t;
   try {
     localStorage.setItem(KEY, t);
-  } catch (e) {
+  } catch {
     // Storage unavailable — theme still applies for this session.
   }
 }

@@ -81,7 +81,7 @@ export function toggleTag(id, field, name) {
 export function save() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (e) {
+  } catch {
     // Storage unavailable/full — keep running in-memory rather than crashing.
   }
 }
@@ -89,10 +89,10 @@ export function save() {
 // Restore persisted state into `state`. Corrupt/partial data falls back to
 // sensible defaults so the app can never be bricked by a bad blob.
 export function load() {
-  let raw = null;
+  let raw;
   try {
     raw = localStorage.getItem(STORAGE_KEY);
-  } catch (e) {
+  } catch {
     raw = null;
   }
   if (!raw) return;
@@ -100,7 +100,7 @@ export function load() {
   let data;
   try {
     data = JSON.parse(raw);
-  } catch (e) {
+  } catch {
     return; // keep default empty pre-combat state
   }
   if (!data || typeof data !== 'object') return;

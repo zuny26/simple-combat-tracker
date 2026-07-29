@@ -14,7 +14,7 @@ export function initUsageCallout() {
       document.documentElement.classList.add('usage-dismissed');
       try {
         localStorage.setItem(KEY, '1');
-      } catch (e) {
+      } catch {
         // Storage unavailable — the callout still hides for this session.
       }
     });
@@ -32,7 +32,7 @@ export function showUsageCallout() {
   document.documentElement.classList.remove('usage-dismissed');
   try {
     localStorage.removeItem(KEY);
-  } catch (e) {
+  } catch {
     // Storage unavailable — the callout still re-shows for this session.
   }
 }

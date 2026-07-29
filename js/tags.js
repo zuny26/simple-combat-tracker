@@ -16,7 +16,7 @@
 // hits the backdrop and closes the picker first — so no structural change (remove /
 // reset / add) can fire underneath an open picker with a stale creatureId.
 
-import { state, hasTag, addTag, removeTag, toggleTag } from './state.js';
+import { state, hasTag, addTag, toggleTag } from './state.js';
 import { updateTagsCell } from './render.js';
 
 // Standard D&D 5e conditions offered in the Conditions picker; custom names allowed too.

@@ -106,7 +106,13 @@ function resortPreservingFocus(e) {
   renderHighlight();
   rendering = false;
 
-  // Re-inserting a node blurs anything focused inside it; hand focus back.
+  // In Chromium this call is a no-op: reorderRows() only ever moves existing nodes
+  // (never rebuilds), so `next` stays connected throughout the reorder, and the browser
+  // completes its own pending focus transition onto it without help — mutation-tested,
+  // deleting this line fails zero of the focus tests. It's kept anyway as defensive
+  // cover for other engines that might drop focus when the pending target's ancestor is
+  // moved mid-transition; that scenario is unproven and unexercised, since the test
+  // suite here is Chromium-only.
   if (next && typeof next.focus === 'function' && document.activeElement !== next) {
     next.focus();
   }

@@ -214,6 +214,12 @@ function customRow(query) {
 // again; option toggles keep it.
 function afterApply(clearFilter) {
   updateTagsCell(picker.creatureId, picker.field);
+  // updateTagsCell rebuilds the whole cell, so the + Add button we anchored to is now
+  // detached. Re-resolve it, or Escape after applying a tag would have nothing live to
+  // hand focus back to (which is the bug this module's Escape handling exists to avoid).
+  const row = document.querySelector(`tr[data-id="${picker.creatureId}"]`);
+  const fresh = row && row.querySelector(`.cond-add[data-field="${picker.field}"]`);
+  if (fresh) triggerEl = fresh;
   const search = popEl && popEl.querySelector('.cond-search');
   if (clearFilter) {
     picker.filter = '';

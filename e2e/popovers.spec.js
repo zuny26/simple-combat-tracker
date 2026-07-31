@@ -7,12 +7,19 @@
 // nothing is persisted, and the popover closes BEFORE running its action so no dialog
 // or table rebuild happens underneath an open panel.
 //
-// Two descriptor flags record where the current code diverges from that description —
-// both verified against the source, both deliberate here rather than asserted away:
+// All four now restore focus to their trigger on Escape (tags.js:77-83,
+// rowMenu.js:58-64, appMenu.js:151-153, themePicker.js all hand it back explicitly).
+// The tag picker has an extra wrinkle the other three don't: applying a tag
+// (afterApply(), tags.js) calls updateTagsCell(), which rebuilds the whole cell
+// (render.js:99-106, `cell.replaceWith(...)`) and detaches the `.cond-add` button the
+// module's `triggerEl` was pointing at. tags.js re-resolves `triggerEl` against the
+// fresh DOM at the end of afterApply() so Escape after an apply still has something live
+// to focus — see the "applies a tag, then Escape" test below, which is the one that
+// actually exercises that path (the plain "closes on Escape" test above presses Escape
+// immediately after opening, before any option is clicked, so it can't catch this).
 //
-//   restoresFocusOnEscape: tags.js never stores its trigger element (tags.js:72-74),
-//     so Escape closes the picker but drops focus to the document. rowMenu.js:58-64
-//     and appMenu.js:151-153 both do it correctly.
+// One descriptor flag still records a real divergence from the documented contract:
+//
 //   ariaExpanded: only #theme-trigger and #app-menu-btn carry it. .btn-menu has
 //     aria-haspopup="menu" only; .cond-add has neither.
 //
@@ -267,4 +274,25 @@ test('the tag picker adds a condition without rebuilding the table', async ({ pa
   await expect(page.locator('tr[data-id="1"] .cond-pill')).toHaveText(/Prone/);
   await expect(nameField).toHaveValue('Goblin scout');
   await expect(adjustField).toHaveValue('3');
+});
+
+test('the tag picker restores focus to the (rebuilt) trigger after applying a tag, then Escape', async ({ page }) => {
+  // The "closes on Escape" case in the table above presses Escape immediately after
+  // opening, before any option is clicked — it never exercises the real interaction, in
+  // which applying a tag first rebuilds the cell (render.js:99-106) and detaches the
+  // `.cond-add` button tags.js anchored to. `triggerEl` is re-resolved at the end of
+  // afterApply() specifically to survive that. `trigger` below is a Playwright locator,
+  // not a captured element handle, so it re-queries the live DOM on every assertion —
+  // asserting against it after the click proves the FRESH button (not the original,
+  // now-detached one) ends up focused.
+  await gotoApp(page, { viewport: DESKTOP, creatures: ONE });
+
+  const trigger = page.locator('tr[data-id="1"] .cond-add[data-field="conditions"]');
+  await trigger.click();
+  await page.locator('.cond-opt', { hasText: 'Prone' }).click();
+
+  await page.keyboard.press('Escape');
+
+  await expect(page.locator('.cond-pop')).toHaveCount(0);
+  await expect(trigger).toBeFocused();
 });

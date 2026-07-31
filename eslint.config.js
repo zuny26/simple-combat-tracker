@@ -12,8 +12,7 @@ import js from '@eslint/js';
 // The complete set of browser globals the app currently uses. Deliberately
 // hand-listed rather than pulled from a `globals` package (see file header).
 // Extend this when the app starts using another browser API (setTimeout,
-// console, navigator, matchMedia, requestAnimationFrame, etc.) — otherwise
-// that usage fails no-undef and the pre-commit hook blocks the commit.
+// console, navigator, matchMedia, requestAnimationFrame, etc.)
 const browserGlobals = {
   document: 'readonly',
   window: 'readonly',
@@ -28,6 +27,8 @@ const nodeGlobals = {
 };
 
 export default [
+  { ignores: ['playwright-report/', 'test-results/'] },
+
   js.configs.recommended,
 
   // The app itself — runs in the browser, no bundler, ES modules only.
@@ -50,6 +51,19 @@ export default [
       ecmaVersion: 'latest',
       sourceType: 'module',
       globals: nodeGlobals,
+    },
+  },
+
+  // Playwright specs — Node modules that also contain browser code. Callbacks passed
+  // to page.evaluate() / page.addInitScript() run in the page, so they reference
+  // document, window and localStorage; without the browser globals here, no-undef
+  // fails on them.
+  {
+    files: ['e2e/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: { ...nodeGlobals, ...browserGlobals },
     },
   },
 

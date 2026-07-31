@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "test": "node --test 'test/*.test.js'",
+    "test:e2e": "playwright test",
     "lint": "eslint .",
-    "check": "npm run lint && npm test"
+    "check": "npm run lint && npm test",
+    "check:all": "npm run lint && npm test && npm run test:e2e"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

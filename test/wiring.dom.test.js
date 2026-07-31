@@ -32,6 +32,10 @@ function type(el, value) {
 }
 
 test('the Dmg button applies the amount from its own row', () => {
+  // Bystander seeded FIRST, so it sits at state.creatures[0] and c does not — a bug
+  // that resolves the acted-on creature by a fixed index instead of the row's own id
+  // would silently damage the bystander instead and this test would catch it.
+  const bystander = seedCreature({ init: '5', name: 'Bystander', maxHP: 12 });
   const c = seedCreature({ init: '10', name: 'Goblin', maxHP: 10 });
   renderTable();
 
@@ -42,9 +46,15 @@ test('the Dmg button applies the amount from its own row', () => {
   assert.equal(c.damageTaken, 3);
   assert.equal(currentHP(c), 7);
   assert.equal(tr.querySelector('.f-adjust').value, '', 'the amount field is cleared');
+  assert.equal(bystander.damageTaken, 0, 'the other row was not touched');
+  assert.equal(currentHP(bystander), 12, 'the other row was not touched');
 });
 
 test('the Heal button applies the amount from its own row', () => {
+  // Bystander seeded FIRST, so it sits at state.creatures[0] and c does not — a bug
+  // that resolves the acted-on creature by a fixed index instead of the row's own id
+  // would silently heal the bystander instead and this test would catch it.
+  const bystander = seedCreature({ init: '5', name: 'Bystander', maxHP: 12, damageTaken: 4 });
   const c = seedCreature({ init: '10', name: 'Goblin', maxHP: 10, damageTaken: 6 });
   renderTable();
 
@@ -53,20 +63,30 @@ test('the Heal button applies the amount from its own row', () => {
   tr.querySelector('.r-heal').click();
 
   assert.equal(currentHP(c), 6);
+  assert.equal(bystander.damageTaken, 4, 'the other row was not touched');
+  assert.equal(currentHP(bystander), 8, 'the other row was not touched');
 });
 
 test('Enter in the amount field never applies it', () => {
   // Deliberate: applying is an explicit button click only, so a stray Enter can never
   // take HP off the wrong creature.
+  //
+  // index.html has no <form>, so an Enter keydown on a bare <input> has no native
+  // default action in jsdom for e.preventDefault() to suppress — without asserting
+  // defaultPrevented, this test would pass identically even if main.js's keydown
+  // listener were deleted entirely, since applyAdjust() is only ever reached via the
+  // Dmg/Heal button click handler. defaultPrevented is the load-bearing assertion.
   const c = seedCreature({ init: '10', name: 'Goblin', maxHP: 10 });
   renderTable();
 
   const input = row(c.id).querySelector('.f-adjust');
   type(input, '5');
-  input.dispatchEvent(new window.KeyboardEvent('keydown', {
+  const evt = new window.KeyboardEvent('keydown', {
     key: 'Enter', bubbles: true, cancelable: true,
-  }));
+  });
+  input.dispatchEvent(evt);
 
+  assert.equal(evt.defaultPrevented, true, 'main.js swallowed the Enter');
   assert.equal(c.damageTaken, 0, 'no damage was applied');
   assert.equal(input.value, '5', 'the typed amount is left alone');
 });

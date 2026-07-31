@@ -45,7 +45,7 @@ const POPOVERS = [
     // The panel is removed from the DOM on close (vs. the theme menu, which is only
     // hidden), so "closed" is asserted differently per popover.
     closeStyle: 'removed',
-    restoresFocusOnEscape: false, // known gap — see header
+    restoresFocusOnEscape: true,
     ariaExpanded: false,
   },
   {

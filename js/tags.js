@@ -39,12 +39,14 @@ const picker = { open: false, field: null, creatureId: null, x: 0, y: 0, filter:
 
 let backdropEl = null;
 let popEl = null;
+let triggerEl = null;
 
 function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
 
-// Open (or re-anchor) the picker under `triggerEl` for a given creature + field.
-export function openPicker(field, creatureId, triggerEl) {
+// Open (or re-anchor) the picker under `triggerEl_` for a given creature + field.
+export function openPicker(field, creatureId, triggerEl_) {
   closePicker(); // tear down any existing popover first
+  triggerEl = triggerEl_;
   const rect = triggerEl.getBoundingClientRect();
   picker.open = true;
   picker.field = field;
@@ -61,6 +63,7 @@ export function closePicker() {
   document.removeEventListener('keydown', onDocKey);
   if (backdropEl) { backdropEl.remove(); backdropEl = null; }
   if (popEl) { popEl.remove(); popEl = null; }
+  triggerEl = null;
   picker.open = false;
   picker.field = null;
   picker.creatureId = null;
@@ -68,9 +71,15 @@ export function closePicker() {
 }
 
 // Escape closes from anywhere, even if focus has left the search box (e.g. after
-// clicking an option, whose button gets rebuilt out from under the focus).
+// clicking an option, whose button gets rebuilt out from under the focus), and hands
+// focus back to the + Add button so keyboard users aren't dropped at the top of the
+// document.
 function onDocKey(e) {
-  if (e.key === 'Escape') { e.preventDefault(); closePicker(); }
+  if (e.key !== 'Escape') return;
+  e.preventDefault();
+  const back = triggerEl;
+  closePicker();
+  if (back && back.isConnected) back.focus();
 }
 
 function config() { return FIELD_CONFIG[picker.field] || FIELD_CONFIG.conditions; }

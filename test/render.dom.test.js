@@ -71,3 +71,32 @@ test('a creature at zero current HP renders as downed', () => {
   assert.ok(tr.classList.contains('downed'));
   assert.equal(tr.querySelector('.hp-downed-tag').textContent, 'DOWNED');
 });
+
+// CLAUDE.md's hardest rule: user data goes in via textContent or .value, never
+// innerHTML. innerHTML is reserved for the static SVG icon constants. These two tests
+// are what stop that from quietly regressing.
+
+test('a creature name is never parsed as HTML', () => {
+  const payload = '<img src=x onerror="throw new Error(1)">';
+  const c = seedCreature({ init: '10', name: payload });
+  renderTable();
+
+  const tr = row(c.id);
+  assert.equal(tr.querySelector('.f-name').value, payload, 'round-trips as text');
+  assert.equal(tr.querySelectorAll('img').length, 0, 'no element was created');
+});
+
+test('a tag pill is never parsed as HTML', () => {
+  const payload = '<b>bold</b>';
+  const c = seedCreature({ init: '10', name: 'Goblin', conditions: [payload] });
+  renderTable();
+
+  const pill = row(c.id).querySelector('.cond-pill');
+  assert.equal(pill.querySelectorAll('b').length, 0, 'no element was created');
+  assert.ok(pill.textContent.includes(payload), 'shown verbatim as text');
+
+  // main.js reads these two attributes to know what to remove.
+  const x = pill.querySelector('.cond-x');
+  assert.equal(x.dataset.field, 'conditions');
+  assert.equal(x.dataset.tag, payload);
+});

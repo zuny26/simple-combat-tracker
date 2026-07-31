@@ -19,6 +19,13 @@
 // confirmDialog.js is absent from this table on purpose: it is a modal, not a
 // trigger-anchored popover, so the contract does not apply. It is still exercised, by
 // the close-before-action test at the bottom.
+//
+// One more caveat on "share one shape": themePicker.js is the exception. Its choose()
+// (themePicker.js:110-113) calls selectTheme() BEFORE closeMenu(true) — action before
+// close, the opposite order from rowMenu.js:74 and appMenu.js:69. Harmless today
+// (closeMenu only toggles the `hidden` attribute, and setTheme() rebuilds nothing), but
+// it is a real inversion of the documented pattern and nothing here asserts it either
+// way.
 import { test, expect } from '@playwright/test';
 
 import { gotoApp, creature } from './fixtures.js';
@@ -119,6 +126,12 @@ for (const p of POPOVERS) {
       }
     });
 
+    // Geometry tautology for its default fixture, not a test of positioning logic: at
+    // DESKTOP/PHONE widths none of the four panels comes close to their clamp bounds
+    // (see the 320px test below for the actual numbers), and the theme picker has no
+    // JS positioning to test at all — #theme-menu is placed purely by CSS, anchored
+    // under the pill. Kept anyway as cheap forward-looking insurance against a CSS or
+    // layout regression, not as proof any clamp math works.
     test('stays inside the viewport', async ({ page }) => {
       await page.locator(p.trigger).click();
       const box = await page.locator(p.panel).boundingBox();
@@ -131,8 +144,14 @@ for (const p of POPOVERS) {
 }
 
 test('the mobile popovers stay on-screen at 320px', async ({ page }) => {
-  // The tightest supported width, where the clamp math in rowMenu.js:38 and
-  // appMenu.js:112 is most likely to be off.
+  // NOT a stress test of the clamp() math in rowMenu.js:38 / appMenu.js:112 — at every
+  // supported width that clamp is unreachable defensive code. Its lower bound only
+  // engages under a viewport of roughly 210px (rowMenu) / 250px (appMenu); its upper
+  // bound only engages with under ~8px of trailing padding, where the real numbers at
+  // 320px are ~17.6px (rowMenu) and ~26px (appMenu). What this test DOES guard is the
+  // right-alignment formula itself (`rect.right - PANEL_W`): switching that to
+  // `rect.left` would push the row menu's right edge to ~446px at this width and fail
+  // here immediately.
   await gotoApp(page, { viewport: NARROW, creatures: ONE });
 
   for (const [trigger, panel] of [
@@ -149,25 +168,76 @@ test('the mobile popovers stay on-screen at 320px', async ({ page }) => {
 
 test('the row menu closes before its action runs', async ({ page }) => {
   // The reason the pattern exists: no confirm dialog or table rebuild may ever happen
-  // underneath an open panel.
+  // underneath an open panel. The end-state assertions below can't actually prove that
+  // ordering on their own: menuItem's click handler, removeRow(), and askConfirm() are
+  // three synchronous, mutually independent DOM writes with no repaint or microtask
+  // between them, so the DOM at the end of the click is identical whichever runs first.
+  // A MutationObserver can see the order a plain assertion can't, because its records
+  // are queued in mutation order and delivered as one ordered batch at the end of the
+  // click's task — so it's installed BEFORE the Remove click and the sequence itself is
+  // asserted, in addition to the end state.
   await gotoApp(page, { viewport: PHONE, creatures: ONE });
 
   await page.locator('tr[data-id="1"] .btn-menu').click();
+
+  await page.evaluate(() => {
+    window.__seq = [];
+    new window.MutationObserver((records) => {
+      for (const r of records) {
+        if (r.type === 'childList') {
+          for (const n of r.removedNodes) {
+            if (n.nodeType === 1 && n.classList.contains('row-menu')) window.__seq.push('menu-gone');
+          }
+        } else if (r.type === 'attributes' && r.target.id === 'confirm-backdrop'
+                   && !r.target.hasAttribute('hidden')) {
+          window.__seq.push('dialog-open');
+        }
+      }
+      // attributeFilter keeps askConfirm's textContent writes (title/body/button label)
+      // out of the log — only the backdrop's `hidden` toggle matters here.
+    }).observe(document.body,
+      { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
+  });
+
   await page.locator('.row-menu-item', { hasText: 'Remove' }).click();
 
+  expect(await page.evaluate(() => window.__seq)).toEqual(['menu-gone', 'dialog-open']);
   await expect(page.locator('.row-menu')).toHaveCount(0);
   await expect(page.locator('.cond-backdrop')).toHaveCount(0);
   await expect(page.locator('#confirm-backdrop')).toBeVisible();
 });
 
 test('the app menu closes before applying a theme', async ({ page }) => {
+  // Same non-provable-by-end-state problem as the row menu test above: themeRow's
+  // click handler calls closeAppMenu(true) and selectTheme() back to back, two
+  // synchronous, independent DOM writes with nothing between them, so final state
+  // can't distinguish the order. Record it with a MutationObserver instead.
   await gotoApp(page, { viewport: PHONE, creatures: ONE });
 
   await page.locator('#app-menu-btn').click();
+
+  await page.evaluate(() => {
+    window.__seq = [];
+    const mo = new window.MutationObserver((records) => {
+      for (const r of records) {
+        if (r.type === 'childList') {
+          for (const n of r.removedNodes) {
+            if (n.nodeType === 1 && n.classList.contains('app-menu')) window.__seq.push('menu-gone');
+          }
+        } else if (r.type === 'attributes' && r.attributeName === 'data-theme') {
+          window.__seq.push('theme-changed');
+        }
+      }
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  });
+
   // Selected by theme id, not label: appMenu.js:56 sets data-theme-id, and ids are the
   // stable half of a THEMES entry (js/theme.js:9) while labels are copy.
   await page.locator('.app-menu-item[data-theme-id="dracula"]').click();
 
+  expect(await page.evaluate(() => window.__seq)).toEqual(['menu-gone', 'theme-changed']);
   await expect(page.locator('.app-menu')).toHaveCount(0);
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dracula');
 });
@@ -175,14 +245,26 @@ test('the app menu closes before applying a theme', async ({ page }) => {
 test('the tag picker adds a condition without rebuilding the table', async ({ page }) => {
   await gotoApp(page, { viewport: DESKTOP, creatures: ONE });
 
-  // Tag the row, then confirm an unrelated field kept the text being typed into it —
-  // updateTagsCell() must touch only its own cell.
+  // Tag the row, then confirm two fields kept what was in them — updateTagsCell() must
+  // touch only its own cell. The name field alone doesn't prove much: main.js:62-63
+  // commits every keystroke to state.js on `input`, so even a full renderTable() would
+  // read 'Goblin scout' straight back out of state and this assertion would still pass.
+  // `.f-adjust` is the assertion with teeth: it's the one field render.js never derives
+  // from state — actionInput() (render.js:235-243) always renders it as '', and
+  // main.js:74 explicitly declines to model its input (`f-adjust is an action input —
+  // no model change on input`). A table rebuild has no state to restore it from and
+  // blanks it; an in-place cell update never touches it. So this only stays '3' if the
+  // picker really did a scoped update.
   const nameField = page.locator('tr[data-id="1"] .f-name');
   await nameField.fill('Goblin scout');
+
+  const adjustField = page.locator('tr[data-id="1"] .f-adjust');
+  await adjustField.fill('3');
 
   await page.locator('tr[data-id="1"] .cond-add[data-field="conditions"]').click();
   await page.locator('.cond-opt', { hasText: 'Prone' }).click();
 
   await expect(page.locator('tr[data-id="1"] .cond-pill')).toHaveText(/Prone/);
   await expect(nameField).toHaveValue('Goblin scout');
+  await expect(adjustField).toHaveValue('3');
 });

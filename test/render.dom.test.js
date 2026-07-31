@@ -77,7 +77,12 @@ test('a creature at zero current HP renders as downed', () => {
 // are what stop that from quietly regressing.
 
 test('a creature name is never parsed as HTML', () => {
-  const payload = '<img src=x onerror="throw new Error(1)">';
+  // The name lands in an attribute context (input.value), so the payload must break
+  // out of both single- and double-quoted attribute templates — otherwise a future
+  // regression that string-templates the row with the "wrong" quote style would leave
+  // .value round-tripping intact and no <img> created, passing this test while still
+  // being unsafe.
+  const payload = `<img src=x onerror="alert(1)" alt='y'>`;
   const c = seedCreature({ init: '10', name: payload });
   renderTable();
 

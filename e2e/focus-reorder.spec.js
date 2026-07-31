@@ -2,9 +2,22 @@
 // codebase: the DM types into the table while state changes underneath them, so a
 // re-sort must never destroy the field being edited or break Tab.
 //
-// These live in a real browser rather than jsdom because they turn on focus semantics
-// — above all e.relatedTarget on focusout, which main.js:102 reads to decide where to
-// hand focus back. jsdom's fidelity there is exactly what this project does not trust.
+// These live in a real browser rather than jsdom because they exercise real focus
+// semantics jsdom does not faithfully model: real Tab-key traversal, real
+// click-to-focus, and — critically — the browser's own focus-transition machinery
+// running across a live DOM move (reorderRows() relocates existing <tr> nodes
+// mid-transition rather than replacing them).
+//
+// Coverage note: resortPreservingFocus()'s explicit `e.relatedTarget` read and its
+// `next.focus()` fallback are NOT exercised by this suite in Chromium. A mutation that
+// deleted that call left all 7 tests below green — Chromium's own HTML focus update
+// steps re-validate and complete the focus move to the already-chosen target (Tab's
+// next tabbable element, or whatever a real click targets) once reorderRows() finishes
+// its synchronous move, regardless of that line. See task-6-report.md for the mutation
+// that demonstrated this. The tests below still prove the invariant that actually
+// matters — an edit is never destroyed and focus lands where the user expects — they
+// just don't prove it via that specific fallback line.
+//
 // The structural half (that reorderRows moves nodes) is proven cheaply in
 // test/reorder.dom.test.js.
 //
@@ -87,11 +100,36 @@ test('an unfinished edit survives the re-sort it caused', async ({ page }) => {
   await page.keyboard.press('Tab');
 
   expect(await rowIds(page)).toEqual([2, 1]);
-  await expect(zzzName).toHaveValue('Aaa', 'the edit was not destroyed by the move');
+  await expect(zzzName, 'the edit was not destroyed by the move').toHaveValue('Aaa');
+  // The value check alone can't distinguish "the node survived the move" from "the node
+  // was rebuilt from state that already held the edit": onInput writes c.name into state
+  // before blur, so even a renderTable() rebuild (the bug this test exists to catch)
+  // would render 'Aaa' from state and this assertion would stay green. Only a
+  // focus-landing check tells them apart — a rebuilt .f-ac is a brand new element that
+  // Tab could never have focused.
+  await expect(page.locator('tr[data-id="2"] .f-ac')).toBeFocused();
 });
 
 test('a re-sort that changes nothing leaves focus completely alone', async ({ page }) => {
   await gotoApp(page, { creatures: TWO });
+
+  // This test's whole point is that NOTHING moved — resortPreservingFocus's
+  // currentRowOrder()/sortedRows() comparison short-circuits before ever touching the
+  // DOM. rowIds() and toBeFocused() can't prove that on their own: reorderRows()
+  // re-appending both rows in their existing relative order would leave rowIds and
+  // focus unchanged too, and would pass just as green. So watch the DOM directly
+  // instead of only checking the outcome.
+  await page.evaluate(() => {
+    window.__mutations = [];
+    const observer = new window.MutationObserver((records) => {
+      window.__mutations.push(...records);
+    });
+    observer.observe(
+      document.getElementById('creature-rows'),
+      { childList: true, subtree: true },
+    );
+    window.__reorderObserver = observer;
+  });
 
   const bbbInit = page.locator('tr[data-id="1"] .f-init');
   await bbbInit.click();
@@ -100,6 +138,12 @@ test('a re-sort that changes nothing leaves focus completely alone', async ({ pa
 
   expect(await rowIds(page)).toEqual([1, 2]);
   await expect(page.locator('tr[data-id="1"] .f-name')).toBeFocused();
+
+  const mutationCount = await page.evaluate(() => {
+    window.__reorderObserver.disconnect();
+    return window.__mutations.length;
+  });
+  expect(mutationCount).toBe(0);
 });
 
 test('the highlight follows the creature, not the row position', async ({ page }) => {
@@ -142,4 +186,31 @@ test('clearing the active creature\'s # moves the highlight to the next row down
     await expect(page.locator('tr[data-id="2"]')).not.toHaveClass(/active/);
     // ...and Bbb is parked at the bottom.
     expect(await rowIds(page)).toEqual([1, 3, 2]);
+  });
+
+test('the unchanged branch still moves the highlight when the active creature leaves',
+  async ({ page }) => {
+    // TWO: Bbb outranks Aaa, so turn order is [Bbb, Aaa] — Aaa is the LAST
+    // initiatived row.
+    await gotoApp(page, { creatures: TWO });
+
+    await page.locator('#start-next-btn').click(); // Start -> Bbb
+    await page.locator('#start-next-btn').click(); // Next  -> Aaa (last row)
+    await expect(page.locator('tr[data-id="2"]')).toHaveClass(/active/);
+
+    const aaaInit = page.locator('tr[data-id="2"] .f-init');
+    await aaaInit.click();
+    await aaaInit.fill(''); // Aaa leaves the turn order, but was already the bottom
+    // row, so parking it changes nothing about display order: resortPreservingFocus
+    // takes the "unchanged" branch (renderHighlight(); return) rather than reorderRows().
+    await page.locator('tr[data-id="1"] .f-name').click(); // commit the blur
+
+    // Display order really is untouched.
+    expect(await rowIds(page)).toEqual([1, 2]);
+    // reassignActiveAfterLeaving(oldIdx=1) wraps past the end of the one remaining
+    // initiatived row (Bbb) back to remaining[0] -> Bbb regains the highlight. The
+    // "unchanged" branch's renderHighlight() call is the ONLY thing that can apply
+    // that to the DOM here — without it the active class would stay stuck on Aaa.
+    await expect(page.locator('tr[data-id="1"]')).toHaveClass(/active/);
+    await expect(page.locator('tr[data-id="2"]')).not.toHaveClass(/active/);
   });

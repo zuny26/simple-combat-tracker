@@ -8,7 +8,8 @@ A D&D combat tracker for DMs: initiative order, HP, and status conditions for on
 
 Fully local by design — no backend, no bundler, no framework, no build step. `index.html` loads
 `js/main.js` as a native ES module; all data lives in `localStorage`. The only dependencies
-(eslint, Playwright) are dev-time.
+(eslint, Playwright, and jsdom — which `npm test` needs for the DOM-module tests) are
+dev-time.
 
 ## Commands
 
@@ -33,9 +34,7 @@ python3 -m http.server 8934   # then open http://localhost:8934/
 ```
 
 For any UI/CSS/layout change, run `npm run check:all` — the Playwright suite covers the
-multi-width overflow check. Use the `run-and-screenshot` skill
-(`.claude/skills/run-and-screenshot/SKILL.md`) when you need to *look* at the result
-rather than assert on it.
+multi-width overflow check.
 
 ## Architecture
 
@@ -139,6 +138,6 @@ avoid a flash; that script intentionally does _not_ know the list of valid theme
   request, so absolute metrics are not portable across machines. That also means a
   green overflow test is not proof the shipped app doesn't overflow with the real font.
 - **Some tests assert ordering or node identity, not final state** — e.g. that a popover
-  closes *before* its action runs, or that `reorderRows()` moves the existing `<tr>`
+  closes _before_ its action runs, or that `reorderRows()` moves the existing `<tr>`
   rather than rebuilding it. Collapsing those into end-state checks would silently gut
   the property they exist to protect.

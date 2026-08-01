@@ -155,10 +155,16 @@ test('the mobile popovers stay on-screen at 320px', async ({ page }) => {
   // supported width that clamp is unreachable defensive code. Its lower bound only
   // engages under a viewport of roughly 210px (rowMenu) / 250px (appMenu); its upper
   // bound only engages with under ~8px of trailing padding, where the real numbers at
-  // 320px are ~17.6px (rowMenu) and ~26px (appMenu). What this test DOES guard is the
-  // right-alignment formula itself (`rect.right - PANEL_W`): switching that to
-  // `rect.left` would push the row menu's right edge to ~446px at this width and fail
-  // here immediately.
+  // 320px are ~17.6px (rowMenu) and ~26px (appMenu).
+  //
+  // The on-screen bounds below therefore prove nothing about the positioning logic:
+  // they hold at this width no matter what `left` is computed, because the clamp — not
+  // the assertion — is what drags a mis-aligned panel back into view. The assertion
+  // with teeth is the right-edge one: it pins the alignment formula itself
+  // (`rect.right - PANEL_W`) to the trigger's right edge. Switching that to `rect.left`
+  // moves each panel's right edge off its trigger (row menu 293.8 → 312, likewise for
+  // the app menu) while both stay comfortably inside 320px, so only this assertion
+  // catches it.
   await gotoApp(page, { viewport: NARROW, creatures: ONE });
 
   for (const [trigger, panel] of [
@@ -167,8 +173,11 @@ test('the mobile popovers stay on-screen at 320px', async ({ page }) => {
   ]) {
     await page.locator(trigger).click();
     const box = await page.locator(panel).boundingBox();
+    const t = await page.locator(trigger).boundingBox();
     expect(box.x, `${panel} left edge`).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width, `${panel} right edge`).toBeLessThanOrEqual(NARROW.width + 1);
+    expect(box.x + box.width, `${panel} right edge aligns with trigger`)
+      .toBeCloseTo(t.x + t.width, 0);
     await page.keyboard.press('Escape');
   }
 });

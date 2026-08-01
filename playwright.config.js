@@ -1,6 +1,7 @@
 // playwright.config.js — the browser-fidelity + layout suite. Runs separately from
-// `npm test` (node:test, jsdom) on purpose; see
-// docs/superpowers/specs/2026-07-31-testing-strategy-design.md.
+// `npm test` (node:test, jsdom) on purpose: real layout, real paint, real event
+// dispatch are the things jsdom cannot give you, and everything else stays in the
+// faster suite.
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({

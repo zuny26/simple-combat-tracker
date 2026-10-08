@@ -160,7 +160,7 @@ only the versioned encounter key, leaving legacy encounter/theme/help data intac
 The Vue confirmation makes the encounter card inert, focuses Cancel, cycles Tab within
 its two buttons, and cancels via Escape or backdrop click. Closing returns focus to the
 trigger, or Add when accepted removal deletes the trigger. Keep confirmation state in the UI.
-Duplicate/Remove and New Combat remain directly visible on mobile until menus migrate.
+Responsive row menus expose Duplicate/Remove in the card layout; New Combat is also available from the mobile app menu.
 Mounted tests own data protection and action outcomes; Chromium owns modal keyboard/focus,
 backdrop dismissal, narrow layout, and reload workflows.
 
@@ -183,6 +183,31 @@ adds custom text. Opening starts with an empty query; picker state never persist
 removal/restoration, and close-before-action/save sequencing. `e2e/vue-tags.spec.js` owns
 browser dismissal/focus, actual reloads, and picker/tag bounds at desktop, tablet, and
 320px widths. Legacy tag widgets and their tests still serve the independent legacy entry.
+
+### Vue responsive menus and preferences (ticket 08)
+
+`ActionMenu.vue` owns transient row, app, and desktop theme menus: fixed panels with
+viewport-clamped placement, a dismissal backdrop, arrow/Home/End navigation, and Escape
+returning focus to the trigger. Tab closes and resumes native navigation from the trigger.
+The Vue patch removes the menu before emitting an action, so saves and confirmations run
+after dismissal. Menu confirmations retain the original menu trigger for focus restoration.
+Responsive controls are always present; existing CSS chooses row menus at the 1400px card
+breakpoint and the app menu at 640px. New Combat also remains available in the header.
+
+`js/themes.js` is the shared theme registry for both independent entries; `js/themes.d.ts`
+types its Vue consumers. Register themes there and add their variable block in `styles.css`.
+`src/ui/preferences.ts` creates app-scoped preference state through the same injected storage
+interface as combat, using only `dnd-ct-theme` and `sct-usage-dismissed`. Dismissal writes `1`;
+reopening writes `0`, compatible with the legacy reader. Read/write failures are contained
+independently and leave controls usable in memory. The tracker applies theme/help presentation;
+combat reset never changes either preference. Omitted preference storage is in-memory for tests.
+
+Both HTML heads apply stored theme and help dismissal synchronously before styles load,
+without importing a registry or depending on Vue. Unknown themes fall back through CSS and
+are reconciled against the registry at startup; a throwing storage getter cannot block startup.
+Mounted preference checks own persistence, reopening, storage failures, and dismissal before
+saves/actions. Chromium owns menu focus/dismissal, confirmation from menus, pre-paint
+presentation with app modules blocked, and representative viewport bounds with fallback fonts.
 
 ### Running legacy application
 
@@ -262,7 +287,7 @@ avoid a flash; that script intentionally does _not_ know the list of valid theme
 - **User data is never HTML.** Text goes in via `textContent` or `.value`. `innerHTML` is
   used only for the static SVG icon constants in `render.js`/`rowMenu.js`/`appMenu.js` —
   keep it that way.
-- **Themes are registered in one place:** the `THEMES` array in `js/theme.js`. Adding an
+- **Themes are registered in one place:** the `THEMES` array in `js/themes.js`. Adding an
   entry (plus its `[data-theme="…"]` variable block in `styles.css`) lights it up in both
   the desktop picker and the mobile menu automatically.
 - **Same DOM at every viewport.** Responsive variants (desktop buttons vs. the `⋮` row menu,

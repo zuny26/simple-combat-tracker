@@ -2,9 +2,14 @@
 import { computed, reactive, ref, watch } from 'vue';
 import type { Combat, ReadonlyCreature } from '../combat/combat';
 import CreatureTags from './CreatureTags.vue';
+import ActionMenu from './ActionMenu.vue';
 
 const { combat, creature } = defineProps<{ combat: Combat; creature: ReadonlyCreature }>();
-defineEmits<{ sort: [event: FocusEvent]; remove: [id: number, event: MouseEvent] }>();
+const emit = defineEmits<{ sort: [event: FocusEvent]; remove: [id: number, trigger: HTMLElement] }>();
+function rowAction(action: string, trigger: HTMLElement) {
+  if (action === 'duplicate') combat.duplicateCreature(creature.id);
+  else emit('remove', creature.id, trigger);
+}
 const health = computed(() => combat.hp(creature.id)!);
 const baseHP = computed(() => creature.maxHP - creature.damageTaken);
 const bloodied = computed(() => baseHP.value / creature.maxHP <= 0.5);
@@ -114,7 +119,7 @@ function finishHP(field: HPField) {
       <CreatureTags :combat="combat" :creature="creature" field="other" />
     </td>
     <td class="cell-actions" data-label="Actions">
-      <div class="row-actions vue-row-actions">
+      <div class="row-actions">
         <button type="button" class="btn-dupe" aria-label="Duplicate creature" title="Duplicate creature"
           @click="combat.duplicateCreature(creature.id)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -122,7 +127,10 @@ function finishHP(field: HPField) {
           </svg>
         </button>
         <button type="button" class="btn-remove" aria-label="Remove creature" title="Remove creature"
-          @click="$emit('remove', creature.id, $event)">×</button>
+          @click="$emit('remove', creature.id, $event.currentTarget as HTMLElement)">×</button>
+        <ActionMenu trigger-class="btn-menu" panel-class="row-menu" label="Creature actions"
+          :items="[{ id: 'duplicate', label: 'Duplicate creature' }, { id: 'remove', label: 'Remove creature', danger: true }]"
+          @select="rowAction">⋮</ActionMenu>
       </div>
     </td>
   </tr>

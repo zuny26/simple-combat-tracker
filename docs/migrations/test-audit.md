@@ -218,3 +218,9 @@ being removed before the named action and save, rather than just its eventual ab
 Escape and apply focus restoration, pending HP input preservation, and long tag/picker
 geometry at 1280, 768, and 320px, including a growing note picker near the viewport bottom.
 Legacy tag tests remain active for the legacy entry.
+
+Ticket 08 adds mounted preference controls/storage/sequencing in `test/vue-preferences.test.ts`
+and browser focus, pre-paint, storage-getter failure, reload, and viewport responsibilities
+in `e2e/vue-preferences.spec.js`. Existing Vue destructive browser cases now open row actions
+through the card menu, retaining their confirmation keyboard, dismissal, and reload assertions.
+Legacy checks remain applicable to their independent entry.

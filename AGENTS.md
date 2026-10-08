@@ -1,4 +1,4 @@
-# CLAUDE.md
+# Repository guidance
 
 This file provides guidance to AI agents when working with code in this repository.
 
@@ -6,35 +6,46 @@ This file provides guidance to AI agents when working with code in this reposito
 
 A D&D combat tracker for DMs: initiative order, HP, and status conditions for one encounter.
 
-Fully local by design — no backend, no bundler, no framework, no build step. `index.html` loads
-`js/main.js` as a native ES module; all data lives in `localStorage`. The only dependencies
-(eslint, Playwright, and jsdom — which `npm test` needs for the DOM-module tests) are
-dev-time.
+Fully local by design: no backend; all encounter data lives in `localStorage`.
+Milestone 1 of the Vue migration serves and bundles the existing `index.html` / `js/main.js`
+application with Vite. The legacy mutable state and manual DOM modules still own the running
+app. Vue Composition API, strict TypeScript SFC checking, Vitest, and Vue Test Utils are
+installed for subsequent milestones; the test-only SFC probe does not mount in the app.
+
+Before changing migration architecture, read the governing decisions:
+[static Vue application](docs/adr/0001-static-vue-application.md),
+[combat state ownership](docs/adr/0002-combat-state-ownership.md), and
+[behavior-focused testing](docs/adr/0003-behavior-focused-testing.md).
+Before replacing tests, read the [per-test responsibility audit](docs/migrations/test-audit.md).
 
 ## Commands
 
-```bash
-npm test            # node --test 'test/*.test.js' — pure modules + jsdom DOM tests
-npm run test:e2e    # playwright test — real browser: focus, popovers, layout
-npm run lint        # eslint .
-npm run check       # lint + test — fast and offline; run this constantly
-npm run check:all   # lint + test + test:e2e — run this before committing UI work
-
-node --test test/hp.test.js                      # one file
-node --test --test-name-pattern 'temp-first'     # one test by name
-npx playwright test e2e/popovers.spec.js         # one browser spec
-
-npx playwright install chromium   # one-time; NOT --with-deps (needs root, fails here)
-```
-
-To run the app, serve it over HTTP — ES modules fail under `file://`:
+Use Node 24.15+ and `npm ci` to install the locked dependencies.
 
 ```bash
-python3 -m http.server 8934   # then open http://localhost:8934/
+npm run dev         # Vite: http://127.0.0.1:8934/simple-combat-tracker/
+npm run build       # generated static output in dist/
+npm run preview     # serve dist/ at the same URL (build first)
+npm run typecheck   # explicit strict vue-tsc check; build alone does not check types
+npm test            # legacy node:test + Vitest
+npm run test:legacy # existing pure-module and jsdom DOM tests
+npm run test:unit   # Vitest: typed module and mounted Vue UI tests
+npm run test:e2e    # Chromium against dist/ at the Pages path (build first)
+npm run lint        # ESLint: legacy JS, TypeScript, and Vue SFCs
+npm run check       # lint + typecheck + both unit/DOM suites; fast and offline
+npm run check:all   # check + build + Chromium; run before committing UI/tooling work
+
+node --test test/hp.test.js
+npm run test:unit -- test/tooling.test.ts
+npx playwright test e2e/popovers.spec.js
+npx playwright install chromium # one-time locally; avoid --with-deps (requires root)
 ```
 
-For any UI/CSS/layout change, run `npm run check:all` — the Playwright suite covers the
-multi-width overflow check.
+Vite preview is local verification, not deployment. Stop dev/preview on port 8934 before
+running browser checks: Playwright starts its own preview and never reuses a source server.
+GitHub Actions runs `check:all` on pushed commits, installing Chromium and OS dependencies
+on its hosted runner. There are no local hooks or required PR workflows. Public deployment
+remains on its existing mechanism; this milestone adds no publishing job or Pages settings.
 
 ## Architecture
 
@@ -110,6 +121,7 @@ avoid a flash; that script intentionally does _not_ know the list of valid theme
 
 ## Conventions
 
+- **Commit messages follow Conventional Commits:** include a type and, when possible, a domain scope, e.g. `feat(combat): add turn advancement`.
 - **User data is never HTML.** Text goes in via `textContent` or `.value`. `innerHTML` is
   used only for the static SVG icon constants in `render.js`/`rowMenu.js`/`appMenu.js` —
   keep it that way.
@@ -124,10 +136,12 @@ avoid a flash; that script intentionally does _not_ know the list of valid theme
   explicit `--control-h` values that keep header pills aligned. No hardcoded colors.
 - **eslint's browser globals are hand-listed** in `eslint.config.js`. Using a new browser API
   (`setTimeout`, `matchMedia`, …) requires adding it there or `no-undef` fails the lint.
-  `no-undef` is the only typo-catcher here — there's no typechecker.
-- **Tests split by fidelity.** `test/` is `node:test` + `node:assert/strict`: the pure
+  `no-undef` catches legacy JS typos; `vue-tsc` checks introduced TypeScript/Vue code.
+- **Tests split by fidelity.** `test/*.test.js` uses `node:test` + `node:assert/strict`: the pure
   modules, plus jsdom tests that boot the real `index.html` and assert what `render.js`
-  builds and what `main.js` routes. `e2e/` is Playwright against the served app, and
+  builds and what `main.js` routes. `test/**/*.test.ts` and `src/**/*.test.ts` use Vitest;
+  Vue Test Utils mounts SFCs in jsdom with fresh instances. Vitest excludes legacy JS and
+  Playwright files. `e2e/` is Playwright against the production build, and
   owns anything where the browser is the thing under test — focus and `relatedTarget`,
   Tab, popover outside-click, viewport layout. Focus assertions never go in `test/`;
   jsdom cannot be trusted on them. If the two suites ever disagree, Playwright wins.

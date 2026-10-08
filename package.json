@@ -4,16 +4,37 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test 'test/*.test.js'",
+    "dev": "vite --host 127.0.0.1 --port 8934 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 8934 --strictPort",
+    "typecheck": "vue-tsc --noEmit",
+    "test": "npm run test:legacy && npm run test:unit",
+    "test:legacy": "node --test 'test/*.test.js'",
+    "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "lint": "eslint .",
-    "check": "npm run lint && npm test",
-    "check:all": "npm run lint && npm test && npm run test:e2e"
+    "check": "npm run lint && npm run typecheck && npm test",
+    "check:all": "npm run check && npm run build && npm run test:e2e"
+  },
+  "engines": {
+    "node": ">=24.15.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.62.0",
+    "@types/node": "^24.19.1",
+    "@vitejs/plugin-vue": "^6.0.9",
+    "@vue/test-utils": "^2.5.1",
     "eslint": "^10.8.0",
-    "jsdom": "^29.1.1"
+    "eslint-plugin-vue": "^10.11.1",
+    "jsdom": "^29.1.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.1",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.3",
+    "vue-tsc": "^3.3.12"
+  },
+  "dependencies": {
+    "vue": "^3.5.43"
   }
 }

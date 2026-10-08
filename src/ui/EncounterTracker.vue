@@ -118,13 +118,13 @@ async function addCreature() {
             <th class="col-init">Initiative</th><th class="col-name">Name</th>
             <th class="col-ac">AC</th><th class="col-hpnum">Max HP</th>
             <th class="col-hpnum">Temp HP</th><th class="col-current">Current HP</th>
-            <th class="col-adjust">Damage / Heal</th><th class="col-actions">Actions</th>
+            <th class="col-adjust">Damage / Heal</th><th>Conditions</th><th>Other</th><th class="col-actions">Actions</th>
           </tr></thead>
           <tbody id="creature-rows" ref="body">
             <CreatureRow v-for="creature in rows" :key="creature.id" :creature="creature"
               :combat="combat" @sort="sortRows" @remove="removeCreature" />
             <tr v-if="rows.length === 0" class="empty-row">
-              <td colspan="8">No creatures yet — add one to begin.</td>
+              <td colspan="10">No creatures yet — add one to begin.</td>
             </tr>
           </tbody>
         </table>

@@ -1018,6 +1018,33 @@ tr.downed .f-name {
 }
 
 /* ---- Row actions (duplicate + remove) ---- */
+.vue-tags .cond-pill {
+  max-width: 100%;
+  white-space: normal;
+}
+.vue-tag-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.vue-tags .cond-x {
+  flex: none;
+}
+.vue-tag-picker {
+  max-width: calc(100vw - 16px);
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
+}
+.vue-tag-picker .cond-opt {
+  overflow-wrap: anywhere;
+}
+.vue-tag-picker .cond-opt > span {
+  min-width: 0;
+}
+.vue-tag-picker .cond-opt:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
 .cell-actions {
   text-align: center;
 }

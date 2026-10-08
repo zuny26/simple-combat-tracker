@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
 import type { Combat, ReadonlyCreature } from '../combat/combat';
+import CreatureTags from './CreatureTags.vue';
 
 const { combat, creature } = defineProps<{ combat: Combat; creature: ReadonlyCreature }>();
 defineEmits<{ sort: [event: FocusEvent]; remove: [id: number, event: MouseEvent] }>();
@@ -105,6 +106,12 @@ function finishHP(field: HPField) {
           Heal
         </button>
       </div>
+    </td>
+    <td class="cell-conditions" data-label="Conditions">
+      <CreatureTags :combat="combat" :creature="creature" field="conditions" />
+    </td>
+    <td class="cell-other" data-label="Other">
+      <CreatureTags :combat="combat" :creature="creature" field="other" />
     </td>
     <td class="cell-actions" data-label="Actions">
       <div class="row-actions vue-row-actions">

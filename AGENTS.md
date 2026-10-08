@@ -115,7 +115,7 @@ and never save independently. Persistence tests exercise the public factory/stor
 `vue.html` loads `src/main.ts`, which creates one persisted Vue combat instance and passes
 it to `src/ui/EncounterTracker.vue`. Mounted tests pass fresh instances through the same
 `combat` prop. The tracker and `CreatureRow.vue` invoke named actions by creature ID; they
-never import legacy state or DOM widgets. Damage/healing, tags, destructive actions, and
+never import legacy state or DOM widgets. Tags, destructive actions, and
 preferences remain later tickets.
 
 Rows use creature-ID keys. Initiative/name actions save on input, while the tracker keeps
@@ -134,6 +134,19 @@ the Vue app card supplies its own combat-started class for the mobile round coun
 `test/encounter.test.ts` verifies mounted field/action wiring and visible state with fresh
 instances. `e2e/vue-encounter.spec.js` exercises both sorting fields with Tab/click and reloads
 the built Vue entry without a storage seed script. Legacy tests remain active independently.
+
+### Vue damage and healing (ticket 05)
+
+Each keyed `CreatureRow.vue` owns a pending adjustment text ref. Typing and Enter leave HP
+unchanged. The explicit Damage/Heal buttons pass a finite positive amount and creature ID
+to the named combat action, then clear only that row's draft, including valid actions that
+leave HP unchanged at its limit. Invalid/nonpositive drafts leave HP and the draft intact.
+Keyed sorting retains each creature's draft; reload starts drafts empty. Combat actions own
+HP rules and persistence; rows derive HP/downed presentation and never save independently.
+
+Mounted encounter tests cover explicit controls, row isolation through sorting, invalid
+amounts, maximum-HP clamping, and downed turn eligibility. The Chromium damage/healing
+workflow reloads actual UI saves and verifies that pending amounts disappear.
 
 ### Running legacy application
 

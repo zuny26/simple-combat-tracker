@@ -9,6 +9,47 @@ const creature = (page, id) => page.locator(`tr[data-id="${id}"]`);
 const order = page => page.locator('#creature-rows tr[data-id]').evaluateAll(rows =>
   rows.map(row => row.dataset.id));
 
+test('Vue applies damage and healing explicitly and reloads applied HP without pending amounts', async ({ page }) => {
+  await page.goto('vue.html');
+  await page.locator('#add-btn').click();
+  const first = creature(page, 1);
+  await first.getByRole('textbox', { name: 'Max HP', exact: true }).fill('12');
+  await first.getByRole('textbox', { name: 'Temp HP', exact: true }).fill('3');
+  await page.locator('#add-btn').click();
+  const second = creature(page, 2);
+  await second.getByRole('textbox', { name: 'Max HP', exact: true }).fill('10');
+  const amount = row => row.getByRole('textbox', { name: 'Damage or healing amount' });
+  await amount(second).fill('7');
+  await amount(first).fill('5.5');
+  await amount(first).press('Enter');
+  await expect(first.locator('.hp-number')).toHaveText('15 / 12');
+  await expect(amount(first)).toHaveValue('5.5');
+  await first.getByRole('button', { name: 'Damage', exact: true }).click();
+  await expect(first.locator('.hp-number')).toHaveText('9.5 / 12');
+  await expect(first.locator('.f-temphp')).toHaveValue('');
+  await expect(amount(first)).toHaveValue('');
+  await expect(amount(second)).toHaveValue('7');
+  await expect(second.locator('.hp-number')).toHaveText('10 / 10');
+  await amount(first).fill('4'); // leave an unapplied amount on each creature
+  await page.reload();
+  await expect(first.locator('.hp-number')).toHaveText('9.5 / 12');
+  await expect(first.locator('.f-temphp')).toHaveValue('');
+  await expect(amount(first)).toHaveValue('');
+  await expect(amount(second)).toHaveValue('');
+  await expect(second.locator('.hp-number')).toHaveText('10 / 10');
+  await first.locator('.f-temphp').fill('2');
+  await amount(first).fill('1.5');
+  await first.getByRole('button', { name: 'Heal', exact: true }).click();
+  await expect(first.locator('.hp-number')).toHaveText('13 / 12');
+  await expect(first.locator('.f-temphp')).toHaveValue('2');
+  await expect(amount(first)).toHaveValue('');
+  await amount(first).fill('8');
+  await page.reload();
+  await expect(first.locator('.hp-number')).toHaveText('13 / 12');
+  await expect(first.locator('.f-temphp')).toHaveValue('2');
+  await expect(amount(first)).toHaveValue('');
+});
+
 test('Vue creates and advances an encounter, edits with Tab/click, and restores without reseeding', async ({ page }) => {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));

@@ -34,9 +34,15 @@
   restoration. HP drafts are UI state, while HP and progression derive from combat actions.
   Both entries build and pass existing checks; public deployment remains unchanged.
 
+- [05: Apply damage and healing through explicit Vue controls](issues/05-vue-damage-and-healing.md):
+  Each keyed Vue row owns its pending text amount; Damage/Heal explicitly invoke combat
+  actions by creature ID and clear that row's valid amount. Enter is inert. Mounted tests
+  cover row isolation, HP presentation, and validation; Chromium reloads real UI saves to
+  verify applied HP persists while pending amounts disappear.
+
 ## Fog
 
 - Actual Pages configuration, published URL, and default branch must be verified before
   cutover. This milestone does not change remote hosting settings.
-- The independent Vue entry now covers encounter editing and turns; damage/healing,
+- The independent Vue entry now covers encounter editing, turns, and damage/healing;
   destructive actions, tags, and preferences remain subsequent tickets.

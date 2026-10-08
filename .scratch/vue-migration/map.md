@@ -27,8 +27,16 @@
   failure containment keep actions usable in memory. Vue instances optionally use the
   adapter; the legacy entry and its storage key remain independent.
 
+- [04: Create, edit, and advance encounters in Vue](issues/04-vue-encounter-editing-and-turns.md):
+  `/simple-combat-tracker/vue.html` runs a persisted Vue encounter independently of the
+  legacy root entry. Keyed rows save input immediately and keep displayed order transient
+  until initiative/name blur; Chromium verifies usable Tab/click focus and actual reload
+  restoration. HP drafts are UI state, while HP and progression derive from combat actions.
+  Both entries build and pass existing checks; public deployment remains unchanged.
+
 ## Fog
 
 - Actual Pages configuration, published URL, and default branch must be verified before
   cutover. This milestone does not change remote hosting settings.
-- Vue encounter workflows remain future tickets.
+- The independent Vue entry now covers encounter editing and turns; damage/healing,
+  destructive actions, tags, and preferences remain subsequent tickets.

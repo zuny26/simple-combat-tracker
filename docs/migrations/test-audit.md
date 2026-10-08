@@ -194,3 +194,11 @@ Later milestones add new-format validation/storage failures, independent app ins
 reset/preferences, custom tags/notes, and complete Vue workflows as specified in the plan.
 Chromium fixtures block external fonts: green fallback-font geometry checks do not establish
 real-font equivalence. The new probe is a tooling check, not migrated combat coverage.
+
+Ticket 04 adds the independently runnable `vue.html` entry without replacing legacy
+implementations or tests. `test/encounter.test.ts` mounts the real tracker with fresh combat
+instances and verifies persisted field wiring, deferred initiative/name sorting, progression,
+parked-creature departure, literal user text, HP presentation, and numeric drafts. The
+test-only SFC probe remains a tooling check. `e2e/vue-encounter.spec.js` loads the generated Vue
+entry at the Pages path, creates and advances an encounter, checks initiative/name editing
+with real Tab/click destinations, and restores real UI saves on reload without reseeding.

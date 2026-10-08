@@ -7,10 +7,10 @@ This file provides guidance to AI agents when working with code in this reposito
 A D&D combat tracker for DMs: initiative order, HP, and status conditions for one encounter.
 
 Fully local by design: no backend; all encounter data lives in `localStorage`.
-The Vue migration currently serves and bundles the existing `index.html` / `js/main.js`
-application with Vite. The legacy mutable state and manual DOM modules still own the running
-app. Vue Composition API, strict TypeScript SFC checking, Vitest, and Vue Test Utils are
-installed for subsequent milestones; the test-only SFC probe does not mount in the app.
+Vite serves and bundles two independent entries: the public legacy tracker at `index.html`
+and the Vue tracker at `vue.html`. Legacy mutable state and manual DOM modules own only the
+legacy entry; Vue Composition API and app-scoped typed combat own the Vue entry. Strict
+TypeScript SFC checking, Vitest, and Vue Test Utils verify the new UI alongside legacy checks.
 
 Before changing migration architecture, read the governing decisions:
 [static Vue application](docs/adr/0001-static-vue-application.md),
@@ -41,6 +41,10 @@ npx playwright test e2e/popovers.spec.js
 npx playwright install chromium # one-time locally; avoid --with-deps (requires root)
 ```
 
+The independent Vue tracker is at `http://127.0.0.1:8934/simple-combat-tracker/vue.html`
+in both dev and production preview. Build emits both entries; `/simple-combat-tracker/`
+continues to open the legacy tracker.
+
 Vite preview is local verification, not deployment. Stop dev/preview on port 8934 before
 running browser checks: Playwright starts its own preview and never reuses a source server.
 GitHub Actions runs `check:all` on pushed commits, installing Chromium and OS dependencies
@@ -60,16 +64,15 @@ Conditions use `conditions`; notes use `other`. Pending HP adjustments belong to
 
 `src/combat/rules.ts` and the combat factory use no Vue or browser globals.
 `src/combat/vueCombat.ts:createVueCombat()` supplies Vue `reactive` state to the factory
-and exposes a deep `readonly` state view. Create it once for each future Vue app and
+and exposes a deep `readonly` state view. Create it once for each Vue app and
 share it with that app's UI. The optional state observer on `createCombat` is the
 integration boundary; callers edit through actions, and state is read-only in TypeScript.
 IDs remain unique across resets within an instance. Non-finite HP edits and nonpositive
 or non-finite damage/healing amounts are ignored; negative HP edits clamp to zero.
 
-The new module is exercised through public-interface Vitest tests, including Node-only
-combat tests and Vue observable-state tests. It is not mounted in the running app yet;
-versioned persistence is available below, while Vue workflows belong to later tickets. Keep the legacy app's
-state owner separate until cutover. Existing tests remain applicable to that app.
+The module is exercised through public-interface Vitest tests, including Node-only combat
+tests and Vue observable-state tests, and drives the Vue entry. Keep the legacy app's state
+owner separate until cutover. Existing tests remain applicable to that app.
 
 ### Versioned encounter persistence (ticket 03)
 
@@ -77,7 +80,7 @@ state owner separate until cutover. Existing tests remain applicable to that app
 combat instance and centrally saves completed changes. The explicit `EncounterStorage`
 interface has `getItem`/`setItem`; tests supply independent in-memory or failing adapters.
 `createBrowserStorage()` defers browser storage access until these calls so a throwing
-`localStorage` getter is also contained. Future production Vue code creates one instance
+`localStorage` getter is also contained. The Vue entry creates one instance
 with `createVueCombat(createBrowserStorage())`; omitting storage creates an in-memory instance.
 The legacy entry still uses its own state and storage code.
 
@@ -106,6 +109,31 @@ failures preserve the completed action, and later changes retry saving. The comb
 accepts initial state/identity and an `onChange` callback; it notifies once after each action
 finishes its invariants, skipping rejected or unchanged actions. Widgets call combat actions
 and never save independently. Persistence tests exercise the public factory/storage seam.
+
+### Vue encounter editing and turns (ticket 04)
+
+`vue.html` loads `src/main.ts`, which creates one persisted Vue combat instance and passes
+it to `src/ui/EncounterTracker.vue`. Mounted tests pass fresh instances through the same
+`combat` prop. The tracker and `CreatureRow.vue` invoke named actions by creature ID; they
+never import legacy state or DOM widgets. Damage/healing, tags, destructive actions, and
+preferences remain later tickets.
+
+Rows use creature-ID keys. Initiative/name actions save on input, while the tracker keeps
+transient displayed IDs and sorts on blur. Combat turns always use the derived combat order,
+even during an unfinished edit. After a keyed move, the tracker restores the blur event's
+Tab/click destination only if it remains connected and the patch left focus on the body.
+Adding a creature focuses its initiative after the Vue patch. Chromium owns these focus checks.
+
+HP fields keep local text drafts so decimal input survives typing and unrelated updates.
+Finite edits save immediately; invalid/non-finite edits leave the previous HP value intact,
+negative edits clamp to zero, and blur displays the accepted numeric value (zero is blank).
+Draft text and displayed row order never persist. HP and downed presentation derive from
+combat state. Responsive markup uses the existing CSS and variables at every viewport;
+the Vue app card supplies its own combat-started class for the mobile round counter.
+
+`test/encounter.test.ts` verifies mounted field/action wiring and visible state with fresh
+instances. `e2e/vue-encounter.spec.js` exercises both sorting fields with Tab/click and reloads
+the built Vue entry without a storage seed script. Legacy tests remain active independently.
 
 ### Running legacy application
 

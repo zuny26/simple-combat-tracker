@@ -1797,7 +1797,8 @@ tr.downed .f-name {
     background: var(--color-accent-700);
     color: var(--color-bg);
   }
-  html.combat-started .turn-group .round {
+  html.combat-started .turn-group .round,
+  .app-card.combat-started .turn-group .round {
     display: inline-flex;
   }
   .turn-group .round #round-value {

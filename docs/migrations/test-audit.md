@@ -209,3 +209,12 @@ accept/cancel/reset persistence, preference isolation, and active-creature remov
 Chromium verifies destructive confirmation at desktop and 320px widths: Cancel/Escape/
 backdrop dismissal, trapped Tab, focus restoration, accepted actions, and actual reload.
 Legacy destructive-action tests remain applicable to the independent legacy entry.
+
+Ticket 07 adds `test/vue-tags.test.ts` for offered/custom conditions, free-text notes,
+trimming/blank/duplicate behavior, literal text, individual removal, restored tags, and
+UI-only query state. Action-boundary and storage-callback observations protect the picker
+being removed before the named action and save, rather than just its eventual absence.
+`e2e/vue-tags.spec.js` covers real UI saves/reloads, keyboard entry, outside-click dismissal,
+Escape and apply focus restoration, pending HP input preservation, and long tag/picker
+geometry at 1280, 768, and 320px, including a growing note picker near the viewport bottom.
+Legacy tag tests remain active for the legacy entry.

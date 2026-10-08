@@ -115,7 +115,7 @@ and never save independently. Persistence tests exercise the public factory/stor
 `vue.html` loads `src/main.ts`, which creates one persisted Vue combat instance and passes
 it to `src/ui/EncounterTracker.vue`. Mounted tests pass fresh instances through the same
 `combat` prop. The tracker and `CreatureRow.vue` invoke named actions by creature ID; they
-never import legacy state or DOM widgets. Tags and preferences remain later tickets.
+never import legacy state or DOM widgets. Preferences remain later tickets.
 
 Rows use creature-ID keys. Initiative/name actions save on input, while the tracker keeps
 transient displayed IDs and sorts on blur. Combat turns always use the derived combat order,
@@ -163,6 +163,26 @@ trigger, or Add when accepted removal deletes the trigger. Keep confirmation sta
 Duplicate/Remove and New Combat remain directly visible on mobile until menus migrate.
 Mounted tests own data protection and action outcomes; Chromium owns modal keyboard/focus,
 backdrop dismissal, narrow layout, and reload workflows.
+
+### Vue conditions and notes (ticket 07)
+
+`CreatureTags.vue` renders the Conditions and Other cells for each keyed creature row.
+Conditions offers standard options plus custom text; Other accepts free-text notes.
+Applied offered options are disabled; individual pill buttons remove tags. Combat actions
+own trimming, blank rejection, duplicate prevention, and central persistence. Vue
+interpolation displays all tag text literally.
+
+Each cell owns its transient picker, query, and viewport-clamped position, recalculated
+after query updates change the panel height. A fixed backdrop
+dismisses on outside click; Escape closes and returns focus to the Add trigger. Applying
+an option or pressing Enter with text closes the picker and awaits the Vue patch before
+calling `addTag`, then returns focus to Add. Enter chooses the first offered match or
+adds custom text. Opening starts with an empty query; picker state never persists.
+
+`test/vue-tags.test.ts` mounts fresh encounters for tag actions, literal text, validation,
+removal/restoration, and close-before-action/save sequencing. `e2e/vue-tags.spec.js` owns
+browser dismissal/focus, actual reloads, and picker/tag bounds at desktop, tablet, and
+320px widths. Legacy tag widgets and their tests still serve the independent legacy entry.
 
 ### Running legacy application
 

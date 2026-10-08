@@ -46,9 +46,15 @@
   actions persist through the combat module and preserve independent preferences.
   Desktop/mobile Chromium checks cover dismissal, keyboard focus, and real reloads.
 
+- [07: Manage conditions and notes in Vue](issues/07-vue-conditions-and-notes.md):
+  Vue-owned pickers offer conditions/custom text and Other notes, with individual removal
+  through named combat actions. Query/open state is transient; the picker patch completes
+  before applying a tag. Mounted checks protect validation, literal text, and action/save
+  sequencing; Chromium verifies dismissal, focus, long tags, and actual reload restoration.
+
 ## Fog
 
 - Actual Pages configuration, published URL, and default branch must be verified before
   cutover. This milestone does not change remote hosting settings.
-- The independent Vue entry now covers encounter editing, turns, and damage/healing;
-  tags and preferences remain subsequent tickets.
+- The independent Vue entry now covers encounter editing, turns, damage/healing, and tags;
+  preferences remain a subsequent ticket.

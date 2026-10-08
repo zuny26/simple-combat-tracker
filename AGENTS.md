@@ -115,8 +115,7 @@ and never save independently. Persistence tests exercise the public factory/stor
 `vue.html` loads `src/main.ts`, which creates one persisted Vue combat instance and passes
 it to `src/ui/EncounterTracker.vue`. Mounted tests pass fresh instances through the same
 `combat` prop. The tracker and `CreatureRow.vue` invoke named actions by creature ID; they
-never import legacy state or DOM widgets. Tags, destructive actions, and
-preferences remain later tickets.
+never import legacy state or DOM widgets. Tags and preferences remain later tickets.
 
 Rows use creature-ID keys. Initiative/name actions save on input, while the tracker keeps
 transient displayed IDs and sorts on blur. Combat turns always use the derived combat order,
@@ -147,6 +146,23 @@ HP rules and persistence; rows derive HP/downed presentation and never save inde
 Mounted encounter tests cover explicit controls, row isolation through sorting, invalid
 amounts, maximum-HP clamping, and downed turn eligibility. The Chromium damage/healing
 workflow reloads actual UI saves and verifies that pending amounts disappear.
+
+### Vue duplication and destructive actions (ticket 06)
+
+Rows invoke `duplicateCreature(id)` for fresh copies with numbered names and copied
+initiative/AC/maximum HP. `EncounterTracker.vue` owns transient removal/reset confirmation
+and calls `isEmptyCreature(id)`/`hasMeaningfulData()` before deciding whether to ask.
+Untouched creatures remove immediately; New Combat clears empty rows without confirmation
+and an already empty encounter causes no save. Accepted removal/reset calls named combat
+actions; opening and cancelling never save. Reset preserves identity allocation and touches
+only the versioned encounter key, leaving legacy encounter/theme/help data intact.
+
+The Vue confirmation makes the encounter card inert, focuses Cancel, cycles Tab within
+its two buttons, and cancels via Escape or backdrop click. Closing returns focus to the
+trigger, or Add when accepted removal deletes the trigger. Keep confirmation state in the UI.
+Duplicate/Remove and New Combat remain directly visible on mobile until menus migrate.
+Mounted tests own data protection and action outcomes; Chromium owns modal keyboard/focus,
+backdrop dismissal, narrow layout, and reload workflows.
 
 ### Running legacy application
 

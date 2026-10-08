@@ -40,9 +40,15 @@
   cover row isolation, HP presentation, and validation; Chromium reloads real UI saves to
   verify applied HP persists while pending amounts disappear.
 
+- [06: Duplicate creatures and confirm destructive actions](issues/06-duplication-and-destructive-confirmation.md):
+  Vue rows expose fresh duplication and removal; the tracker owns transient confirmation
+  for meaningful removal/New Combat. Cancellation leaves state/storage intact; accepted
+  actions persist through the combat module and preserve independent preferences.
+  Desktop/mobile Chromium checks cover dismissal, keyboard focus, and real reloads.
+
 ## Fog
 
 - Actual Pages configuration, published URL, and default branch must be verified before
   cutover. This milestone does not change remote hosting settings.
 - The independent Vue entry now covers encounter editing, turns, and damage/healing;
-  destructive actions, tags, and preferences remain subsequent tickets.
+  tags and preferences remain subsequent tickets.

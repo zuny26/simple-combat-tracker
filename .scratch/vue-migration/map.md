@@ -52,9 +52,17 @@
   before applying a tag. Mounted checks protect validation, literal text, and action/save
   sequencing; Chromium verifies dismissal, focus, long tags, and actual reload restoration.
 
+- [08: Complete responsive menus, themes, and help preferences](issues/08-responsive-menus-and-preferences.md):
+  CSS chooses desktop controls and card/app menus from the same Vue UI. Shared menu
+  dismissal completes before actions and preserves the trigger for confirmation focus.
+  Both entries use `js/themes.js`; Vue preferences have an independent injected storage
+  boundary and synchronous head presentation. Mounted tests protect storage failures,
+  reopening, reset independence, and sequencing; Chromium covers focus, actual reloads,
+  pre-paint presentation, and relational bounds at representative widths.
+
 ## Fog
 
 - Actual Pages configuration, published URL, and default branch must be verified before
   cutover. This milestone does not change remote hosting settings.
 - The independent Vue entry now covers encounter editing, turns, damage/healing, and tags;
-  preferences remain a subsequent ticket.
+  responsive menus and preferences are also implemented.

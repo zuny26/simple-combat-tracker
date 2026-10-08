@@ -3,15 +3,9 @@
 
 const KEY = 'dnd-ct-theme';
 
-// Single source of truth for selectable themes. `id` is the data-theme value on
-// <html> (and what's persisted); the swatch colors are the little preview dot
-// shown in the picker. Add a theme here and it appears in the dropdown for free.
-export const THEMES = [
-  { id: 'light',   label: 'Organic Day',   swatchBg: '#ebddc5', swatchDot: '#c67139' },
-  { id: 'dark',    label: 'Organic Night', swatchBg: '#2d2921', swatchDot: '#e58f52' },
-  { id: 'dracula', label: 'Dracula',       swatchBg: '#282a36', swatchDot: '#bd93f9' },
-  { id: 'alucard', label: 'Alucard',       swatchBg: '#fffbeb', swatchDot: '#644ac9' },
-];
+// Both entries use the same registry; this module owns legacy browser preferences.
+export { THEMES } from './themes.js';
+import { THEMES } from './themes.js';
 
 const VALID = new Set(THEMES.map((t) => t.id));
 

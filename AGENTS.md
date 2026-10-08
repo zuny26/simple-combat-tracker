@@ -141,3 +141,20 @@ avoid a flash; that script intentionally does _not_ know the list of valid theme
   closes _before_ its action runs, or that `reorderRows()` moves the existing `<tr>`
   rather than rebuilding it. Collapsing those into end-state checks would silently gut
   the property they exist to protect.
+
+## Agent skills
+
+### Issue tracker
+
+Specs and tickets live in `.scratch/<feature>/`. Before creating, reading,
+or updating tickets, read `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Local issues use the default triage roles in their `Status:` line.
+Before triaging, read `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Use one root `GLOSSARY.md` and `docs/adr/`. Before exploring or designing
+the codebase, read `docs/agents/domain.md`.

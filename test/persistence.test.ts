@@ -191,3 +191,34 @@ it('retains usable persisted progression when the round reaches its safe integer
   expect(restored.state.activeId).toBe(1);
   expect(restored.state.creatures[0]?.name).toBe('Still fighting');
 });
+
+it('skips saves when clamped edits, HP actions and progression leave encounter facts unchanged', () => {
+  const storage = memoryStorage();
+  const empty = JSON.stringify({ version: 1, nextId: 1, round: 0, started: false,
+    activeId: null, creatures: [] }, null, 2);
+  storage.setItem(ENCOUNTER_KEY, empty);
+  const combat = createPersistedCombat(storage);
+  combat.reset(); combat.start(); combat.next();
+  expect(storage.getItem(ENCOUNTER_KEY)).toBe(empty);
+
+  const id = combat.addCreature();
+  combat.editCreature(id, { init: '0', maxHP: 10 });
+  combat.start();
+  const full = JSON.stringify(JSON.parse(storage.getItem(ENCOUNTER_KEY)!), null, 2);
+  storage.setItem(ENCOUNTER_KEY, full);
+  combat.start(); combat.heal(id, 3); combat.editCreature(id, { tempHP: -2 });
+  expect(storage.getItem(ENCOUNTER_KEY)).toBe(full);
+
+  combat.editCreature(id, { tempHP: 1e20 });
+  const temporary = JSON.stringify(JSON.parse(storage.getItem(ENCOUNTER_KEY)!), null, 2);
+  storage.setItem(ENCOUNTER_KEY, temporary);
+  combat.damage(id, 1);
+  expect(storage.getItem(ENCOUNTER_KEY)).toBe(temporary);
+  combat.editCreature(id, { tempHP: 0 });
+
+  combat.damage(id, 10);
+  const downed = JSON.stringify(JSON.parse(storage.getItem(ENCOUNTER_KEY)!), null, 2);
+  storage.setItem(ENCOUNTER_KEY, downed);
+  combat.damage(id, 3);
+  expect(storage.getItem(ENCOUNTER_KEY)).toBe(downed);
+});

@@ -12,6 +12,13 @@ type HPField = 'maxHP' | 'tempHP';
 const hpText = (value: number) => value === 0 ? '' : String(value);
 const drafts = reactive({ maxHP: hpText(creature.maxHP), tempHP: hpText(creature.tempHP) });
 const editingHP = ref<HPField | null>(null);
+const pendingAdjustment = ref('');
+function applyAdjustment(action: 'damage' | 'heal') {
+  const amount = Number(pendingAdjustment.value);
+  if (!Number.isFinite(amount) || amount <= 0) return;
+  combat[action](creature.id, amount);
+  pendingAdjustment.value = '';
+}
 for (const field of ['maxHP', 'tempHP'] as const) {
   watch(() => creature[field], value => {
     if (editingHP.value !== field) drafts[field] = hpText(value);
@@ -81,6 +88,22 @@ function finishHP(field: HPField) {
           </div>
           <span class="hp-number"><span :class="{ 'hp-cur-bloodied': bloodied }">{{ health.current }}</span><span class="hp-max-of"> / {{ creature.maxHP }}</span></span>
         </template>
+      </div>
+    </td>
+    <td class="cell-adjust" data-label="Damage / Heal">
+      <div class="r-ctl">
+        <input v-model="pendingAdjustment" class="r-amt f-adjust" type="text" inputmode="decimal"
+          aria-label="Damage or healing amount" placeholder="—">
+        <button type="button" class="r-side r-dmg" aria-label="Damage" @click="applyAdjustment('damage')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" aria-hidden="true"><path d="M5 12h14" /></svg>
+          Dmg
+        </button>
+        <button type="button" class="r-side r-heal" @click="applyAdjustment('heal')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          Heal
+        </button>
       </div>
     </td>
   </tr>

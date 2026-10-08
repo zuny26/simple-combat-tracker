@@ -3,6 +3,45 @@ import { expect, it } from 'vitest';
 import EncounterTracker from '../src/ui/EncounterTracker.vue';
 import { createVueCombat } from '../src/combat/vueCombat';
 
+it('applies only the intended creature’s pending amount through explicit Damage and Heal controls', async () => {
+  const combat = createVueCombat();
+  for (const init of ['20', '10']) {
+    const id = combat.addCreature();
+    combat.editCreature(id, { init, maxHP: 12, tempHP: 3 });
+  }
+  const wrapper = mount(EncounterTracker, { props: { combat } });
+  const first = wrapper.get('tr[data-id="1"]');
+  const second = wrapper.get('tr[data-id="2"]');
+  try {
+    await first.get('.f-adjust').setValue('5.5');
+    await second.get('.f-adjust').setValue('2');
+    await first.get('.f-adjust').trigger('keydown', { key: 'Enter' });
+    expect(first.get('.hp-number').text()).toBe('15 / 12');
+    expect(second.get('.hp-number').text()).toBe('15 / 12');
+    expect((first.get('.f-adjust').element as HTMLInputElement).value).toBe('5.5');
+    // Pending amounts follow creature identity when keyed rows move.
+    await first.get('.f-init').setValue('1');
+    await first.get('.f-init').trigger('blur');
+    await first.get('button.r-dmg').trigger('click');
+    expect(first.get('.hp-number').text()).toBe('9.5 / 12');
+    expect((first.get('.f-temphp').element as HTMLInputElement).value).toBe('');
+    expect((first.get('.f-adjust').element as HTMLInputElement).value).toBe('');
+    expect((second.get('.f-adjust').element as HTMLInputElement).value).toBe('2');
+    expect(second.get('.hp-number').text()).toBe('15 / 12');
+    await first.get('.f-temphp').setValue('4');
+    await first.get('.f-adjust').setValue('100');
+    await first.get('button.r-heal').trigger('click');
+    expect(first.get('.hp-number').text()).toBe('16 / 12');
+    expect((first.get('.f-temphp').element as HTMLInputElement).value).toBe('4');
+    expect((first.get('.f-adjust').element as HTMLInputElement).value).toBe('');
+    await second.get('button.r-dmg').trigger('click');
+    expect(second.get('.hp-number').text()).toBe('13 / 12');
+    expect((second.get('.f-adjust').element as HTMLInputElement).value).toBe('');
+  } finally {
+    wrapper.unmount();
+  }
+});
+
 function createStorage() {
   const values = new Map<string, string>();
   return {
@@ -10,6 +49,63 @@ function createStorage() {
     setItem: (key: string, value: string) => { values.set(key, value); },
   };
 }
+
+it.each(['', ' ', '0', '-3', 'invalid', 'NaN', 'Infinity', '1e309'])(
+  'keeps HP intact when either adjustment button receives %j', async amount => {
+    const combat = createVueCombat();
+    const id = combat.addCreature();
+    combat.editCreature(id, { maxHP: 12, tempHP: 3 });
+    combat.damage(id, 5);
+    const wrapper = mount(EncounterTracker, { props: { combat } });
+    try {
+      for (const action of ['r-dmg', 'r-heal']) {
+        await wrapper.get('.f-adjust').setValue(amount);
+        await wrapper.get(`button.${action}`).trigger('click');
+        expect(wrapper.get('.hp-number').text()).toBe('10 / 12');
+        expect((wrapper.get('.f-temphp').element as HTMLInputElement).value).toBe('');
+      }
+    } finally {
+      wrapper.unmount();
+    }
+  },
+);
+
+it('updates maximum HP immediately and keeps downed creatures eligible for turns', async () => {
+  const combat = createVueCombat();
+  const id = combat.addCreature();
+  combat.editCreature(id, { init: '20', maxHP: 12, tempHP: 3 });
+  const unconfigured = combat.addCreature();
+  combat.editCreature(unconfigured, { init: '10' });
+  const wrapper = mount(EncounterTracker, { props: { combat } });
+  const row = wrapper.get(`tr[data-id="${id}"]`);
+  try {
+    await wrapper.get('#start-next-btn').trigger('click');
+    await row.get('.f-adjust').setValue('8');
+    await row.get('button.r-dmg').trigger('click');
+    expect(row.get('.hp-number').text()).toBe('7 / 12');
+    await row.get('.f-maxhp').setValue('4');
+    expect(row.get('.cell-current').text()).toBe('DOWNED');
+    expect(row.classes()).toContain('downed');
+    await row.get('.f-maxhp').setValue('6');
+    expect(row.get('.hp-number').text()).toBe('2 / 6');
+    await row.get('.f-adjust').setValue('100');
+    await row.get('button.r-dmg').trigger('click');
+    expect(row.get('.cell-current').text()).toBe('DOWNED');
+    expect((row.get('.f-adjust').element as HTMLInputElement).value).toBe('');
+    expect(wrapper.get(`tr[data-id="${unconfigured}"] .cell-current`).text()).toBe('set HP');
+    expect(wrapper.get(`tr[data-id="${unconfigured}"]`).classes()).not.toContain('downed');
+    await wrapper.get('#start-next-btn').trigger('click');
+    expect(wrapper.get('tr.active').attributes('data-id')).toBe(String(unconfigured));
+    await wrapper.get('#start-next-btn').trigger('click');
+    expect(wrapper.get('tr.active').attributes('data-id')).toBe(String(id));
+    await row.get('.f-adjust').setValue('2');
+    await row.get('button.r-heal').trigger('click');
+    expect(row.get('.hp-number').text()).toBe('2 / 6');
+    expect(row.classes()).not.toContain('downed');
+  } finally {
+    wrapper.unmount();
+  }
+});
 
 it('adds empty creatures and saves editable fields for an independent encounter', async () => {
   const storage = createStorage();

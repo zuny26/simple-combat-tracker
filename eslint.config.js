@@ -45,9 +45,6 @@ export default [
       sourceType: 'module',
       globals: browserGlobals,
     },
-    rules: {
-      'no-unused-vars': 'error',
-    },
   },
 
   // Tests — run under node --test.

@@ -28,12 +28,27 @@ export type ReadonlyCombatState = Readonly<Omit<CombatState, 'creatures'>> & {
 };
 export type CreatureEdits = Partial<Pick<Creature, 'init' | 'name' | 'ac' | 'maxHP' | 'tempHP'>>;
 
-function plainState(value: CombatState): CombatState {
-  return value;
+export interface Combat {
+  readonly state: ReadonlyCombatState;
+  readonly displayOrder: readonly ReadonlyCreature[];
+  addCreature(): number;
+  editCreature(id: number, edits: CreatureEdits): void;
+  duplicateCreature(id: number): number | null;
+  removeCreature(id: number): void;
+  addTag(id: number, field: 'conditions' | 'other', value: string): void;
+  removeTag(id: number, field: 'conditions' | 'other', value: string): void;
+  hp(id: number): { current: number; configured: boolean; downed: boolean } | null;
+  damage(id: number, amount: number): void;
+  heal(id: number, amount: number): void;
+  start(): void;
+  next(): void;
+  reset(): void;
+  isEmptyCreature(id: number): boolean;
+  hasMeaningfulData(): boolean;
 }
 
 // The observer wraps fresh owned state; the default needs no framework or globals.
-export function createCombat(observe: typeof plainState = plainState) {
+export function createCombat(observe: (value: CombatState) => CombatState = value => value): Combat {
   const state = observe({ creatures: [], round: 0, activeId: null, started: false });
   let nextId = 1;
   const find = (id: number) => state.creatures.find(creature => creature.id === id);

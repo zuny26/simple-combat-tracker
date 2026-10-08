@@ -21,8 +21,14 @@
   reactivity and a read-only state view. The legacy app remains the running owner;
   typed combat is an independently tested expansion alongside it.
 
+- [03: Versioned encounter persistence](issues/03-versioned-encounter-persistence.md):
+  An injected storage interface restores and centrally saves version-1 encounter inputs,
+  progression, and identity allocation. Whole-encounter validation recovery and storage
+  failure containment keep actions usable in memory. Vue instances optionally use the
+  adapter; the legacy entry and its storage key remain independent.
+
 ## Fog
 
 - Actual Pages configuration, published URL, and default branch must be verified before
   cutover. This milestone does not change remote hosting settings.
-- New-format persistence and Vue encounter workflows remain future tickets.
+- Vue encounter workflows remain future tickets.

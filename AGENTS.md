@@ -49,7 +49,7 @@ remains on its existing mechanism; this milestone adds no publishing job or Page
 
 ## Architecture
 
-### Typed combat expansion (ticket 02)
+### Typed combat expansion (tickets 02–03)
 
 `src/combat/combat.ts:createCombat()` creates a fresh encounter with typed read-only
 state and named actions. Each app/test owns one instance. Actions coordinate HP
@@ -68,8 +68,44 @@ or non-finite damage/healing amounts are ignored; negative HP edits clamp to zer
 
 The new module is exercised through public-interface Vitest tests, including Node-only
 combat tests and Vue observable-state tests. It is not mounted in the running app yet;
-new-format persistence and Vue workflows belong to later tickets. Keep the legacy app's
+versioned persistence is available below, while Vue workflows belong to later tickets. Keep the legacy app's
 state owner separate until cutover. Existing tests remain applicable to that app.
+
+### Versioned encounter persistence (ticket 03)
+
+`src/combat/persistence.ts:createPersistedCombat(storage, observe?)` restores a fresh
+combat instance and centrally saves completed changes. The explicit `EncounterStorage`
+interface has `getItem`/`setItem`; tests supply independent in-memory or failing adapters.
+`createBrowserStorage()` defers browser storage access until these calls so a throwing
+`localStorage` getter is also contained. Future production Vue code creates one instance
+with `createVueCombat(createBrowserStorage())`; omitting storage creates an in-memory instance.
+The legacy entry still uses its own state and storage code.
+
+The new key is `dnd-combat-tracker-v1`, separate from legacy combat, theme, and help keys.
+Version 1 stores `version`, `nextId`, `creatures`, `round`, `activeId`, and `started`.
+Creature fields are `id`, initiative text (`init`), `name`, `ac`, `maxHP`, `tempHP`,
+`damageTaken`, `conditions`, and notes (`other`). Identity allocation survives removal,
+reset, and reload. HP totals, display order, and transient UI state are excluded. Unknown
+saved fields are ignored and omitted on the next save; legacy formats are not loaded.
+
+The loader rejects the whole encounter on malformed JSON, unsupported versions, invalid
+field shapes, non-finite/negative HP inputs, damage above maximum HP, invalid or duplicate
+IDs, invalid next identity, or inconsistent progression. IDs and `nextId` are positive safe
+integers, with `nextId` available for allocation. At the safe-integer limit allocation
+wraps to the first unused positive ID, retaining issued IDs across resets within an instance.
+The round counter saturates at `Number.MAX_SAFE_INTEGER` so further turns and saves remain
+usable without losing the encounter to an unsafe counter. Tags are trimmed, nonblank strings unique
+without regard to case. Pre-combat requires round zero and no active creature; started
+combat requires a positive safe-integer round and an existing eligible active creature.
+Initiative remains text: blank, nonnumeric, and non-finite values are parked; finite zero
+and negative values remain eligible.
+
+Recovery creates an empty pre-combat encounter, without rewriting storage on load. The
+next actual change replaces invalid data. Read failures also start in memory; write
+failures preserve the completed action, and later changes retry saving. The combat factory
+accepts initial state/identity and an `onChange` callback; it notifies once after each action
+finishes its invariants, skipping rejected or unchanged actions. Widgets call combat actions
+and never save independently. Persistence tests exercise the public factory/storage seam.
 
 ### Running legacy application
 

@@ -28,3 +28,20 @@ it('exposes live read-only encounter state and derived behavior to Vue consumers
     stop();
   }
 });
+
+it('restores persisted combat into Vue reactivity and saves subsequent actions', () => {
+  const values = new Map<string, string>();
+  const storage = {
+    getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => { values.set(key, value); },
+  };
+  const original = createVueCombat(storage);
+  const id = original.addCreature();
+  original.editCreature(id, { maxHP: 10 });
+  const restored = createVueCombat(storage);
+  const current = computed(() => restored.hp(id)?.current);
+  expect(current.value).toBe(10);
+  restored.damage(id, 4);
+  expect(current.value).toBe(6);
+  expect(createVueCombat(storage).hp(id)?.current).toBe(6);
+});

@@ -1,13 +1,8 @@
-// eslint.config.js — flat config. Three blocks, because the three kinds of file
-// in this repo see three different sets of globals.
-//
-// The point of linting here is no-undef: with no typechecker and no build step,
-// it is the only automated thing that catches a typo'd identifier or a function
-// renamed in one module but not in its callers. Stylistic rules stay OFF —
-// conventions live in CLAUDE.md and are enforced by review, and style churn
-// would bury real findings.
+// Legacy JavaScript keeps no-undef; TypeScript uses vue-tsc for identifier checks.
 
 import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import vue from 'eslint-plugin-vue';
 
 // The complete set of browser globals the app currently uses. Deliberately
 // hand-listed rather than pulled from a `globals` package (see file header).
@@ -27,13 +22,24 @@ const nodeGlobals = {
 };
 
 export default [
-  { ignores: ['playwright-report/', 'test-results/'] },
+  { ignores: ['dist/', 'coverage/', '.vite/', 'playwright-report/', 'test-results/'] },
 
   js.configs.recommended,
-
-  // The app itself — runs in the browser, no bundler, ES modules only.
+  ...tseslint.configs.recommended.map((config) => ({
+    ...config,
+    files: ['**/*.ts', '**/*.vue'],
+  })),
+  ...vue.configs['flat/essential'],
   {
-    files: ['js/**/*.js'],
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: { parser: tseslint.parser },
+    },
+  },
+
+  // The still-active legacy app and future typed UI run in the browser.
+  {
+    files: ['js/**/*.js', 'src/**/*.ts', 'src/**/*.vue'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -46,7 +52,7 @@ export default [
 
   // Tests — run under node --test.
   {
-    files: ['test/**/*.js'],
+    files: ['test/**/*.js', 'test/**/*.ts', 'test/**/*.vue'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -69,7 +75,7 @@ export default [
 
   // Root-level config files, so `eslint .` does not report false no-undef here.
   {
-    files: ['*.js'],
+    files: ['*.js', '*.ts'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

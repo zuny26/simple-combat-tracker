@@ -65,7 +65,7 @@ export async function gotoApp(page, opts = {}) {
     if (themeId) localStorage.setItem(themeKey, themeId);
   }, [STORAGE_KEY, blob, THEME_KEY, theme]);
 
-  await page.goto('/');
+  await page.goto('./');
   // An empty combat still renders one <tr> (the "no creatures yet" row), so this waits
   // for first paint of the table either way.
   await expect(page.locator('#creature-rows tr').first()).toBeVisible();

@@ -202,3 +202,10 @@ parked-creature departure, literal user text, HP presentation, and numeric draft
 test-only SFC probe remains a tooling check. `e2e/vue-encounter.spec.js` loads the generated Vue
 entry at the Pages path, creates and advances an encounter, checks initiative/name editing
 with real Tab/click destinations, and restores real UI saves on reload without reseeding.
+
+
+Ticket 06 extends mounted Vue encounter tests with duplication, meaningful/empty removal,
+accept/cancel/reset persistence, preference isolation, and active-creature removal/wrap.
+Chromium verifies destructive confirmation at desktop and 320px widths: Cancel/Escape/
+backdrop dismissal, trapped Tab, focus restoration, accepted actions, and actual reload.
+Legacy destructive-action tests remain applicable to the independent legacy entry.

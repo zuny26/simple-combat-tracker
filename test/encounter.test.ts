@@ -227,3 +227,151 @@ it('shows restored downed HP, clamps maximum edits, and preserves decimal drafts
     wrapper.unmount();
   }
 });
+
+
+it('duplicates a creature with numbered names, copied stats, and fresh HP and tags', async () => {
+  const storage = createStorage();
+  const combat = createVueCombat(storage);
+  const id = combat.addCreature();
+  combat.editCreature(id, { init: '20', name: 'Goblin', ac: '13', maxHP: 12, tempHP: 3 });
+  combat.damage(id, 8);
+  combat.addTag(id, 'conditions', 'Poisoned');
+  combat.addTag(id, 'other', 'Guard');
+  const wrapper = mount(EncounterTracker, { props: { combat } });
+  try {
+    await wrapper.get(`tr[data-id="${id}"] .btn-dupe`).trigger('click');
+    await wrapper.get(`tr[data-id="${id}"] .btn-dupe`).trigger('click');
+    const restored = createVueCombat(storage);
+    expect(restored.state.creatures.map(creature => creature.name).sort()).toEqual(['Goblin', 'Goblin 2', 'Goblin 3']);
+    for (const copy of restored.state.creatures.filter(creature => creature.id !== id)) {
+      expect(copy).toMatchObject({ init: '20', ac: '13', maxHP: 12, tempHP: 0, damageTaken: 0, conditions: [], other: [] });
+      expect(wrapper.get(`tr[data-id="${copy.id}"] .hp-number`).text()).toBe('12 / 12');
+    }
+    await wrapper.get('#add-btn').trigger('click');
+    const blank = combat.state.creatures.at(-1)!;
+    await wrapper.get(`tr[data-id="${blank.id}"] .btn-dupe`).trigger('click');
+    expect(combat.state.creatures.filter(creature => creature.name === '')).toHaveLength(2);
+  } finally {
+    wrapper.unmount();
+  }
+});
+
+
+it('removes untouched creatures immediately but saves meaningful removal only after acceptance', async () => {
+  const storage = createStorage();
+  const combat = createVueCombat(storage);
+  const empty = combat.addCreature();
+  const first = combat.addCreature();
+  combat.editCreature(first, { init: '20', name: '<b>Goblin</b>' });
+  const second = combat.addCreature();
+  combat.editCreature(second, { init: '10' });
+  combat.start();
+  const wrapper = mount(EncounterTracker, { props: { combat } });
+  try {
+    await wrapper.get(`tr[data-id="${empty}"] .btn-remove`).trigger('click');
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+    expect(wrapper.find(`tr[data-id="${empty}"]`).exists()).toBe(false);
+    const before = storage.getItem('dnd-combat-tracker-v1');
+    await wrapper.get(`tr[data-id="${first}"] .btn-remove`).trigger('click');
+    expect(wrapper.get('[role="dialog"]').text()).toContain('<b>Goblin</b>');
+    expect(wrapper.find('[role="dialog"] b').exists()).toBe(false);
+    expect(storage.getItem('dnd-combat-tracker-v1')).toBe(before);
+    await wrapper.get('#confirm-cancel-btn').trigger('click');
+    expect(storage.getItem('dnd-combat-tracker-v1')).toBe(before);
+    expect(wrapper.get('tr.active').attributes('data-id')).toBe(String(first));
+    await wrapper.get(`tr[data-id="${first}"] .btn-remove`).trigger('click');
+    await wrapper.get('#confirm-ok-btn').trigger('click');
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+    expect(wrapper.get('tr.active').attributes('data-id')).toBe(String(second));
+    expect(createVueCombat(storage).state.activeId).toBe(second);
+    expect(wrapper.get('#round-value').text()).toBe('1');
+    await wrapper.get(`tr[data-id="${second}"] .btn-remove`).trigger('click');
+    await wrapper.get('#confirm-ok-btn').trigger('click');
+    expect(wrapper.find('tr.active').exists()).toBe(false);
+    expect(wrapper.get('#round-value').text()).toBe('0');
+    expect(createVueCombat(storage).state.creatures).toHaveLength(0);
+  } finally {
+    wrapper.unmount();
+  }
+});
+
+
+it('confirms New Combat without saving on cancellation and preserves independent preferences on reset', async () => {
+  const storage = createStorage();
+  for (const key of ['dnd-ct-theme', 'sct-usage-dismissed', 'dnd-combat-tracker']) storage.setItem(key, 'preserve');
+  const combat = createVueCombat(storage);
+  const id = combat.addCreature();
+  combat.editCreature(id, { init: '20' });
+  combat.start();
+  const wrapper = mount(EncounterTracker, { props: { combat } });
+  try {
+    const before = storage.getItem('dnd-combat-tracker-v1');
+    await wrapper.get('#reset-btn').trigger('click');
+    expect(wrapper.get('[role="dialog"]').text()).toContain('New Combat');
+    expect(storage.getItem('dnd-combat-tracker-v1')).toBe(before);
+    await wrapper.get('#confirm-cancel-btn').trigger('click');
+    expect(storage.getItem('dnd-combat-tracker-v1')).toBe(before);
+    expect(combat.state.started).toBe(true);
+    await wrapper.get('#reset-btn').trigger('click');
+    await wrapper.get('#confirm-ok-btn').trigger('click');
+    expect(wrapper.findAll('tr[data-id]')).toHaveLength(0);
+    expect(wrapper.get('#round-value').text()).toBe('0');
+    expect(wrapper.get('#start-next-btn').text()).toBe('Start');
+    const restored = createVueCombat(storage);
+    expect(restored.state).toMatchObject({ creatures: [], round: 0, activeId: null, started: false });
+    for (const key of ['dnd-ct-theme', 'sct-usage-dismissed', 'dnd-combat-tracker']) expect(storage.getItem(key)).toBe('preserve');
+    const resetSave = storage.getItem('dnd-combat-tracker-v1');
+    await wrapper.get('#reset-btn').trigger('click');
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+    expect(storage.getItem('dnd-combat-tracker-v1')).toBe(resetSave);
+    await wrapper.get('#add-btn').trigger('click');
+    expect(combat.state.creatures[0]!.id).toBeGreaterThan(id);
+    await wrapper.get('#reset-btn').trigger('click');
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+    expect(createVueCombat(storage).state.creatures).toHaveLength(0);
+  } finally {
+    wrapper.unmount();
+  }
+});
+
+
+it.each(['init', 'ac', 'maxHP', 'tempHP', 'conditions', 'other'] as const)(
+  'protects a creature whose only meaningful data is %s', async field => {
+    const combat = createVueCombat();
+    const id = combat.addCreature();
+    if (field === 'conditions' || field === 'other') combat.addTag(id, field, 'Important');
+    else combat.editCreature(id, { [field]: field === 'maxHP' || field === 'tempHP' ? 1 : '0' });
+    const wrapper = mount(EncounterTracker, { props: { combat } });
+    try {
+      await wrapper.get('.btn-remove').trigger('click');
+      expect(wrapper.find('[role="dialog"]').exists()).toBe(true);
+      expect(combat.state.creatures).toHaveLength(1);
+      await wrapper.get('#confirm-cancel-btn').trigger('click');
+      await wrapper.get('#reset-btn').trigger('click');
+      expect(wrapper.find('[role="dialog"]').exists()).toBe(true);
+      await wrapper.get('#confirm-cancel-btn').trigger('click');
+      expect(combat.state.creatures).toHaveLength(1);
+    } finally {
+      wrapper.unmount();
+    }
+  },
+);
+
+it('wraps accepted removal of the last active creature without incrementing the round', async () => {
+  const combat = createVueCombat();
+  for (const init of ['20', '10']) {
+    const id = combat.addCreature();
+    combat.editCreature(id, { init });
+  }
+  combat.start();
+  combat.next();
+  const wrapper = mount(EncounterTracker, { props: { combat } });
+  try {
+    await wrapper.get('tr[data-id="2"] .btn-remove').trigger('click');
+    await wrapper.get('#confirm-ok-btn').trigger('click');
+    expect(wrapper.get('tr.active').attributes('data-id')).toBe('1');
+    expect(wrapper.get('#round-value').text()).toBe('1');
+  } finally {
+    wrapper.unmount();
+  }
+});

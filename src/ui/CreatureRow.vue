@@ -3,7 +3,7 @@ import { computed, reactive, ref, watch } from 'vue';
 import type { Combat, ReadonlyCreature } from '../combat/combat';
 
 const { combat, creature } = defineProps<{ combat: Combat; creature: ReadonlyCreature }>();
-defineEmits<{ sort: [event: FocusEvent] }>();
+defineEmits<{ sort: [event: FocusEvent]; remove: [id: number, event: MouseEvent] }>();
 const health = computed(() => combat.hp(creature.id)!);
 const baseHP = computed(() => creature.maxHP - creature.damageTaken);
 const bloodied = computed(() => baseHP.value / creature.maxHP <= 0.5);
@@ -104,6 +104,18 @@ function finishHP(field: HPField) {
             stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
           Heal
         </button>
+      </div>
+    </td>
+    <td class="cell-actions" data-label="Actions">
+      <div class="row-actions vue-row-actions">
+        <button type="button" class="btn-dupe" aria-label="Duplicate creature" title="Duplicate creature"
+          @click="combat.duplicateCreature(creature.id)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V4H4v12h4" />
+          </svg>
+        </button>
+        <button type="button" class="btn-remove" aria-label="Remove creature" title="Remove creature"
+          @click="$emit('remove', creature.id, $event)">×</button>
       </div>
     </td>
   </tr>

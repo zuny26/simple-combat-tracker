@@ -1855,3 +1855,14 @@ tr.downed .f-name {
     width: 26px;
   }
 }
+
+/* Vue keeps both row actions available until the row menu migrates. */
+.cell-actions .vue-row-actions .btn-dupe,
+.cell-actions .vue-row-actions .btn-remove {
+  display: inline-flex;
+}
+
+/* New Combat remains directly available before the Vue app menu migrates. */
+#reset-btn.vue-reset {
+  display: inline-flex;
+}

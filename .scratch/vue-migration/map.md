@@ -15,8 +15,14 @@
   Public deployment is unchanged. The [per-test audit](../../docs/migrations/test-audit.md)
   records each test's responsibility and migration decision.
 
+- [02: Isolated combat actions](issues/02-isolated-combat-actions.md):
+  The typed factory owns independent encounters and named actions, derives order/HP,
+  and handles active-creature departure internally. A Vue adapter adds built-in
+  reactivity and a read-only state view. The legacy app remains the running owner;
+  typed combat is an independently tested expansion alongside it.
+
 ## Fog
 
 - Actual Pages configuration, published URL, and default branch must be verified before
   cutover. This milestone does not change remote hosting settings.
-- Typed combat state, persistence, and Vue encounter workflows remain future milestones.
+- New-format persistence and Vue encounter workflows remain future tickets.

@@ -7,7 +7,7 @@ This file provides guidance to AI agents when working with code in this reposito
 A D&D combat tracker for DMs: initiative order, HP, and status conditions for one encounter.
 
 Fully local by design: no backend; all encounter data lives in `localStorage`.
-Milestone 1 of the Vue migration serves and bundles the existing `index.html` / `js/main.js`
+The Vue migration currently serves and bundles the existing `index.html` / `js/main.js`
 application with Vite. The legacy mutable state and manual DOM modules still own the running
 app. Vue Composition API, strict TypeScript SFC checking, Vitest, and Vue Test Utils are
 installed for subsequent milestones; the test-only SFC probe does not mount in the app.
@@ -48,6 +48,30 @@ on its hosted runner. There are no local hooks or required PR workflows. Public 
 remains on its existing mechanism; this milestone adds no publishing job or Pages settings.
 
 ## Architecture
+
+### Typed combat expansion (ticket 02)
+
+`src/combat/combat.ts:createCombat()` creates a fresh encounter with typed read-only
+state and named actions. Each app/test owns one instance. Actions coordinate HP
+invariants, tags, duplication, and active-creature departure; UI callers pass creature
+IDs and never capture turn indices. `displayOrder` and `hp(id)` are derived reads.
+`isEmptyCreature(id)` and `hasMeaningfulData()` support UI-owned confirmations.
+Conditions use `conditions`; notes use `other`. Pending HP adjustments belong to UI state.
+
+`src/combat/rules.ts` and the combat factory use no Vue or browser globals.
+`src/combat/vueCombat.ts:createVueCombat()` supplies Vue `reactive` state to the factory
+and exposes a deep `readonly` state view. Create it once for each future Vue app and
+share it with that app's UI. The optional state observer on `createCombat` is the
+integration boundary; callers edit through actions, and state is read-only in TypeScript.
+IDs remain unique across resets within an instance. Non-finite HP edits and nonpositive
+or non-finite damage/healing amounts are ignored; negative HP edits clamp to zero.
+
+The new module is exercised through public-interface Vitest tests, including Node-only
+combat tests and Vue observable-state tests. It is not mounted in the running app yet;
+new-format persistence and Vue workflows belong to later tickets. Keep the legacy app's
+state owner separate until cutover. Existing tests remain applicable to that app.
+
+### Running legacy application
 
 **`js/state.js` is the single source of truth.** It exports one mutable `state` object
 (`creatures`, `round`, `activeId`, `started`, `nextId`). Every module imports and mutates it

@@ -808,11 +808,6 @@ tr.downed .f-name {
 .hp-cell.hp-unconfigured .hp-track {
   background: color-mix(in srgb, var(--color-text) 8%, transparent);
 }
-.hp-label-muted {
-  font-size: 12px;
-  color: color-mix(in srgb, var(--color-text) 40%, transparent);
-  white-space: nowrap;
-}
 .hp-track-alive {
   background: color-mix(in srgb, var(--color-text) 10%, transparent);
   overflow: hidden;

@@ -156,7 +156,6 @@ function finishHP(field: HPField) {
       >
         <template v-if="!health.configured">
           <div class="hp-track"></div>
-          <span class="hp-label-muted">set HP</span>
         </template>
         <template v-else-if="health.downed">
           <div class="hp-track hp-track-downed"></div>

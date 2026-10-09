@@ -95,7 +95,7 @@ it('updates maximum HP immediately and keeps downed creatures eligible for turns
     await row.get('button.r-dmg').trigger('click');
     expect(row.get('.cell-current').text()).toBe('DOWNED');
     expect((row.get('.f-adjust').element as HTMLInputElement).value).toBe('');
-    expect(wrapper.get(`tr[data-id="${unconfigured}"] .cell-current`).text()).toBe('set HP');
+    expect(wrapper.get(`tr[data-id="${unconfigured}"] .cell-current`).text()).toBe('');
     expect(wrapper.get(`tr[data-id="${unconfigured}"]`).classes()).not.toContain('downed');
     await wrapper.get('#start-next-btn').trigger('click');
     expect(wrapper.get('tr.active').attributes('data-id')).toBe(String(unconfigured));
@@ -120,7 +120,8 @@ it('adds empty creatures and saves editable fields for an independent encounter'
     for (const field of ['init', 'name', 'ac', 'maxhp', 'temphp']) {
       expect((row.get(`.f-${field}`).element as HTMLInputElement).value).toBe('');
     }
-    expect(row.get('.cell-current').text()).toBe('set HP');
+    expect(row.get('.cell-current').text()).toBe('');
+    expect(row.find('.hp-unconfigured .hp-track').exists()).toBe(true);
     await row.get('.f-init').setValue('-2');
     await row.get('.f-name').setValue('<img src=x onerror=alert(1)>');
     await row.get('.f-ac').setValue('15');
@@ -233,7 +234,7 @@ it('shows restored downed HP, clamps maximum edits, and preserves decimal drafts
     await wrapper.get('.f-maxhp').trigger('blur');
     expect((wrapper.get('.f-maxhp').element as HTMLInputElement).value).toBe('1.5');
     await wrapper.get('.f-maxhp').setValue('');
-    expect(wrapper.get('.cell-current').text()).toBe('set HP');
+    expect(wrapper.get('.cell-current').text()).toBe('');
     expect(wrapper.get('tr[data-id]').classes()).not.toContain('downed');
   } finally {
     wrapper.unmount();

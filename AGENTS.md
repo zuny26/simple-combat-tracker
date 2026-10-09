@@ -235,12 +235,12 @@ presentation with app modules blocked, and representative viewport bounds with f
 
 ### Issue tracker
 
-Specs and tickets live in `.scratch/<feature>/`. Before creating, reading,
-or updating tickets, read `docs/agents/issue-tracker.md`.
+Specs and tickets live in GitHub Issues for `zuny26/simple-combat-tracker`.
+Before creating, reading, or updating tickets, read `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
-Local issues use the default triage roles in their `Status:` line.
+GitHub issues use the default triage labels.
 Before triaging, read `docs/agents/triage-labels.md`.
 
 ### Domain docs

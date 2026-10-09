@@ -23,8 +23,8 @@
   --shadow-md: 0 3px 10px color-mix(in srgb, #2e2b25 16%, transparent);
   --page-bg: #d9d2c4;
 
-  --font-heading: "Caprasimo", system-ui, sans-serif;
-  --font-body: "Figtree", system-ui, sans-serif;
+  --font-heading: 'Caprasimo', system-ui, sans-serif;
+  --font-body: 'Figtree', system-ui, sans-serif;
 
   --space-1: 4.4px;
   --space-2: 8.8px;
@@ -45,7 +45,7 @@
   --control-h-sm: 36px; /* tier 1 — theme picker, help, and the ☰ app-menu trigger */
 }
 
-[data-theme="dark"] {
+[data-theme='dark'] {
   --color-bg: #211e19;
   --color-surface: #2d2921;
   --color-text: #f1e6d2;
@@ -75,7 +75,7 @@
    copied 1:1: Purple drives the UI chrome (buttons, focus, turn flag, active
    row), Green is the healthy HP bar, Cyan the temp-HP "shield" segment, Pink
    the bloodied bar, and Red the downed tag — a green→pink→red severity ramp. */
-[data-theme="dracula"] {
+[data-theme='dracula'] {
   --color-bg: #282a36; /* Background — the app card */
   --color-surface: #44475a; /* Current Line / Selection — topbar, inputs, pills */
   --color-text: #f8f8f2; /* Foreground */
@@ -110,7 +110,7 @@
    — Purple chrome, Green healthy HP, Cyan temp-HP, Pink bloodied, Red downed —
    but oriented for a light surface, so the scale runs 100 = lightest tint →
    800 = darkest ink, using Alucard's deeper shades of each Dracula hue. */
-[data-theme="alucard"] {
+[data-theme='alucard'] {
   --color-bg: #fffbeb; /* Background — the app card */
   --color-surface: #e9e4cd; /* line-highlight cream — topbar, inputs, pills */
   --color-text: #1f1f1f; /* Foreground */
@@ -182,7 +182,7 @@ body {
 
 .app-card {
   position: relative;
-  width: 1400px;
+  width: 1600px;
   max-width: 100%;
   background: var(--color-bg);
   border-radius: var(--radius-lg);
@@ -325,7 +325,7 @@ body {
   border: 1px solid color-mix(in srgb, #000 18%, transparent);
 }
 .theme-swatch::after {
-  content: "";
+  content: '';
   position: absolute;
   left: 3px;
   bottom: 3px;
@@ -383,7 +383,7 @@ body {
   stroke-linejoin: round;
   opacity: 0;
 }
-.theme-option[aria-selected="true"] .theme-check {
+.theme-option[aria-selected='true'] .theme-check {
   opacity: 1;
 }
 
@@ -552,7 +552,7 @@ body {
 }
 
 .combat-table thead th {
-  text-align: left;
+  text-align: center;
   font: 700 11px var(--font-body);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -570,7 +570,7 @@ body {
 
 /* Column sizing */
 .col-init {
-  width: 72px;
+  width: 84px;
   text-align: center;
 }
 .col-name {
@@ -590,16 +590,29 @@ body {
 .col-adjust {
   width: 200px;
 }
-/* The one centered header — it labels a single centered control, not a column of text. */
-.combat-table thead th.col-adjust {
-  text-align: center;
-}
 .col-text {
   min-width: 150px;
 }
 .col-actions {
   width: 92px;
 } /* holds the duplicate + remove buttons */
+
+@media (min-width: 1401px) {
+  .combat-table {
+    table-layout: fixed;
+  }
+  .col-name {
+    width: 240px;
+  }
+  .col-current {
+    width: 180px;
+    min-width: 180px;
+  }
+  .col-conditions,
+  .col-other {
+    min-width: 200px;
+  }
+}
 
 /* ---- Inline-editable fields (borderless, reveal on interaction) ---- */
 .combat-table input {
@@ -808,11 +821,6 @@ tr.downed .f-name {
 .hp-cell.hp-unconfigured .hp-track {
   background: color-mix(in srgb, var(--color-text) 8%, transparent);
 }
-.hp-label-muted {
-  font-size: 12px;
-  color: color-mix(in srgb, var(--color-text) 40%, transparent);
-  white-space: nowrap;
-}
 .hp-track-alive {
   background: color-mix(in srgb, var(--color-text) 10%, transparent);
   overflow: hidden;
@@ -858,14 +866,17 @@ tr.downed .f-name {
 /* Both columns render the same `.cond-*` pill design (the Other picker just has no
    predefined list). The cell: pills wrap to multiple lines, the + Add button sits last. */
 .cond-cell {
+  --tag-control-h: 27px;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: stretch;
+  justify-content: center;
   gap: 5px;
   padding: 2px 0;
 }
 .cond-pill {
   display: inline-flex;
+  min-height: var(--tag-control-h);
   align-items: center;
   gap: 1px;
   padding: 3px 4px 3px 11px;
@@ -902,7 +913,7 @@ tr.downed .f-name {
 }
 .cond-add {
   min-width: 27px;
-  height: 27px;
+  min-height: var(--tag-control-h);
   padding: 0 9px;
   border-radius: 999px;
   border: 1.5px dashed color-mix(in srgb, var(--color-accent) 45%, transparent);
@@ -1187,7 +1198,7 @@ tr.downed .f-name {
 }
 /* .theme-check ships opacity: 0 and reveals on the picker's aria-selected; these rows are
    role="menuitemradio", so they reveal on aria-checked instead. */
-.app-menu-item[aria-checked="true"] .theme-check {
+.app-menu-item[aria-checked='true'] .theme-check {
   opacity: 1;
 }
 .app-menu-sep {
@@ -1374,7 +1385,7 @@ tr.downed .f-name {
   :root {
     --card-field-h: 46px;
   }
-  /* Edge-to-edge: no floating card, no page margin — the app fills the viewport. */
+  /* Fill the viewport on narrower screens; wide tablets regain a small gutter below. */
   .app-shell {
     padding: 0;
     min-height: 100vh;
@@ -1632,7 +1643,7 @@ tr.downed .f-name {
      enough for two per line — so the break is explicit. Zero height, and the negative
      margin on the cells below cancels the row-gap its own flex line would add. */
   .combat-table tbody tr::after {
-    content: "";
+    content: '';
     order: 6;
     flex: 0 0 100%;
     height: 0;
@@ -1685,6 +1696,9 @@ tr.downed .f-name {
   }
 
   /* ---- Conditions / Other: pills, one field per line ---- */
+  .cond-cell {
+    --tag-control-h: 31px;
+  }
   .cell-conditions {
     order: 11;
     flex: 1 1 100%;
@@ -1703,7 +1717,6 @@ tr.downed .f-name {
   }
   .cond-add {
     min-width: 31px;
-    height: 31px;
     font-size: 13px;
   }
 
@@ -1715,13 +1728,250 @@ tr.downed .f-name {
   .cell-conditions::before,
   .cell-other::before {
     content: attr(data-label);
+  }
+  .cell-init::before,
+  .cell-ac::before,
+  .cell-maxhp::before,
+  .cell-temphp::before,
+  .cell-current::before,
+  .cell-adjust::before,
+  .cell-conditions::before,
+  .cell-other::before {
     display: block;
-    margin-bottom: 5px;
-    padding-left: 2px;
+    margin-bottom: var(--space-1);
+    padding-left: calc(var(--space-1) / 2);
     font: 700 10px var(--font-body);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  }
+}
+
+/* Wide tablets retain a smaller outer margin than desktop. */
+@media (min-width: 1200px) and (max-width: 1400px) {
+  .app-shell {
+    padding: var(--space-4);
+  }
+  .app-card {
+    min-height: calc(100vh - 2 * var(--space-4));
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+/* Tablet: a continuous table with headings above each creature. Each creature's tag fields
+   wrap onto full-width lines below its primary controls. */
+@media (min-width: 768px) and (max-width: 1400px) {
+  .combat-table {
+    --tablet-columns: 52px minmax(0, 2fr) repeat(3, minmax(54px, 0.5fr)) minmax(112px, 1fr)
+      minmax(174px, 1fr) 46px;
+  }
+  .combat-table tbody tr:not(.empty-row) {
+    display: grid;
+    grid-template-columns: var(--tablet-columns);
+    grid-template-areas:
+      'init name ac maxhp temphp current adjust actions'
+      'conditions conditions conditions conditions conditions conditions conditions conditions'
+      'other other other other other other other other';
+    align-items: start;
+    column-gap: var(--space-2);
+    row-gap: var(--space-1);
+    padding: var(--space-2) var(--space-3);
+    margin: 0;
+    border: 0;
+    border-bottom: 1px solid var(--color-divider);
+    border-radius: 0;
+    background: transparent;
+  }
+  .combat-table tbody tr::after {
+    content: none;
+  }
+  .combat-table tbody tr.active {
+    background: var(--color-accent-100);
+    box-shadow: inset 3px 0 var(--color-accent);
+  }
+  .combat-table tbody tr.downed:not(.active) {
+    background: color-mix(in srgb, var(--color-text) 5%, transparent);
+  }
+  .combat-table tbody td {
+    margin: 0;
+    max-width: none;
+    width: auto;
+    justify-self: stretch;
+    align-self: start;
+  }
+  .combat-table tbody td::before {
+    content: attr(data-label);
+    display: block;
+    margin: 0 0 var(--space-1);
+    padding: 0;
+    font: 700 9px/12px var(--font-body);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    text-align: center;
+    white-space: nowrap;
+    color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  }
+  .combat-table tbody td.cell-name::before {
+    text-align: left;
+    padding-left: var(--space-2);
+  }
+  .cell-init {
+    display: block;
+    grid-area: init;
+  }
+  .cell-name {
+    grid-area: name;
+  }
+  .cell-ac {
+    grid-area: ac;
+  }
+  .cell-maxhp {
+    grid-area: maxhp;
+  }
+  .cell-temphp {
+    grid-area: temphp;
+  }
+  .cell-current {
+    grid-area: current;
+  }
+  .cell-adjust {
+    grid-area: adjust;
+  }
+  .cell-actions {
+    grid-area: actions;
+  }
+  .init-wrap,
+  .ac-wrap {
+    width: 100%;
+    padding: 0;
+    justify-content: center;
+    border: 0;
+    background: transparent;
+    border-radius: 0;
+  }
+  .init-wrap {
+    flex-direction: column;
+    gap: 0;
+  }
+  .combat-table tbody tr.active .init-wrap {
+    background: transparent;
+    border-color: transparent;
+  }
+  .init-shoe,
+  .ac-shield {
+    display: none;
+  }
+  .turn-flag {
+    position: static;
+    transform: none;
+    font-size: 7px;
+    padding: 1px 5px;
+  }
+  .combat-table td.cell-init input.f-init,
+  .combat-table td.cell-ac input.f-ac {
+    width: 100%;
+    height: var(--card-field-h);
+  }
+  .combat-table tbody td input:not(.r-amt) {
+    padding-inline: var(--space-1);
+    background: transparent;
+    border-color: transparent;
+    border-radius: 999px;
+  }
+  .combat-table tbody tr.active input.f-init {
+    height: 30px;
+    min-height: 30px;
+  }
+  .combat-table tbody td input:not(.r-amt):hover {
+    border-color: var(--color-divider);
+  }
+  .combat-table tbody td input:not(.r-amt):focus {
+    border-color: var(--color-accent);
+    background: var(--color-surface);
+  }
+  .combat-table tbody td input.f-name {
+    padding-left: var(--space-2);
+  }
+  .cell-current .hp-cell {
+    min-height: var(--card-field-h);
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: 5px;
+  }
+  .cell-current .hp-track {
+    flex: none;
+    width: 100%;
+  }
+  .hp-number {
+    text-align: center;
+  }
+  .btn-menu {
+    width: var(--card-field-h);
+  }
+  .cell-adjust .r-ctl {
+    width: 100%;
+    max-width: 100%;
+  }
+  .combat-table tbody td input.r-amt {
+    flex: 0 0 52px;
+    width: 52px;
+    min-width: 52px;
+    padding: 0 4px;
+    min-height: var(--card-field-h);
+  }
+  .cell-adjust .r-side {
+    flex: 1;
+    min-width: var(--card-field-h);
+    min-height: var(--card-field-h);
+    padding-inline: 6px;
+    gap: 2px;
+  }
+  .cell-adjust .r-side svg {
+    width: 10px;
+  }
+  .cell-conditions,
+  .cell-other {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding: 0 var(--space-2);
+  }
+  .cell-conditions {
+    grid-area: conditions;
+  }
+  .cell-other {
+    grid-area: other;
+  }
+  .combat-table tbody td.cell-conditions::before,
+  .combat-table tbody td.cell-other::before {
+    display: block;
+    flex: 0 0 80px;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+  }
+  .vue-tags {
+    --tag-control-h: 33px;
+    min-width: 0;
+    flex: 1;
+  }
+  .cond-add {
+    min-width: 46px;
+  }
+  .cond-x {
+    min-width: 24px;
+    width: 24px;
+    height: 30px;
+  }
+  .cond-pill {
+    padding-block: 0;
+    font-size: 12px;
+  }
+  .cond-opt,
+  .row-menu .row-menu-item {
+    min-height: var(--card-field-h);
   }
 }
 

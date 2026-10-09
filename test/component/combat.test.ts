@@ -20,15 +20,27 @@ describe('isolated combat actions', () => {
 it('derives descending finite initiative, stable name ties, and insertion order for parked creatures', () => {
   const combat = createCombat();
   const values = [
-    ['Infinity', 'z'], ['10', 'beta'], ['', 'a'], ['10', 'Alpha'], ['10', 'alpha'],
-    ['0', 'zero'], ['-2', 'negative'], ['NaN', 'b'], ['1e309', 'c'], ['   ', 'd'],
+    ['Infinity', 'z'],
+    ['10', 'beta'],
+    ['', 'a'],
+    ['10', 'Alpha'],
+    ['10', 'alpha'],
+    ['0', 'zero'],
+    ['-2', 'negative'],
+    ['NaN', 'b'],
+    ['1e309', 'c'],
+    ['   ', 'd'],
   ];
   for (const [init, name] of values) {
     const id = combat.addCreature();
     combat.editCreature(id, { init: init!, name: name! });
   }
-  expect(combat.displayOrder.map(creature => creature.id)).toEqual([4, 5, 2, 6, 7, 1, 3, 8, 9, 10]);
-  expect(combat.state.creatures.map(creature => creature.id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  expect(combat.displayOrder.map((creature) => creature.id)).toEqual([
+    4, 5, 2, 6, 7, 1, 3, 8, 9, 10,
+  ]);
+  expect(combat.state.creatures.map((creature) => creature.id)).toEqual([
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+  ]);
 });
 
 it('starts only with eligible creatures, advances on wrap, and follows identity across edits', () => {
@@ -50,24 +62,27 @@ it('starts only with eligible creatures, advances on wrap, and follows identity 
   expect(combat.state).toMatchObject({ round: 2, activeId: a });
 });
 
-it.each(['remove', '', 'invalid', 'Infinity'])('reassigns the active creature at its previous position on departure (%s)', departure => {
-  const combat = createCombat();
-  const ids = [20, 10, 0].map(init => {
-    const id = combat.addCreature();
-    combat.editCreature(id, { init: String(init) });
-    return id;
-  });
-  const [a, b, c] = ids as [number, number, number];
-  combat.start();
-  combat.next();
-  if (departure === 'remove') combat.removeCreature(b);
-  else combat.editCreature(b, { init: departure, name: 'changed simultaneously' });
-  expect(combat.state).toMatchObject({ activeId: c, round: 1, started: true });
-  combat.removeCreature(c);
-  expect(combat.state).toMatchObject({ activeId: a, round: 1 });
-  combat.editCreature(a, { init: '' });
-  expect(combat.state).toMatchObject({ activeId: null, round: 0, started: false });
-});
+it.each(['remove', '', 'invalid', 'Infinity'])(
+  'reassigns the active creature at its previous position on departure (%s)',
+  (departure) => {
+    const combat = createCombat();
+    const ids = [20, 10, 0].map((init) => {
+      const id = combat.addCreature();
+      combat.editCreature(id, { init: String(init) });
+      return id;
+    });
+    const [a, b, c] = ids as [number, number, number];
+    combat.start();
+    combat.next();
+    if (departure === 'remove') combat.removeCreature(b);
+    else combat.editCreature(b, { init: departure, name: 'changed simultaneously' });
+    expect(combat.state).toMatchObject({ activeId: c, round: 1, started: true });
+    combat.removeCreature(c);
+    expect(combat.state).toMatchObject({ activeId: a, round: 1 });
+    combat.editCreature(a, { init: '' });
+    expect(combat.state).toMatchObject({ activeId: null, round: 0, started: false });
+  },
+);
 
 it('does not change the active creature when another creature leaves', () => {
   const combat = createCombat();
@@ -136,32 +151,44 @@ it('duplicates fresh stats after the source with unique IDs and increasing case-
   combat.addTag(source, 'other', 'Concentrating');
   const copy = combat.duplicateCreature(source);
   expect(copy).not.toBe(source);
-  expect(combat.state.creatures.map(creature => creature.id)).toEqual([source, copy, later]);
-  expect(combat.state.creatures[1]).toEqual({ id: copy, init: '10', name: 'Goblin 5', ac: '15',
-    maxHP: 20, tempHP: 0, damageTaken: 0, conditions: [], other: [] });
+  expect(combat.state.creatures.map((creature) => creature.id)).toEqual([source, copy, later]);
+  expect(combat.state.creatures[1]).toEqual({
+    id: copy,
+    init: '10',
+    name: 'Goblin 5',
+    ac: '15',
+    maxHP: 20,
+    tempHP: 0,
+    damageTaken: 0,
+    conditions: [],
+    other: [],
+  });
   const next = combat.duplicateCreature(copy!);
-  expect(combat.state.creatures.find(creature => creature.id === next)?.name).toBe('Goblin 6');
+  expect(combat.state.creatures.find((creature) => creature.id === next)?.name).toBe('Goblin 6');
   combat.editCreature(later, { name: '   ' });
   const blank = combat.duplicateCreature(later);
-  expect(combat.state.creatures.find(creature => creature.id === blank)?.name).toBe('');
+  expect(combat.state.creatures.find((creature) => creature.id === blank)?.name).toBe('');
   expect(combat.duplicateCreature(999)).toBeNull();
 });
 
-it.each(['conditions', 'other'] as const)('adds and removes trimmed, nonblank, case-insensitively unique %s', field => {
-  const combat = createCombat();
-  const id = combat.addCreature();
-  combat.addTag(id, field, '   ');
-  expect(combat.isEmptyCreature(id)).toBe(true);
-  combat.addTag(id, field, '  Poisoned  ');
-  combat.addTag(id, field, 'POISONED');
-  combat.addTag(id, field, '<b>custom, text</b>');
-  expect(combat.state.creatures[0]?.[field]).toEqual(['Poisoned', '<b>custom, text</b>']);
-  expect(combat.hasMeaningfulData()).toBe(true);
-  combat.removeTag(id, field, ' poisoned ');
-  expect(combat.state.creatures[0]?.[field]).toEqual(['<b>custom, text</b>']);
-  combat.removeTag(999, field, 'absent');
-  combat.addTag(999, field, 'absent');
-});
+it.each(['conditions', 'other'] as const)(
+  'adds and removes trimmed, nonblank, case-insensitively unique %s',
+  (field) => {
+    const combat = createCombat();
+    const id = combat.addCreature();
+    combat.addTag(id, field, '   ');
+    expect(combat.isEmptyCreature(id)).toBe(true);
+    combat.addTag(id, field, '  Poisoned  ');
+    combat.addTag(id, field, 'POISONED');
+    combat.addTag(id, field, '<b>custom, text</b>');
+    expect(combat.state.creatures[0]?.[field]).toEqual(['Poisoned', '<b>custom, text</b>']);
+    expect(combat.hasMeaningfulData()).toBe(true);
+    combat.removeTag(id, field, ' poisoned ');
+    expect(combat.state.creatures[0]?.[field]).toEqual(['<b>custom, text</b>']);
+    combat.removeTag(999, field, 'absent');
+    combat.addTag(999, field, 'absent');
+  },
+);
 
 it('resets creatures and progression and keeps subsequent identities unique', () => {
   const combat = createCombat();
@@ -182,7 +209,7 @@ it('preserves active identity across name ties and advances through downed creat
   combat.editCreature(b, { init: '10', name: 'Beta', maxHP: 10 });
   combat.start();
   combat.editCreature(a, { name: 'Zulu' });
-  expect(combat.displayOrder.map(creature => creature.id)).toEqual([b, a]);
+  expect(combat.displayOrder.map((creature) => creature.id)).toEqual([b, a]);
   expect(combat.state.activeId).toBe(a);
   combat.damage(b, 10);
   combat.next();
@@ -196,7 +223,7 @@ it('inserts parked duplicates beside their source and does not share tag arrays'
   const later = combat.addCreature();
   const copy = combat.duplicateCreature(source)!;
   combat.addTag(copy, 'conditions', 'Prone');
-  expect(combat.displayOrder.map(creature => creature.id)).toEqual([source, copy, later]);
+  expect(combat.displayOrder.map((creature) => creature.id)).toEqual([source, copy, later]);
   expect(combat.state.creatures[0]?.conditions).toEqual([]);
   combat.editCreature(999, { init: '10' });
   expect(combat.state.creatures).toHaveLength(3);
@@ -207,7 +234,9 @@ it('increases duplicate suffixes beyond the safe-integer limit without repeating
   const id = combat.addCreature();
   combat.editCreature(id, { name: 'Goblin 9007199254740992' });
   const copy = combat.duplicateCreature(id);
-  expect(combat.state.creatures.find(creature => creature.id === copy)?.name).toBe('Goblin 9007199254740993');
+  expect(combat.state.creatures.find((creature) => creature.id === copy)?.name).toBe(
+    'Goblin 9007199254740993',
+  );
 });
 
 it('retains existing injuries when temporary HP fully absorbs a large finite damage amount', () => {
@@ -241,5 +270,5 @@ it('keeps removal and parking before combat in pre-combat', () => {
   combat.removeCreature(first);
   combat.editCreature(second, { init: '' });
   expect(combat.state).toMatchObject({ round: 0, activeId: null, started: false });
-  expect(combat.displayOrder.map(creature => creature.id)).toEqual([second]);
+  expect(combat.displayOrder.map((creature) => creature.id)).toEqual([second]);
 });

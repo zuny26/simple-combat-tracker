@@ -2,12 +2,15 @@ import { test, expect } from '@playwright/test';
 import { expectNoOverflow } from './fixtures.js';
 
 test.beforeEach(async ({ page }) => {
-  await page.route(/fonts\.(googleapis|gstatic)\.com/, route =>
-    route.fulfill({ status: 200, contentType: 'text/css', body: '' }));
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, (route) =>
+    route.fulfill({ status: 200, contentType: 'text/css', body: '' }),
+  );
 });
 
 for (const width of [1600, 768, 320]) {
-  test(`Vue preferences and encounter controls work at ${width}px without overflow`, async ({ page }) => {
+  test(`Vue preferences and encounter controls work at ${width}px without overflow`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width, height: 800 });
     await page.goto('./');
     await page.locator('#usage-dismiss-btn').click();
@@ -87,18 +90,24 @@ test('Vue applies saved preferences before its application module runs', async (
     localStorage.setItem('sct-usage-dismissed', '1');
   });
   // Blocking app modules distinguishes the head script from Vue's reconciliation.
-  await page.route('**/assets/*.js', route => route.abort());
+  await page.route('**/assets/*.js', (route) => route.abort());
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('html')).toHaveClass(/usage-dismissed/);
   await expect(page.locator('#app')).toBeEmpty();
 });
 
-test('Vue starts and preference controls work when localStorage access throws', async ({ page }) => {
+test('Vue starts and preference controls work when localStorage access throws', async ({
+  page,
+}) => {
   const errors = [];
-  page.on('pageerror', error => errors.push(error.message));
+  page.on('pageerror', (error) => errors.push(error.message));
   await page.addInitScript(() => {
-    Object.defineProperty(window, 'localStorage', { get() { throw new Error('blocked'); } });
+    Object.defineProperty(window, 'localStorage', {
+      get() {
+        throw new Error('blocked');
+      },
+    });
   });
   await page.goto('./');
   await page.locator('#theme-trigger').click();

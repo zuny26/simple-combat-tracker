@@ -3,7 +3,11 @@ import { nextTick, onBeforeUnmount, ref, useId } from 'vue';
 import type { MenuItem } from './menu';
 
 const props = defineProps<{
-  label: string; triggerClass: string; triggerId?: string; panelClass: string; items: readonly MenuItem[];
+  label: string;
+  triggerClass: string;
+  triggerId?: string;
+  panelClass: string;
+  items: readonly MenuItem[];
 }>();
 const emit = defineEmits<{ select: [id: string, trigger: HTMLButtonElement] }>();
 const open = ref(false);
@@ -11,7 +15,8 @@ const trigger = ref<HTMLButtonElement>();
 const panel = ref<HTMLDivElement>();
 const menuId = useId();
 const position = ref({ left: '8px', top: '8px' });
-const buttons = () => Array.from(panel.value?.querySelectorAll<HTMLButtonElement>('[role^="menuitem"]') ?? []);
+const buttons = () =>
+  Array.from(panel.value?.querySelectorAll<HTMLButtonElement>('[role^="menuitem"]') ?? []);
 
 async function close(restoreFocus = true) {
   open.value = false;
@@ -32,7 +37,7 @@ async function toggle() {
     top: `${Math.max(8, Math.min(anchor.bottom + 6, window.innerHeight - bounds.height - 8))}px`,
   };
   const options = buttons();
-  (options.find(button => button.getAttribute('aria-checked') === 'true') ?? options[0])?.focus();
+  (options.find((button) => button.getAttribute('aria-checked') === 'true') ?? options[0])?.focus();
 }
 async function select(id: string) {
   await close();
@@ -54,7 +59,8 @@ function keydown(event: KeyboardEvent) {
   const current = options.indexOf(document.activeElement as HTMLButtonElement);
   let destination: HTMLButtonElement | undefined;
   if (event.key === 'ArrowDown') destination = options[(current + 1) % options.length];
-  else if (event.key === 'ArrowUp') destination = options[(current - 1 + options.length) % options.length];
+  else if (event.key === 'ArrowUp')
+    destination = options[(current - 1 + options.length) % options.length];
   else if (event.key === 'Home') destination = options[0];
   else if (event.key === 'End') destination = options.at(-1);
   if (destination) {
@@ -66,19 +72,51 @@ onBeforeUnmount(() => document.removeEventListener('keydown', keydown));
 </script>
 
 <template>
-  <button :id="props.triggerId" ref="trigger" type="button" :class="triggerClass" :aria-label="label"
-    aria-haspopup="menu" :aria-expanded="open" :aria-controls="open ? menuId : undefined" @click="toggle">
+  <button
+    :id="props.triggerId"
+    ref="trigger"
+    type="button"
+    :class="triggerClass"
+    :aria-label="label"
+    aria-haspopup="menu"
+    :aria-expanded="open"
+    :aria-controls="open ? menuId : undefined"
+    @click="toggle"
+  >
     <slot />
   </button>
   <template v-if="open">
     <div class="cond-backdrop" @click="close()"></div>
-    <div :id="menuId" ref="panel" :class="[panelClass, 'vue-action-menu']" :style="position" role="menu" :aria-label="label">
-      <button v-for="item in items" :key="item.id" type="button" :class="[panelClass === 'row-menu' ? 'row-menu-item' : 'app-menu-item', { 'is-danger': item.danger }]"
-        :role="item.theme ? 'menuitemradio' : 'menuitem'" :aria-checked="item.theme ? item.checked : undefined"
-        tabindex="-1" @click="select(item.id)">
-        <span v-if="item.theme" class="theme-swatch" :style="{ '--sw-bg': item.theme.swatchBg, '--sw-dot': item.theme.swatchDot }"></span>
+    <div
+      :id="menuId"
+      ref="panel"
+      :class="[panelClass, 'vue-action-menu']"
+      :style="position"
+      role="menu"
+      :aria-label="label"
+    >
+      <button
+        v-for="item in items"
+        :key="item.id"
+        type="button"
+        :class="[
+          panelClass === 'row-menu' ? 'row-menu-item' : 'app-menu-item',
+          { 'is-danger': item.danger },
+        ]"
+        :role="item.theme ? 'menuitemradio' : 'menuitem'"
+        :aria-checked="item.theme ? item.checked : undefined"
+        tabindex="-1"
+        @click="select(item.id)"
+      >
+        <span
+          v-if="item.theme"
+          class="theme-swatch"
+          :style="{ '--sw-bg': item.theme.swatchBg, '--sw-dot': item.theme.swatchDot }"
+        ></span>
         <span class="app-menu-label">{{ item.label }}</span>
-        <svg v-if="item.theme" class="theme-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+        <svg v-if="item.theme" class="theme-check" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
       </button>
     </div>
   </template>

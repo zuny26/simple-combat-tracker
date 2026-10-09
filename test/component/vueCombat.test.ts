@@ -6,14 +6,22 @@ it('exposes live read-only encounter state and derived behavior to Vue consumers
   const combat = createVueCombat();
   const independent = createVueCombat();
   const summary = computed(() => ({
-    names: combat.displayOrder.map(creature => creature.name),
+    names: combat.displayOrder.map((creature) => creature.name),
     active: combat.state.activeId,
     round: combat.state.round,
   }));
   const totals: number[] = [];
-  const stop = watchEffect(() => {
-    totals.push(combat.state.creatures.reduce((total, creature) => total + combat.hp(creature.id)!.current, 0));
-  }, { flush: 'sync' });
+  const stop = watchEffect(
+    () => {
+      totals.push(
+        combat.state.creatures.reduce(
+          (total, creature) => total + combat.hp(creature.id)!.current,
+          0,
+        ),
+      );
+    },
+    { flush: 'sync' },
+  );
   try {
     const id = combat.addCreature();
     combat.editCreature(id, { name: 'Goblin', init: '10', maxHP: 10 });
@@ -33,7 +41,9 @@ it('restores persisted combat into Vue reactivity and saves subsequent actions',
   const values = new Map<string, string>();
   const storage = {
     getItem: (key: string) => values.get(key) ?? null,
-    setItem: (key: string, value: string) => { values.set(key, value); },
+    setItem: (key: string, value: string) => {
+      values.set(key, value);
+    },
   };
   const original = createVueCombat(storage);
   const id = original.addCreature();

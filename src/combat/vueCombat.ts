@@ -11,6 +11,8 @@ export function createVueCombat(storage?: EncounterStorage): Combat {
   return {
     ...combat,
     state: readonly(combat.state),
-    get displayOrder() { return combat.displayOrder; },
+    get displayOrder() {
+      return combat.displayOrder;
+    },
   };
 }

@@ -1,12 +1,18 @@
 // @vitest-environment node
 import { expect, it } from 'vitest';
-import { createBrowserStorage, createPersistedCombat, ENCOUNTER_KEY } from '../../src/combat/persistence';
+import {
+  createBrowserStorage,
+  createPersistedCombat,
+  ENCOUNTER_KEY,
+} from '../../src/combat/persistence';
 
 function memoryStorage() {
   const values = new Map<string, string>();
   return {
     getItem: (key: string) => values.get(key) ?? null,
-    setItem: (key: string, value: string) => { values.set(key, value); },
+    setItem: (key: string, value: string) => {
+      values.set(key, value);
+    },
   };
 }
 
@@ -30,12 +36,34 @@ it('restores encounter inputs, progression and identity allocation across reload
 });
 
 const valid = {
-  version: 1, nextId: 3, round: 1, started: true, activeId: 1,
+  version: 1,
+  nextId: 3,
+  round: 1,
+  started: true,
+  activeId: 1,
   creatures: [
-    { id: 1, init: '-2', name: 'Goblin', ac: '', maxHP: 10, tempHP: 0,
-      damageTaken: 2, conditions: ['Poisoned'], other: [] },
-    { id: 2, init: 'Infinity', name: '', ac: '', maxHP: 0, tempHP: 0,
-      damageTaken: 0, conditions: [], other: [] },
+    {
+      id: 1,
+      init: '-2',
+      name: 'Goblin',
+      ac: '',
+      maxHP: 10,
+      tempHP: 0,
+      damageTaken: 2,
+      conditions: ['Poisoned'],
+      other: [],
+    },
+    {
+      id: 2,
+      init: 'Infinity',
+      name: '',
+      ac: '',
+      maxHP: 0,
+      tempHP: 0,
+      damageTaken: 0,
+      conditions: [],
+      other: [],
+    },
   ],
 };
 
@@ -56,14 +84,31 @@ it.each([
   ['invalid next identity', JSON.stringify({ ...valid, nextId: 2 })],
   ['unsafe identity', JSON.stringify({ ...valid, nextId: 1e20 })],
   ...[
-    { id: 0 }, { id: 1.5 }, { init: 10 }, { name: null }, { ac: 12 },
-    { maxHP: -1 }, { tempHP: '3' }, { damageTaken: 11 }, { damageTaken: -1 },
-    { conditions: 'Poisoned' }, { conditions: [false] }, { other: [''] },
-    { conditions: ['Poisoned', 'poisoned'] }, { other: [' untrimmed '] },
-  ].map(change => ['invalid creature ' + JSON.stringify(change), JSON.stringify({
-    ...valid, creatures: [{ ...valid.creatures[0], ...change }, valid.creatures[1]],
-  })]),
-  ['duplicate identity', JSON.stringify({ ...valid, creatures: [valid.creatures[0], valid.creatures[0]] })],
+    { id: 0 },
+    { id: 1.5 },
+    { init: 10 },
+    { name: null },
+    { ac: 12 },
+    { maxHP: -1 },
+    { tempHP: '3' },
+    { damageTaken: 11 },
+    { damageTaken: -1 },
+    { conditions: 'Poisoned' },
+    { conditions: [false] },
+    { other: [''] },
+    { conditions: ['Poisoned', 'poisoned'] },
+    { other: [' untrimmed '] },
+  ].map((change) => [
+    'invalid creature ' + JSON.stringify(change),
+    JSON.stringify({
+      ...valid,
+      creatures: [{ ...valid.creatures[0], ...change }, valid.creatures[1]],
+    }),
+  ]),
+  [
+    'duplicate identity',
+    JSON.stringify({ ...valid, creatures: [valid.creatures[0], valid.creatures[0]] }),
+  ],
   ['invalid creature list', JSON.stringify({ ...valid, creatures: {} })],
   ['null creature', JSON.stringify({ ...valid, creatures: [null] })],
 ])('recovers the whole encounter from %s and can save again', (_reason, saved) => {
@@ -84,20 +129,34 @@ it('saves every action and reset without touching preferences or legacy data', (
   }
   const combat = createPersistedCombat(storage);
   const check = () => expect(createPersistedCombat(storage).state).toEqual(combat.state);
-  const first = combat.addCreature(); check();
-  combat.editCreature(first, { init: '12', name: 'Goblin', maxHP: 10, tempHP: 2 }); check();
-  const second = combat.duplicateCreature(first)!; check();
-  combat.addTag(first, 'conditions', 'Poisoned'); check();
-  combat.addTag(first, 'other', 'watch'); check();
-  combat.removeTag(first, 'conditions', 'Poisoned'); check();
-  combat.removeTag(first, 'other', 'watch'); check();
-  combat.damage(first, 5); check();
-  combat.heal(first, 1); check();
-  combat.start(); check();
-  combat.next(); check();
-  combat.editCreature(second, { init: 'parked' }); check();
-  combat.removeCreature(first); check();
-  combat.reset(); check();
+  const first = combat.addCreature();
+  check();
+  combat.editCreature(first, { init: '12', name: 'Goblin', maxHP: 10, tempHP: 2 });
+  check();
+  const second = combat.duplicateCreature(first)!;
+  check();
+  combat.addTag(first, 'conditions', 'Poisoned');
+  check();
+  combat.addTag(first, 'other', 'watch');
+  check();
+  combat.removeTag(first, 'conditions', 'Poisoned');
+  check();
+  combat.removeTag(first, 'other', 'watch');
+  check();
+  combat.damage(first, 5);
+  check();
+  combat.heal(first, 1);
+  check();
+  combat.start();
+  check();
+  combat.next();
+  check();
+  combat.editCreature(second, { init: 'parked' });
+  check();
+  combat.removeCreature(first);
+  check();
+  combat.reset();
+  check();
   expect(createPersistedCombat(storage).addCreature()).toBe(3);
   for (const key of ['dnd-ct-theme', 'sct-usage-dismissed', 'dnd-combat-tracker']) {
     expect(storage.getItem(key)).toBe('retain');
@@ -106,12 +165,21 @@ it('saves every action and reset without touching preferences or legacy data', (
 
 it('writes only encounter inputs and progression and strips unknown saved fields', () => {
   const storage = memoryStorage();
-  storage.setItem(ENCOUNTER_KEY, JSON.stringify({ ...valid, currentHP: 999,
-    displayOrder: [2, 1], menu: true, confirmation: {}, search: 'foo', adjustment: 9,
-    creatures: [{ ...valid.creatures[0], currentHP: 999, adjustment: 9 }, valid.creatures[1]],
-  }));
+  storage.setItem(
+    ENCOUNTER_KEY,
+    JSON.stringify({
+      ...valid,
+      currentHP: 999,
+      displayOrder: [2, 1],
+      menu: true,
+      confirmation: {},
+      search: 'foo',
+      adjustment: 9,
+      creatures: [{ ...valid.creatures[0], currentHP: 999, adjustment: 9 }, valid.creatures[1]],
+    }),
+  );
   const combat = createPersistedCombat(storage);
-  expect(combat.displayOrder.map(creature => creature.id)).toEqual([1, 2]);
+  expect(combat.displayOrder.map((creature) => creature.id)).toEqual([1, 2]);
   combat.next();
   expect(JSON.parse(storage.getItem(ENCOUNTER_KEY)!)).toEqual({ ...valid, round: 2 });
   expect(combat.hp(1)?.current).toBe(8);
@@ -122,17 +190,22 @@ it('leaves stored data untouched for reads and rejected or unchanged actions', (
   const saved = JSON.stringify(valid, null, 2);
   storage.setItem(ENCOUNTER_KEY, saved);
   const combat = createPersistedCombat(storage);
-  combat.hp(1); expect(combat.displayOrder).toHaveLength(2);
-  combat.hasMeaningfulData(); combat.isEmptyCreature(1);
+  combat.hp(1);
+  expect(combat.displayOrder).toHaveLength(2);
+  combat.hasMeaningfulData();
+  combat.isEmptyCreature(1);
   combat.editCreature(1, { maxHP: NaN, name: 'Goblin' });
   combat.editCreature(99, { name: 'missing' });
-  combat.damage(1, Infinity); combat.heal(1, -1);
-  combat.duplicateCreature(99); combat.removeCreature(99);
-  combat.addTag(1, 'conditions', 'poisoned'); combat.removeTag(1, 'other', 'absent');
+  combat.damage(1, Infinity);
+  combat.heal(1, -1);
+  combat.duplicateCreature(99);
+  combat.removeCreature(99);
+  combat.addTag(1, 'conditions', 'poisoned');
+  combat.removeTag(1, 'other', 'absent');
   expect(storage.getItem(ENCOUNTER_KEY)).toBe(saved);
 });
 
-it.each(['read', 'write', 'both'])('keeps combat usable when storage fails on %s', failure => {
+it.each(['read', 'write', 'both'])('keeps combat usable when storage fails on %s', (failure) => {
   const memory = memoryStorage();
   let failing = true;
   const storage = {
@@ -157,7 +230,6 @@ it.each(['read', 'write', 'both'])('keeps combat usable when storage fails on %s
   combat.heal(id, 1);
   expect(createPersistedCombat(storage).hp(id)?.current).toBe(8);
 });
-
 
 it('keeps browser storage access failures inside the persistence boundary', () => {
   // Node has no browser localStorage: even constructing the adapter must be safe.
@@ -194,11 +266,16 @@ it('retains usable persisted progression when the round reaches its safe integer
 
 it('skips saves when clamped edits, HP actions and progression leave encounter facts unchanged', () => {
   const storage = memoryStorage();
-  const empty = JSON.stringify({ version: 1, nextId: 1, round: 0, started: false,
-    activeId: null, creatures: [] }, null, 2);
+  const empty = JSON.stringify(
+    { version: 1, nextId: 1, round: 0, started: false, activeId: null, creatures: [] },
+    null,
+    2,
+  );
   storage.setItem(ENCOUNTER_KEY, empty);
   const combat = createPersistedCombat(storage);
-  combat.reset(); combat.start(); combat.next();
+  combat.reset();
+  combat.start();
+  combat.next();
   expect(storage.getItem(ENCOUNTER_KEY)).toBe(empty);
 
   const id = combat.addCreature();
@@ -206,7 +283,9 @@ it('skips saves when clamped edits, HP actions and progression leave encounter f
   combat.start();
   const full = JSON.stringify(JSON.parse(storage.getItem(ENCOUNTER_KEY)!), null, 2);
   storage.setItem(ENCOUNTER_KEY, full);
-  combat.start(); combat.heal(id, 3); combat.editCreature(id, { tempHP: -2 });
+  combat.start();
+  combat.heal(id, 3);
+  combat.editCreature(id, { tempHP: -2 });
   expect(storage.getItem(ENCOUNTER_KEY)).toBe(full);
 
   combat.editCreature(id, { tempHP: 1e20 });

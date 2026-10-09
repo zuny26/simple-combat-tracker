@@ -46,12 +46,15 @@ function createStorage() {
   const values = new Map<string, string>();
   return {
     getItem: (key: string) => values.get(key) ?? null,
-    setItem: (key: string, value: string) => { values.set(key, value); },
+    setItem: (key: string, value: string) => {
+      values.set(key, value);
+    },
   };
 }
 
 it.each(['', ' ', '0', '-3', 'invalid', 'NaN', 'Infinity', '1e309'])(
-  'keeps HP intact when either adjustment button receives %j', async amount => {
+  'keeps HP intact when either adjustment button receives %j',
+  async (amount) => {
     const combat = createVueCombat();
     const id = combat.addCreature();
     combat.editCreature(id, { maxHP: 12, tempHP: 3 });
@@ -92,7 +95,7 @@ it('updates maximum HP immediately and keeps downed creatures eligible for turns
     await row.get('button.r-dmg').trigger('click');
     expect(row.get('.cell-current').text()).toBe('DOWNED');
     expect((row.get('.f-adjust').element as HTMLInputElement).value).toBe('');
-    expect(wrapper.get(`tr[data-id="${unconfigured}"] .cell-current`).text()).toBe('set HP');
+    expect(wrapper.get(`tr[data-id="${unconfigured}"] .cell-current`).text()).toBe('');
     expect(wrapper.get(`tr[data-id="${unconfigured}"]`).classes()).not.toContain('downed');
     await wrapper.get('#start-next-btn').trigger('click');
     expect(wrapper.get('tr.active').attributes('data-id')).toBe(String(unconfigured));
@@ -117,7 +120,8 @@ it('adds empty creatures and saves editable fields for an independent encounter'
     for (const field of ['init', 'name', 'ac', 'maxhp', 'temphp']) {
       expect((row.get(`.f-${field}`).element as HTMLInputElement).value).toBe('');
     }
-    expect(row.get('.cell-current').text()).toBe('set HP');
+    expect(row.get('.cell-current').text()).toBe('');
+    expect(row.find('.hp-unconfigured .hp-track').exists()).toBe(true);
     await row.get('.f-init').setValue('-2');
     await row.get('.f-name').setValue('<img src=x onerror=alert(1)>');
     await row.get('.f-ac').setValue('15');
@@ -126,7 +130,11 @@ it('adds empty creatures and saves editable fields for an independent encounter'
     expect(row.get('.hp-number').text()).toBe('15 / 12');
     expect(wrapper.find('img').exists()).toBe(false);
     expect(createVueCombat(storage).state.creatures[0]).toMatchObject({
-      init: '-2', name: '<img src=x onerror=alert(1)>', ac: '15', maxHP: 12, tempHP: 3,
+      init: '-2',
+      name: '<img src=x onerror=alert(1)>',
+      ac: '15',
+      maxHP: 12,
+      tempHP: 3,
     });
     expect(independent.findAll('tr[data-id]')).toHaveLength(0);
   } finally {
@@ -175,15 +183,20 @@ it('saves sorting edits during input but waits for blur to change displayed orde
   combat.editCreature(second, { init: '10', name: 'Beta' });
   combat.start();
   const wrapper = mount(EncounterTracker, { props: { combat } });
-  const ids = () => wrapper.findAll('tr[data-id]').map(row => row.attributes('data-id'));
+  const ids = () => wrapper.findAll('tr[data-id]').map((row) => row.attributes('data-id'));
   try {
     await wrapper.get('tr[data-id="1"] .f-init').setValue('10');
     await wrapper.get('tr[data-id="1"] .f-name').setValue('Zulu');
     expect(ids()).toEqual(['1', '2']);
     const restored = mount(EncounterTracker, { props: { combat: createVueCombat(storage) } });
     try {
-      expect(restored.findAll('tr[data-id]').map(row => row.attributes('data-id'))).toEqual(['2', '1']);
-      expect((restored.get('tr[data-id="1"] .f-name').element as HTMLInputElement).value).toBe('Zulu');
+      expect(restored.findAll('tr[data-id]').map((row) => row.attributes('data-id'))).toEqual([
+        '2',
+        '1',
+      ]);
+      expect((restored.get('tr[data-id="1"] .f-name').element as HTMLInputElement).value).toBe(
+        'Zulu',
+      );
       expect(restored.get('tr.active').attributes('data-id')).toBe('1');
       expect(restored.get('#round-value').text()).toBe('1');
     } finally {
@@ -221,13 +234,12 @@ it('shows restored downed HP, clamps maximum edits, and preserves decimal drafts
     await wrapper.get('.f-maxhp').trigger('blur');
     expect((wrapper.get('.f-maxhp').element as HTMLInputElement).value).toBe('1.5');
     await wrapper.get('.f-maxhp').setValue('');
-    expect(wrapper.get('.cell-current').text()).toBe('set HP');
+    expect(wrapper.get('.cell-current').text()).toBe('');
     expect(wrapper.get('tr[data-id]').classes()).not.toContain('downed');
   } finally {
     wrapper.unmount();
   }
 });
-
 
 it('duplicates a creature with numbered names, copied stats, and fresh HP and tags', async () => {
   const storage = createStorage();
@@ -242,20 +254,31 @@ it('duplicates a creature with numbered names, copied stats, and fresh HP and ta
     await wrapper.get(`tr[data-id="${id}"] .btn-dupe`).trigger('click');
     await wrapper.get(`tr[data-id="${id}"] .btn-dupe`).trigger('click');
     const restored = createVueCombat(storage);
-    expect(restored.state.creatures.map(creature => creature.name).sort()).toEqual(['Goblin', 'Goblin 2', 'Goblin 3']);
-    for (const copy of restored.state.creatures.filter(creature => creature.id !== id)) {
-      expect(copy).toMatchObject({ init: '20', ac: '13', maxHP: 12, tempHP: 0, damageTaken: 0, conditions: [], other: [] });
+    expect(restored.state.creatures.map((creature) => creature.name).sort()).toEqual([
+      'Goblin',
+      'Goblin 2',
+      'Goblin 3',
+    ]);
+    for (const copy of restored.state.creatures.filter((creature) => creature.id !== id)) {
+      expect(copy).toMatchObject({
+        init: '20',
+        ac: '13',
+        maxHP: 12,
+        tempHP: 0,
+        damageTaken: 0,
+        conditions: [],
+        other: [],
+      });
       expect(wrapper.get(`tr[data-id="${copy.id}"] .hp-number`).text()).toBe('12 / 12');
     }
     await wrapper.get('#add-btn').trigger('click');
     const blank = combat.state.creatures.at(-1)!;
     await wrapper.get(`tr[data-id="${blank.id}"] .btn-dupe`).trigger('click');
-    expect(combat.state.creatures.filter(creature => creature.name === '')).toHaveLength(2);
+    expect(combat.state.creatures.filter((creature) => creature.name === '')).toHaveLength(2);
   } finally {
     wrapper.unmount();
   }
 });
-
 
 it('removes untouched creatures immediately but saves meaningful removal only after acceptance', async () => {
   const storage = createStorage();
@@ -295,10 +318,10 @@ it('removes untouched creatures immediately but saves meaningful removal only af
   }
 });
 
-
 it('confirms New Combat without saving on cancellation and preserves independent preferences on reset', async () => {
   const storage = createStorage();
-  for (const key of ['dnd-ct-theme', 'sct-usage-dismissed', 'dnd-combat-tracker']) storage.setItem(key, 'preserve');
+  for (const key of ['dnd-ct-theme', 'sct-usage-dismissed', 'dnd-combat-tracker'])
+    storage.setItem(key, 'preserve');
   const combat = createVueCombat(storage);
   const id = combat.addCreature();
   combat.editCreature(id, { init: '20' });
@@ -318,8 +341,14 @@ it('confirms New Combat without saving on cancellation and preserves independent
     expect(wrapper.get('#round-value').text()).toBe('0');
     expect(wrapper.get('#start-next-btn').text()).toBe('Start');
     const restored = createVueCombat(storage);
-    expect(restored.state).toMatchObject({ creatures: [], round: 0, activeId: null, started: false });
-    for (const key of ['dnd-ct-theme', 'sct-usage-dismissed', 'dnd-combat-tracker']) expect(storage.getItem(key)).toBe('preserve');
+    expect(restored.state).toMatchObject({
+      creatures: [],
+      round: 0,
+      activeId: null,
+      started: false,
+    });
+    for (const key of ['dnd-ct-theme', 'sct-usage-dismissed', 'dnd-combat-tracker'])
+      expect(storage.getItem(key)).toBe('preserve');
     const resetSave = storage.getItem('dnd-combat-tracker-v1');
     await wrapper.get('#reset-btn').trigger('click');
     expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
@@ -334,9 +363,9 @@ it('confirms New Combat without saving on cancellation and preserves independent
   }
 });
 
-
 it.each(['init', 'ac', 'maxHP', 'tempHP', 'conditions', 'other'] as const)(
-  'protects a creature whose only meaningful data is %s', async field => {
+  'protects a creature whose only meaningful data is %s',
+  async (field) => {
     const combat = createVueCombat();
     const id = combat.addCreature();
     if (field === 'conditions' || field === 'other') combat.addTag(id, field, 'Important');
@@ -381,8 +410,20 @@ it('supplies readable captions for the responsive creature fields', () => {
   combat.addCreature();
   const wrapper = mount(EncounterTracker, { props: { combat } });
   try {
-    expect(wrapper.findAll('tr[data-id] td[data-label]').map(cell => cell.attributes('data-label')))
-      .toEqual(['Init', 'AC', 'Max HP', 'Temp HP', 'Current HP', 'Damage / Heal', 'Conditions', 'Other', 'Actions']);
+    expect(
+      wrapper.findAll('tr[data-id] td[data-label]').map((cell) => cell.attributes('data-label')),
+    ).toEqual([
+      'Init',
+      'Name',
+      'AC',
+      'Max HP',
+      'Temp HP',
+      'Current HP',
+      'Damage / Heal',
+      'Conditions',
+      'Other',
+      'Actions',
+    ]);
   } finally {
     wrapper.unmount();
   }

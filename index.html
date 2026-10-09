@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="%BASE_URL%favicon.ico" />
     <title>D&amp;D Combat Tracker</title>
     <script>
       // Set the theme before first paint to avoid a light/dark flash.
@@ -12,18 +13,21 @@
           // lives in src/ui/themes.ts). An unknown id simply falls back to the default
           // :root theme and Vue reconciles it on load — so adding a theme
           // needs no change to this script.
-          var t = localStorage.getItem("dnd-ct-theme");
+          var t = localStorage.getItem('dnd-ct-theme');
           if (t) document.documentElement.dataset.theme = t;
           // Hide the usage callout before first paint if it was dismissed previously.
-          if (localStorage.getItem("sct-usage-dismissed") === "1") {
-            document.documentElement.classList.add("usage-dismissed");
+          if (localStorage.getItem('sct-usage-dismissed') === '1') {
+            document.documentElement.classList.add('usage-dismissed');
           }
         } catch {}
       })();
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Figtree:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div id="app"></div>

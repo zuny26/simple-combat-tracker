@@ -2,23 +2,30 @@ import { test, expect } from '@playwright/test';
 import { URL } from 'node:url';
 
 test.beforeEach(async ({ page }) => {
-  await page.route(/fonts\.(googleapis|gstatic)\.com/, route =>
-    route.fulfill({ status: 200, contentType: 'text/css', body: '' }));
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, (route) =>
+    route.fulfill({ status: 200, contentType: 'text/css', body: '' }),
+  );
 });
 
 const creature = (page, id) => page.locator(`tr[data-id="${id}"]`);
-const order = page => page.locator('#creature-rows tr[data-id]').evaluateAll(rows =>
-  rows.map(row => row.dataset.id));
+const order = (page) =>
+  page
+    .locator('#creature-rows tr[data-id]')
+    .evaluateAll((rows) => rows.map((row) => row.dataset.id));
 
-test('the built tracker creates and advances an encounter, edits with Tab/click, and restores without reseeding', async ({ page }) => {
+test('the built tracker creates and advances an encounter, edits with Tab/click, and restores without reseeding', async ({
+  page,
+}) => {
   const errors = [];
-  page.on('pageerror', error => errors.push(error.message));
+  page.on('pageerror', (error) => errors.push(error.message));
   const response = await page.goto('./');
   expect(response.status()).toBe(200);
   expect(new URL(page.url()).pathname).toBe('/simple-combat-tracker/');
   await expect(page.locator('#app .app-card')).toBeVisible();
   await expect(page).toHaveTitle('D&D Combat Tracker');
-  await expect(page.locator('script[type="module"][src^="/simple-combat-tracker/assets/"]')).toHaveCount(1);
+  await expect(
+    page.locator('script[type="module"][src^="/simple-combat-tracker/assets/"]'),
+  ).toHaveCount(1);
   await page.locator('#add-btn').click();
   const first = creature(page, 1);
   await expect(first.locator('.f-init')).toBeFocused();
@@ -74,7 +81,9 @@ test('the built tracker creates and advances an encounter, edits with Tab/click,
   expect(errors).toEqual([]);
 });
 
-test('Vue applies damage and healing explicitly and reloads applied HP without pending amounts', async ({ page }) => {
+test('Vue applies damage and healing explicitly and reloads applied HP without pending amounts', async ({
+  page,
+}) => {
   await page.goto('./');
   await page.locator('#add-btn').click();
   const first = creature(page, 1);
@@ -83,7 +92,7 @@ test('Vue applies damage and healing explicitly and reloads applied HP without p
   await page.locator('#add-btn').click();
   const second = creature(page, 2);
   await second.getByRole('textbox', { name: 'Max HP', exact: true }).fill('10');
-  const amount = row => row.getByRole('textbox', { name: 'Damage or healing amount' });
+  const amount = (row) => row.getByRole('textbox', { name: 'Damage or healing amount' });
   await amount(second).fill('7');
   await amount(first).fill('5.5');
   await amount(first).press('Enter');

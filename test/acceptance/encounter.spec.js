@@ -1,18 +1,26 @@
 import { test, expect } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
-  await page.route(/fonts\.(googleapis|gstatic)\.com/, route =>
-    route.fulfill({ status: 200, contentType: 'text/css', body: '' }));
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, (route) =>
+    route.fulfill({ status: 200, contentType: 'text/css', body: '' }),
+  );
 });
 
 const creature = (page, id) => page.locator(`tr[data-id="${id}"]`);
-const order = page => page.locator('#creature-rows tr[data-id]').evaluateAll(rows =>
-  rows.map(row => row.dataset.id));
+const order = (page) =>
+  page
+    .locator('#creature-rows tr[data-id]')
+    .evaluateAll((rows) => rows.map((row) => row.dataset.id));
 
-test('Vue name ties reorder on blur and retain the Tab and click destinations', async ({ page }) => {
+test('Vue name ties reorder on blur and retain the Tab and click destinations', async ({
+  page,
+}) => {
   await page.goto('./');
   await expect(page).toHaveTitle('D&D Combat Tracker');
-  for (const [id, name] of [[1, 'Alpha'], [2, 'Beta']]) {
+  for (const [id, name] of [
+    [1, 'Alpha'],
+    [2, 'Beta'],
+  ]) {
     await page.locator('#add-btn').click();
     await creature(page, id).locator('.f-init').fill('10');
     await creature(page, id).locator('.f-name').fill(name);
@@ -38,7 +46,9 @@ test('Vue name ties reorder on blur and retain the Tab and click destinations', 
   await expect(second.locator('.f-name')).toHaveValue('Zzz');
 });
 
-test('Vue destructive confirmation supports cancellation, keyboard use, and reload at 320px', async ({ page }) => {
+test('Vue destructive confirmation supports cancellation, keyboard use, and reload at 320px', async ({
+  page,
+}) => {
   const width = 320;
   await page.setViewportSize({ width, height: 800 });
   await page.goto('./');
@@ -50,7 +60,9 @@ test('Vue destructive confirmation supports cancellation, keyboard use, and relo
   await first.getByRole('button', { name: 'Creature actions' }).click();
   await page.getByRole('menuitem', { name: 'Duplicate creature' }).click();
   await expect(creature(page, 2).locator('.f-name')).toHaveValue('Goblin 2');
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
   await page.locator('#start-next-btn').click();
   const saved = () => page.evaluate(() => localStorage.getItem('dnd-combat-tracker-v1'));
   const before = await saved();
@@ -106,5 +118,7 @@ test('Vue destructive confirmation supports cancellation, keyboard use, and relo
   await expect(page.locator('tr[data-id]')).toHaveCount(0);
   await expect(page.locator('#round-value')).toHaveText('0');
   await expect(page.locator('#start-next-btn')).toHaveText('Start');
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
 });

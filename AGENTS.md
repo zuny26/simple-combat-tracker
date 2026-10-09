@@ -38,7 +38,8 @@ npx playwright install chromium # one-time locally; avoid --with-deps (requires 
 Stop dev/preview on port 8934 before browser checks: Playwright starts its own preview
 and never reuses a source server. Preview verifies locally; it is not deployment.
 Push CI installs dependencies and Chromium and runs `check:all`. Successful default-branch
-pushes (currently `master`) upload the tested `dist/` and deploy that exact artifact to
+pushes (currently `master`) upload the tested `dist/`; a separate CD workflow consumes
+that successful CI run's unchanged Pages archive and deploys it to
 https://zuny26.github.io/simple-combat-tracker/; other branches verify without publishing.
 Pages uses GitHub Actions, with no custom domain. There are no local hooks or required
 PR workflows. Before changing hosting or restoring the prior deployment, read

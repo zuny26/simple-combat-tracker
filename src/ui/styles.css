@@ -552,7 +552,7 @@ body {
 }
 
 .combat-table thead th {
-  text-align: left;
+  text-align: center;
   font: 700 11px var(--font-body);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -570,7 +570,7 @@ body {
 
 /* Column sizing */
 .col-init {
-  width: 72px;
+  width: 84px;
   text-align: center;
 }
 .col-name {
@@ -589,10 +589,6 @@ body {
 }
 .col-adjust {
   width: 200px;
-}
-/* The one centered header — it labels a single centered control, not a column of text. */
-.combat-table thead th.col-adjust {
-  text-align: center;
 }
 .col-text {
   min-width: 150px;

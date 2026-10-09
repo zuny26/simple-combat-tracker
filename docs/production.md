@@ -31,11 +31,15 @@ reload. These verified workflows retain the agreed editing behavior.
 
 ## Deploy the tested artifact
 
-[The push workflow](../.github/workflows/verify.yml) verifies every pushed
+[CI](../.github/workflows/verify.yml) verifies every pushed
 branch with `npm run check:all`. After successful verification on the repository's
 default branch (currently `master`), it uploads the tested `dist/` with
-`actions/upload-pages-artifact`. The dependent deployment job publishes that
-artifact with `actions/deploy-pages`; it performs no checkout or rebuild.
+`actions/upload-pages-artifact`. The separate [CD workflow](../.github/workflows/deploy.yml)
+runs after CI completes and deploys only successful default-branch push runs.
+It downloads the Pages archive using that CI run's ID and transfers the unchanged
+`artifact.tar` into its own run, because `actions/deploy-pages` reads artifacts
+from the deployment run. It then deploys that archive without checking out,
+extracting, or rebuilding the application.
 Other pushed branches verify without publishing. There are no local hooks or
 required pull-request workflows.
 
@@ -46,7 +50,7 @@ and serializes Pages deployments without cancelling an in-progress deployment.
 Failed verification prevents artifact upload and deployment; the previous site
 stays published. Failed checks retain Playwright diagnostics for seven days.
 
-After a production push, check that both `verify` and `deploy` succeed in Actions.
+After a production push, check that both CI and CD succeed in Actions.
 Open the published URL in a fresh browser context, check that generated assets
 load, then create a creature, start/advance combat, apply damage, and reload.
 Confirm the encounter restores and pending adjustment text does not. Check the
@@ -76,7 +80,7 @@ native-module dependencies. The Vue source requires a Vite build.
 
 To restore the previous static publishing mechanism while keeping the migration:
 
-1. Disable **Verify and deploy pushed commits** in GitHub Actions so future
+1. Disable **CD** in GitHub Actions so future
    default-branch pushes cannot replace the restored deployment. Let any active
    Pages deployment finish before switching the source.
 2. Create a restoration branch from the recorded legacy commit:
@@ -91,6 +95,6 @@ To restore the previous static publishing mechanism while keeping the migration:
    public URL. Verify the legacy `js/main.js` loads and encounter controls work.
 
 To return to Vue, select **GitHub Actions** as the Pages source, re-enable the
-verification workflow, and push a default-branch commit to run verification and
+CD workflow, and push a default-branch commit to run verification and
 publish its tested artifact. Legacy encounter-data restoration is not required;
 Vue uses its separate versioned encounter key.

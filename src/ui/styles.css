@@ -1698,6 +1698,7 @@ tr.downed .f-name {
   /* ---- Conditions / Other: pills, one field per line ---- */
   .cond-cell {
     --tag-control-h: 31px;
+    justify-content: flex-start;
   }
   .cell-conditions {
     order: 11;

@@ -5,14 +5,12 @@
 A browser-only D&D combat tracker for DMs: initiative order, HP, and status conditions
 for one encounter. No backend; encounter and preferences live in `localStorage`.
 `index.html` loads the maintained Vue Composition API application through Vite.
-Each app/test owns one typed combat instance. The legacy singleton and manual DOM
-application have been retired; the theme registry remains in `js/themes.js`.
+Each app/test owns one typed combat instance. The theme registry is in `js/themes.js`.
 
 Before changing architecture, read the governing decisions:
 [static Vue application](docs/adr/0001-static-vue-application.md),
 [combat state ownership](docs/adr/0002-combat-state-ownership.md), and
 [behavior-focused testing](docs/adr/0003-behavior-focused-testing.md).
-Before replacing tests, read the [responsibility audit](docs/migrations/test-audit.md).
 
 ## Commands
 
@@ -43,9 +41,8 @@ pushes (currently `master`) upload the tested `dist/`; a separate CD workflow co
 that successful CI run's unchanged Pages archive and deploys it to
 https://zuny26.github.io/simple-combat-tracker/; pull-request checks never publish.
 Pages uses GitHub Actions, with no custom domain. There are no local hooks.
-Before changing hosting or restoring the prior deployment, read
-[production verification and restoration](docs/production.md). Publish generated output;
-raw Vue source cannot run the application. `/vue.html` is no longer a separate entry.
+Before changing hosting, read [production verification and deployment](docs/production.md).
+Publish generated output from `dist/`.
 
 ## Architecture
 
@@ -78,12 +75,12 @@ interface has `getItem`/`setItem`; tests supply independent in-memory or failing
 `localStorage` getter is also contained. The Vue entry creates one instance
 with `createVueCombat(createBrowserStorage())`; omitting storage creates an in-memory instance.
 
-The new key is `dnd-combat-tracker-v1`, separate from legacy combat, theme, and help keys.
+The encounter key is `dnd-combat-tracker-v1`, separate from theme and help keys.
 Version 1 stores `version`, `nextId`, `creatures`, `round`, `activeId`, and `started`.
 Creature fields are `id`, initiative text (`init`), `name`, `ac`, `maxHP`, `tempHP`,
 `damageTaken`, `conditions`, and notes (`other`). Identity allocation survives removal,
 reset, and reload. HP totals, display order, and transient UI state are excluded. Unknown
-saved fields are ignored and omitted on the next save; legacy formats are not loaded.
+saved fields are ignored and omitted on the next save. Only version 1 is supported.
 
 The loader rejects the whole encounter on malformed JSON, unsupported versions, invalid
 field shapes, non-finite/negative HP inputs, damage above maximum HP, invalid or duplicate
@@ -149,7 +146,7 @@ and calls `isEmptyCreature(id)`/`hasMeaningfulData()` before deciding whether to
 Untouched creatures remove immediately; New Combat clears empty rows without confirmation
 and an already empty encounter causes no save. Accepted removal/reset calls named combat
 actions; opening and cancelling never save. Reset preserves identity allocation and touches
-only the versioned encounter key, leaving legacy encounter/theme/help data intact.
+only the versioned encounter key, leaving theme/help preferences and unrelated storage intact.
 
 The Vue confirmation makes the encounter card inert, focuses Cancel, cycles Tab within
 its two buttons, and cancels via Escape or backdrop click. Closing returns focus to the
@@ -230,7 +227,7 @@ presentation with app modules blocked, and representative viewport bounds with f
   suite blocks Google Fonts, so passing fallback-font checks cannot prove real-font equivalence.
 - **Sequencing:** retain checks that observe menus/pickers being removed before actions,
   saves, or confirmation. End-state checks alone lose this guarantee. Avoid private Vue
-  internals, deleted routing/renderer contracts, and exact row-node identity assertions.
+  internals and exact row-node identity assertions.
 
 ## Agent skills
 

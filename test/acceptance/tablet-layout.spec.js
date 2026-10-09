@@ -148,7 +148,7 @@ test('crowded rows grow and keep menus, pickers, and turn order usable across ta
   await second.getByRole('button', { name: 'Damage', exact: true }).click();
   await page.locator('#start-next-btn').click();
 
-  for (const width of [320, 767, 768, 769, 1024, 1366, 1399, 1400, 1401, 1600]) {
+  for (const width of [320, 767, 768, 769, 1024, 1199, 1200, 1366, 1399, 1400, 1401, 1600]) {
     await page.setViewportSize({ width, height: 900 });
     await expect(first).toHaveClass(/active/);
     await expect(first.locator('.turn-flag')).toBeVisible();

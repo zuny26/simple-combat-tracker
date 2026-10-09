@@ -1369,7 +1369,7 @@ tr.downed .f-name {
   :root {
     --card-field-h: 46px;
   }
-  /* Edge-to-edge: no floating card, no page margin — the app fills the viewport. */
+  /* Fill the viewport on narrower screens; wide tablets regain a small gutter below. */
   .app-shell {
     padding: 0;
     min-height: 100vh;
@@ -1726,6 +1726,18 @@ tr.downed .f-name {
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  }
+}
+
+/* Wide tablets retain a smaller outer margin than desktop. */
+@media (min-width: 1200px) and (max-width: 1400px) {
+  .app-shell {
+    padding: var(--space-4);
+  }
+  .app-card {
+    min-height: calc(100vh - 2 * var(--space-4));
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
   }
 }
 

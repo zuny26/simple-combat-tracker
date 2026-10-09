@@ -6,6 +6,6 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     // Run the typed combat, persistence, and mounted UI seams; Playwright stays separate.
-    include: ['test/**/*.test.ts', 'src/**/*.test.ts'],
+    include: ['test/component/**/*.test.ts', 'src/**/*.test.ts'],
   },
 });

@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   // Browser acceptance is separate from the faster Vitest seam checks.
-  testDir: './e2e',
+  testDir: './test/acceptance',
   fullyParallel: true,
   retries: 0, // a flaky test is a bug in the test, not something to paper over
   reporter: [['list'], ['html', { open: 'never' }]],

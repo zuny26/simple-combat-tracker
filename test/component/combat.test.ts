@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { createCombat } from '../src/combat/combat';
+import { createCombat } from '../../src/combat/combat';
 
 describe('isolated combat actions', () => {
   it('creates independent encounters and distinguishes empty entries from meaningful data', () => {

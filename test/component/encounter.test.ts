@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { expect, it } from 'vitest';
-import EncounterTracker from '../src/ui/EncounterTracker.vue';
-import { createVueCombat } from '../src/combat/vueCombat';
+import EncounterTracker from '../../src/ui/EncounterTracker.vue';
+import { createVueCombat } from '../../src/combat/vueCombat';
 
 it('applies only the intended creature’s pending amount through explicit Damage and Heal controls', async () => {
   const combat = createVueCombat();

@@ -62,7 +62,7 @@ export default [
   // document, window and localStorage; without the browser globals here, no-undef
   // fails on them.
   {
-    files: ['e2e/**/*.js'],
+    files: ['test/acceptance/**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { expect, it } from 'vitest';
-import { createBrowserStorage, createPersistedCombat, ENCOUNTER_KEY } from '../src/combat/persistence';
+import { createBrowserStorage, createPersistedCombat, ENCOUNTER_KEY } from '../../src/combat/persistence';
 
 function memoryStorage() {
   const values = new Map<string, string>();

@@ -1715,13 +1715,114 @@ tr.downed .f-name {
   .cell-conditions::before,
   .cell-other::before {
     content: attr(data-label);
+  }
+  .cell-init::before,
+  .cell-ac::before,
+  .cell-maxhp::before,
+  .cell-temphp::before,
+  .cell-current::before,
+  .cell-adjust::before,
+  .cell-conditions::before,
+  .cell-other::before {
     display: block;
-    margin-bottom: 5px;
-    padding-left: 2px;
+    margin-bottom: var(--space-1);
+    padding-left: calc(var(--space-1) / 2);
     font: 700 10px var(--font-body);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  }
+}
+
+/* Tablet rows share the card's touch styling, but arrange the encounter in two
+   bands. Flexible name/HP columns take the space left by compact numeric fields. */
+@media (min-width: 768px) and (max-width: 1400px) {
+  .combat-table tbody tr:not(.empty-row) {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) 64px 64px 64px minmax(110px, 1fr) var(--card-field-h);
+    grid-template-areas:
+      "init name ac maxhp temphp current actions"
+      "adjust adjust conditions conditions conditions other other";
+    align-items: end;
+    row-gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+  }
+  .combat-table tbody tr::after {
+    content: none;
+  }
+  .combat-table tbody td {
+    margin: 0;
+    max-width: none;
+  }
+  .cell-init {
+    display: block;
+    grid-area: init;
+  }
+  .cell-name { grid-area: name; }
+  .cell-ac { grid-area: ac; }
+  .cell-maxhp { grid-area: maxhp; }
+  .cell-temphp { grid-area: temphp; }
+  .cell-current { grid-area: current; }
+  .cell-actions { grid-area: actions; }
+  .cell-adjust { grid-area: adjust; }
+  .cell-conditions { grid-area: conditions; }
+  .cell-other { grid-area: other; }
+
+  .init-wrap,
+  .ac-wrap {
+    width: 100%;
+    padding: 0;
+    justify-content: center;
+  }
+  .init-shoe,
+  .ac-shield {
+    display: none;
+  }
+  .combat-table td.cell-init input.f-init,
+  .combat-table td.cell-ac input.f-ac {
+    width: 100%;
+    height: var(--card-field-h);
+  }
+  .combat-table tbody td input.f-maxhp,
+  .combat-table tbody td input.f-temphp {
+    padding-inline: var(--space-1);
+  }
+  .cell-init::before,
+  .cell-ac::before,
+  .cell-current::before,
+  .cell-adjust::before {
+    content: attr(data-label);
+  }
+  .cell-current .hp-cell {
+    min-height: var(--card-field-h);
+  }
+  .btn-menu {
+    width: var(--card-field-h);
+  }
+  .cell-adjust,
+  .cell-conditions,
+  .cell-other {
+    align-self: start;
+  }
+  .cell-adjust .r-ctl {
+    max-width: none;
+  }
+  .combat-table tbody td input.r-amt,
+  .cell-adjust .r-side {
+    min-height: var(--card-field-h);
+    min-width: var(--card-field-h);
+  }
+  .cond-add,
+  .cond-x {
+    min-width: var(--card-field-h);
+    height: var(--card-field-h);
+  }
+  .cond-pill {
+    padding-block: 0;
+  }
+  .cond-opt,
+  .row-menu .row-menu-item {
+    min-height: var(--card-field-h);
   }
 }
 

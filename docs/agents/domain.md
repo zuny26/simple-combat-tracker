@@ -1,19 +1,5 @@
-# Domain documentation
+# Domain guidance
 
-This repo uses one domain context.
+Before exploring or designing, read the root [glossary](../../GLOSSARY.md) and relevant [ADRs](../adr/). Use their terms in code, tests, and tickets.
 
-## Before exploring or designing
-
-Read the root `GLOSSARY.md`, if present, and relevant decisions in
-`docs/adr/`.
-
-Proceed when these documents are absent. Create them through
-domain-modeling as terms and decisions are resolved.
-
-## Vocabulary and decisions
-
-Use glossary terms consistently in proposals, tickets, and tests.
-When a needed term is missing, note it for domain-modeling.
-
-If a proposal conflicts with an existing ADR, identify the ADR and
-explain why revisiting it is justified.
+Keep domain terms in the single root glossary and architectural decisions in `docs/adr/`. Use domain-modeling when adding either. If a proposal conflicts with an ADR, identify the conflict and explain why the decision should change.

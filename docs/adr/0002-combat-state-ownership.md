@@ -1,5 +1,5 @@
 # Own combat state through an app-scoped module
 
-One combat module owns the encounter state and exposes named actions. UI modules read state and request changes through those actions; combat rules remain independent of Vue, and persistence is coordinated centrally after changes. Each application or test creates its own instance, avoiding shared module-level state and global browser setup.
+Each app/test creates one combat instance. Named actions own encounter invariants and centrally save completed changes; callers read state and request actions. Combat rules stay independent of Vue and browser globals. Inject storage so persistence and failure recovery can be tested without browser setup.
 
-Vue's built-in reactivity connects the combat module to the UI. Transient interaction state, including open menus, search text, and pending damage amounts, belongs to the UI. Pinia is not required for the initial migration.
+Vue's built-in reactivity is sufficient for this encounter; a separate state-management library is unnecessary. Drafts, menus, picker queries, and confirmation belong to the UI and never persist. Encounter and preference storage remain independent so combat reset preserves theme/help settings.

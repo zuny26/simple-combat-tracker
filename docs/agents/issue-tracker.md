@@ -4,7 +4,11 @@ Specs and tickets live in GitHub Issues for `zuny26/simple-combat-tracker`.
 Use the `gh` CLI from this clone; pass `--repo zuny26/simple-combat-tracker`
 when running elsewhere.
 
-## Conventions
+| File                    | Purpose                          |
+| ----------------------- | -------------------------------- |
+| `spec.md`               | Specification                    |
+| `issues/<NN>-<slug>.md` | Tickets, numbered from `01`      |
+| `map.md`                | Notes, Decisions-so-far, and Fog |
 
 - Create: `gh issue create --title "..." --body-file <file>`.
 - Read: `gh issue view <number> --json number,title,body,labels,comments`.

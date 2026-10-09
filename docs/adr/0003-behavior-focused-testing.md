@@ -1,9 +1,21 @@
-# Concentrate tests on combat and UI behavior
+# Test behavior at its owning seam
 
-Use Vitest for combat and persistence tests, Vue Test Utils for isolated UI tests, and Playwright for acceptance tests that require a real browser. Favor state/component tests for rules, validation, and action wiring, with a small browser suite for complete workflows and browser fidelity. Choose coverage by responsibility rather than a numerical quota.
+Favor state/component tests for rules and edge cases, with a small Chromium suite
+for workflows and browser fidelity. Choose coverage by responsibility, not a quota.
 
-Evaluate tests by the behavior and failure modes they protect. Exercise public actions, injected storage, UI inputs/outputs, and visible behavior rather than private implementation details. Focus, Tab, dismissal, and layout assertions belong in Chromium; simulated DOM checks cannot establish browser fidelity.
+| Seam | Responsibility |
+| --- | --- |
+| Vitest combat actions/state | HP, ordering, turns, tags, duplication, reset |
+| Injected storage | Validation, round trips, recovery, read/write failures |
+| Vue Test Utils | Fresh instances; field/action wiring and visible behavior |
+| Playwright production build | Complete workflows, focus, Tab, dismissal, pre-paint presentation, reloads, layout |
 
-The acceptance suite covers creating and advancing an encounter, editing initiative with usable Tab/click focus, damage/healing with reload persistence, conditions and destructive-action confirmation, desktop/mobile layout and menu accessibility, and the production artifact under the GitHub Pages base path. State/component tests own permutations and edge cases, including HP calculations, turn reassignment, duplication, validation, and confirmation outcomes.
+Assert public behavior rather than private Vue internals or exact row-node identity.
+Chromium wins when simulated DOM behavior disagrees. Preserve checks that observe
+menus/pickers closing before actions, saves, or confirmation; end-state checks
+cannot prove sequencing.
 
-The complete verification command runs lint, Vue/TypeScript checking, Vitest, a production build, and the browser acceptance suite against that build. Reload checks use real UI saves, and layout checks assert visibility and bounds relationally without pixel baselines. Retain sequencing checks that observe menus/pickers closing before actions, saves, or confirmation; end-state assertions alone cannot establish that guarantee.
+Reload through real UI saves without reseeding storage. Assert visibility, bounds,
+and overflow relationally, without pixel baselines. Acceptance blocks Google Fonts
+and proves fallback-font geometry only. `test/acceptance/fixtures.js` holds the
+shared overflow assertion; keep storage setup out of it.

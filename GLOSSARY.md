@@ -1,34 +1,34 @@
 # Combat Tracker
 
-A tracker for a DM to manage creatures, hit points, conditions, and turns in one encounter.
+A DM manages creatures, HP, conditions, and turns in one encounter.
 
 ## Language
 
 **Creature**:
-A participant in the encounter, including player characters and monsters.
+An encounter participant, including player characters and monsters.
 _Avoid_: Entity, combatant
 
 **Initiative**:
-A creature's numeric priority in the turn order; higher initiative acts earlier, with names breaking ties alphabetically.
+Numeric turn priority, descending; names break ties alphabetically without regard to case.
 
 **Parked creature**:
-A creature with blank or non-numeric initiative that remains visible but does not participate in the turn order.
+A creature with blank, nonnumeric, or non-finite initiative; visible without taking turns.
 
 **Active creature**:
-The creature whose turn is currently highlighted during combat.
+The creature whose turn is highlighted.
 _Avoid_: Active row
 
 **Round**:
-A cycle through the creatures in the turn order; starting combat begins round one and advancing past the last creature begins the next round.
+One cycle through the turn order; combat starts at round one.
 
 **Pre-combat**:
-The state before combat starts, with no active creature and round zero.
+No active creature and round zero.
 
 **Current HP**:
-The tracker's displayed hit-point total, including remaining normal hit points and temporary hit points.
+Remaining normal HP plus temporary HP.
 
 **Condition**:
-A named status attached to a creature, chosen from the offered list or entered as custom text.
+An offered or custom named status attached to a creature.
 
 **Note**:
-A free-text tag attached to a creature in the Other field.
+A free-text tag in the Other field.

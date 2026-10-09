@@ -16,9 +16,9 @@ function rowAction(action: string, trigger: HTMLElement) {
 const health = computed(() => combat.hp(creature.id)!);
 const baseHP = computed(() => creature.maxHP - creature.damageTaken);
 const bloodied = computed(() => baseHP.value / creature.maxHP <= 0.5);
-const fillPercent = computed(() =>
-  Math.min(100, Math.max(0, (baseHP.value / creature.maxHP) * 100)),
-);
+const barCapacity = computed(() => creature.maxHP + creature.tempHP);
+const fillPercent = computed(() => (baseHP.value / barCapacity.value) * 100);
+const tempPercent = computed(() => (creature.tempHP / barCapacity.value) * 100);
 type HPField = 'maxHP' | 'tempHP';
 const hpText = (value: number) => (value === 0 ? '' : String(value));
 const drafts = reactive({ maxHP: hpText(creature.maxHP), tempHP: hpText(creature.tempHP) });
@@ -90,7 +90,7 @@ function finishHP(field: HPField) {
         class="f-name"
         type="text"
         aria-label="Name"
-        placeholder="Name"
+        placeholder="—"
         :value="creature.name"
         @input="editText('name', $event)"
         @blur="$emit('sort', $event)"
@@ -172,7 +172,7 @@ function finishHP(field: HPField) {
             <div
               v-if="creature.tempHP > 0"
               class="hp-temp-seg"
-              :style="{ width: `${Math.min(30, (creature.tempHP / creature.maxHP) * 100)}%` }"
+              :style="{ width: `${tempPercent}%` }"
             ></div>
           </div>
           <span class="hp-number"

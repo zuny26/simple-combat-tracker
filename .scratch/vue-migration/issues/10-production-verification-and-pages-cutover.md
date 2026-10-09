@@ -4,7 +4,7 @@
 
 **Blocked by:** 09 — Retire legacy code and consolidate verification.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 - [ ] Verify the actual repository remote, default branch, published URL, and Pages configuration before cutover; do not assume the recorded planning configuration has been inspected remotely.
 - [ ] Use the repository Pages base path for the recorded remote unless actual custom-domain configuration establishes a root path. Serve and visit the configured path to verify generated asset loading.

@@ -21,6 +21,8 @@ The current layout changes from a desktop table to full-width creature cards at 
 
 Give name and current HP flexible space and keep numeric inputs compact. Retain the existing HP bar and current HP display.
 
+Conditions and Other each occupy half of the space beside Damage/healing, with a gap between them.
+
 Keep tablet controls approximately 46–48px tall. Gain density through horizontal arrangement and tighter spacing. Conditions and notes wrap naturally; a crowded creature grows taller so all tags remain visible. Two lines are the normal arrangement, not a fixed row height.
 
 ## Responsive behavior

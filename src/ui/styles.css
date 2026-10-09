@@ -1742,7 +1742,7 @@ tr.downed .f-name {
     grid-template-columns: 64px minmax(0, 1fr) 64px 64px 64px minmax(110px, 1fr) var(--card-field-h);
     grid-template-areas:
       "init name ac maxhp temphp current actions"
-      "adjust adjust conditions conditions conditions other other";
+      "adjust adjust . . . . .";
     align-items: end;
     row-gap: var(--space-2);
     padding: var(--space-2) var(--space-3);
@@ -1765,8 +1765,16 @@ tr.downed .f-name {
   .cell-current { grid-area: current; }
   .cell-actions { grid-area: actions; }
   .cell-adjust { grid-area: adjust; }
-  .cell-conditions { grid-area: conditions; }
-  .cell-other { grid-area: other; }
+  /* Split the space beside Damage / Heal evenly, independently of the numeric
+     and flexible columns used by the first line. */
+  .cell-conditions,
+  .cell-other {
+    grid-area: 2 / 3 / 3 / -1;
+    width: calc((100% - var(--space-2)) / 2);
+  }
+  .cell-other {
+    justify-self: end;
+  }
 
   .init-wrap,
   .ac-wrap {

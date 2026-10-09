@@ -32,6 +32,7 @@ async function expectTabletGrouping(row) {
   for (const selector of ['.cell-adjust', '.cell-conditions', '.cell-other']) {
     secondLine.push(await row.locator(selector).boundingBox());
   }
+  expect(secondLine[1].width).toBeCloseTo(secondLine[2].width, 1);
   for (let i = 0; i < secondLine.length; i++) {
     expect(secondLine[i].y).toBeGreaterThanOrEqual(Math.max(...boxes.map(box => box.y + box.height)));
     expect(secondLine[i].y).toBeCloseTo(secondLine[0].y, 0);

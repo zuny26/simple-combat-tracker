@@ -5,14 +5,13 @@ import tseslint from 'typescript-eslint';
 import vue from 'eslint-plugin-vue';
 
 // The complete set of browser globals the app currently uses. Deliberately
-// hand-listed rather than pulled from a `globals` package (see file header).
+// hand-listed rather than pulled from a `globals` package.
 // Extend this when the app starts using another browser API (setTimeout,
 // console, navigator, matchMedia, requestAnimationFrame, etc.)
 const browserGlobals = {
   document: 'readonly',
   window: 'readonly',
   localStorage: 'readonly',
-  confirm: 'readonly',
 };
 
 const nodeGlobals = {

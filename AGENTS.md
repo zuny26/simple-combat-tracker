@@ -37,11 +37,13 @@ npx playwright install chromium # one-time locally; avoid --with-deps (requires 
 
 Stop dev/preview on port 8934 before browser checks: Playwright starts its own preview
 and never reuses a source server. Preview verifies locally; it is not deployment.
-Push CI installs dependencies and Chromium and runs `check:all` without deploying.
-There are no local hooks or required PR workflows. Public hosting configuration remains
-unchanged until ticket 10 verifies Pages and enables deployment of the checked artifact.
-Keep retirement changes on the migration branch until that cutover; publishing raw source
-from this branch cannot run the Vue application. `/vue.html` is no longer a separate entry.
+Push CI installs dependencies and Chromium and runs `check:all`. Successful default-branch
+pushes (currently `master`) upload the tested `dist/` and deploy that exact artifact to
+https://zuny26.github.io/simple-combat-tracker/; other branches verify without publishing.
+Pages uses GitHub Actions, with no custom domain. There are no local hooks or required
+PR workflows. Before changing hosting or restoring the prior deployment, read
+[production verification and restoration](docs/production.md). Publish generated output;
+raw Vue source cannot run the application. `/vue.html` is no longer a separate entry.
 
 ## Architecture
 

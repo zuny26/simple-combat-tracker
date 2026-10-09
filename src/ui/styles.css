@@ -869,6 +869,7 @@ tr.downed .f-name {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   padding: 2px 0;
 }

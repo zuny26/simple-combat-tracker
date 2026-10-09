@@ -37,12 +37,13 @@ npx playwright install chromium # one-time locally; avoid --with-deps (requires 
 
 Stop dev/preview on port 8934 before browser checks: Playwright starts its own preview
 and never reuses a source server. Preview verifies locally; it is not deployment.
-Push CI installs dependencies and Chromium and runs `check:all`. Successful default-branch
+CI on `master` pushes and pull requests targeting `master` installs dependencies and
+Chromium and runs `check:all`. Successful default-branch
 pushes (currently `master`) upload the tested `dist/`; a separate CD workflow consumes
 that successful CI run's unchanged Pages archive and deploys it to
-https://zuny26.github.io/simple-combat-tracker/; other branches verify without publishing.
-Pages uses GitHub Actions, with no custom domain. There are no local hooks or required
-PR workflows. Before changing hosting or restoring the prior deployment, read
+https://zuny26.github.io/simple-combat-tracker/; pull-request checks never publish.
+Pages uses GitHub Actions, with no custom domain. There are no local hooks.
+Before changing hosting or restoring the prior deployment, read
 [production verification and restoration](docs/production.md). Publish generated output;
 raw Vue source cannot run the application. `/vue.html` is no longer a separate entry.
 

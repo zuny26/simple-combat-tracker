@@ -31,8 +31,8 @@ reload. These verified workflows retain the agreed editing behavior.
 
 ## Deploy the tested artifact
 
-[CI](../.github/workflows/verify.yml) verifies every pushed
-branch with `npm run check:all`. After successful verification on the repository's
+[CI](../.github/workflows/verify.yml) verifies pushes to `master` and pull requests
+targeting `master` with `npm run check:all`. After successful verification on the repository's
 default branch (currently `master`), it uploads the tested `dist/` with
 `actions/upload-pages-artifact`. The separate [CD workflow](../.github/workflows/deploy.yml)
 runs after CI completes and deploys only successful default-branch push runs.
@@ -40,8 +40,9 @@ It downloads the Pages archive using that CI run's ID and transfers the unchange
 `artifact.tar` into its own run, because `actions/deploy-pages` reads artifacts
 from the deployment run. It then deploys that archive without checking out,
 extracting, or rebuilding the application.
-Other pushed branches verify without publishing. There are no local hooks or
-required pull-request workflows.
+Pull-request checks never publish; other branch pushes do not trigger CI.
+There are no local hooks. This trigger policy was approved during ticket 10
+completion, replacing the original plan to verify every pushed branch.
 
 Pages must use **GitHub Actions** as its publishing source. The `github-pages`
 environment permits the `master` branch; update its branch policy if the default
@@ -56,6 +57,24 @@ load, then create a creature, start/advance combat, apply damage, and reload.
 Confirm the encounter restores and pending adjustment text does not. Check the
 mobile controls and viewport bounds as well. A successful local preview alone
 does not establish a successful public deployment.
+
+## Completed production verification
+
+On 2026-10-09, `master` commit `c987487daae0d34b72fb60f831453a6eda2216df`
+passed [CI](https://github.com/zuny26/simple-combat-tracker/actions/runs/37915799061)
+and [CD](https://github.com/zuny26/simple-combat-tracker/actions/runs/37915891580).
+CI passed lint, explicit type checking, all 97 Vitest cases, the production build,
+and all 12 Chromium acceptance cases. CD downloaded that CI run's Pages archive
+and published it successfully. Pull-request CI also passed and its CD run was
+skipped, confirming the push-event deployment gate.
+
+Downloaded CI/CD `artifact.tar` files were byte-identical, with SHA-256
+`9194632e3c96a6f8cef6b76d4bf84f6385fe86b9aabb5c15164005391276420f`.
+Public `index.html`, generated JavaScript, and CSS matched their archived bytes.
+All 12 existing Chromium cases also passed against the actual public URL using
+a temporary configuration with no preview server, including real encounter
+reloads and 1600px, 768px, and 320px layouts. The site is confirmed to run the
+tested static Vue application at the repository Pages path.
 
 ## Prior deployment and restoration
 

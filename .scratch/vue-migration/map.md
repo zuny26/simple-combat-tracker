@@ -3,7 +3,7 @@
 ## Notes
 
 - [Specification](spec.md) and [migration plan](../../docs/migrations/vue-migration.md).
-- The maintained local root entry is Vue; public deployment cutover remains ticket 10.
+- The maintained local and public root entry is Vue; ticket 10 completed Pages cutover.
 
 ## Decisions-so-far
 
@@ -68,9 +68,17 @@
   editing, reload, modal/menu/picker focus and representative geometry responsibilities.
   `check:all` and push-only CI verify without publishing; hosting cutover stays ticket 10.
 
+- [10: Verify the production artifact and cut over GitHub Pages](issues/10-production-verification-and-pages-cutover.md):
+  Authenticated inspection confirmed `master` root legacy publishing, no custom domain,
+  and `/simple-combat-tracker/`. Pages now uses Actions. Separate CI/CD workflows publish
+  the exact tested archive after successful default-branch push verification. By user
+  approval, CI checks `master` pushes and PRs targeting `master`; PRs never deploy.
+  Local and remote checks passed 97 Vitest and 12 Chromium cases. All 12 Chromium cases
+  also passed on the live URL, and public HTML/JS/CSS matched the byte-identical CI/CD
+  archives. [Production documentation](../../docs/production.md) records run links,
+  hosting settings, usable workflows, and legacy static publishing restoration.
+
 ## Fog
 
-- Actual Pages configuration, published URL, and default branch must be verified before
-  cutover. This milestone does not change remote hosting settings.
-- Migration branch source now requires a Vite build; keep it off the existing raw-source
-  deployment branch until ticket 10 publishes the checked artifact.
+- None remaining for the Vue migration. Real Google Font metrics remain outside the
+  fallback-font acceptance checks; no real-font equivalence is claimed.

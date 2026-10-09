@@ -30,8 +30,8 @@ npm run lint        # ESLint: JavaScript, TypeScript, and Vue SFCs
 npm run check       # lint + typecheck + Vitest; fast and offline
 npm run check:all   # check + build + Chromium; run before committing UI/tooling work
 
-npm run test:unit -- test/combat.test.ts
-npx playwright test e2e/production.spec.js
+npm run test:unit -- test/component/combat.test.ts
+npx playwright test test/acceptance/production.spec.js
 npx playwright install chromium # one-time locally; avoid --with-deps (requires root)
 ```
 
@@ -120,9 +120,9 @@ Draft text and displayed row order never persist. HP and downed presentation der
 combat state. Responsive markup uses the existing CSS and variables at every viewport;
 the Vue app card supplies its own combat-started class for the mobile round counter.
 
-`test/encounter.test.ts` verifies mounted field/action wiring and visible state with fresh
-instances. `e2e/production.spec.js` exercises initiative Tab/click and actual reloads;
-`e2e/encounter.spec.js` covers name-tie Tab/click destinations.
+`test/component/encounter.test.ts` verifies mounted field/action wiring and visible state with fresh
+instances. `test/acceptance/production.spec.js` exercises initiative Tab/click and actual reloads;
+`test/acceptance/encounter.spec.js` covers name-tie Tab/click destinations.
 
 ### Damage and healing
 
@@ -169,8 +169,8 @@ an option or pressing Enter with text closes the picker and awaits the Vue patch
 calling `addTag`, then returns focus to Add. Enter chooses the first offered match or
 adds custom text. Opening starts with an empty query; picker state never persists.
 
-`test/vue-tags.test.ts` mounts fresh encounters for tag actions, literal text, validation,
-removal/restoration, and close-before-action/save sequencing. `e2e/tags.spec.js` owns
+`test/component/vue-tags.test.ts` mounts fresh encounters for tag actions, literal text, validation,
+removal/restoration, and close-before-action/save sequencing. `test/acceptance/tags.spec.js` owns
 browser dismissal/focus, actual reloads, and picker/tag bounds at desktop and
 320px widths.
 
@@ -216,12 +216,12 @@ presentation with app modules blocked, and representative viewport bounds with f
   add any new API used by JS there. Strict `vue-tsc` checks TypeScript/Vue identifiers.
 - **Testing seams:** combat tests use public actions/observable state; persistence tests
   use injected storage; Vue Test Utils mounts fresh app instances and asserts input,
-  output, and visible behavior. Vitest runs `test/**/*.test.ts` and `src/**/*.test.ts`.
-  Browser acceptance in `e2e/` owns focus, Tab, relatedTarget, dismissal, pre-paint
+  output, and visible behavior. Vitest runs `test/component/**/*.test.ts` and `src/**/*.test.ts`.
+  Browser acceptance in `test/acceptance/` owns focus, Tab, relatedTarget, dismissal, pre-paint
   presentation, and layout against the production build. Focus assertions stay out of
   jsdom tests; if simulated DOM and Chromium disagree, Chromium wins.
 - **Reload checks:** drive real UI saves and reload without a seeding init script.
-  `e2e/fixtures.js` contains only the shared relational overflow assertion.
+  `test/acceptance/fixtures.js` contains only the shared relational overflow assertion.
 - **No pixel baselines:** assert bounds, visibility, and overflow relationally. The browser
   suite blocks Google Fonts, so passing fallback-font checks cannot prove real-font equivalence.
 - **Sequencing:** retain checks that observe menus/pickers being removed before actions,

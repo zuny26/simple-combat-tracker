@@ -1,6 +1,6 @@
 import { computed, watchEffect } from 'vue';
 import { expect, it } from 'vitest';
-import { createVueCombat } from '../src/combat/vueCombat';
+import { createVueCombat } from '../../src/combat/vueCombat';
 
 it('exposes live read-only encounter state and derived behavior to Vue consumers', () => {
   const combat = createVueCombat();

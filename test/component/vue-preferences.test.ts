@@ -1,7 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { expect, it } from 'vitest';
-import EncounterTracker from '../src/ui/EncounterTracker.vue';
-import { createVueCombat } from '../src/combat/vueCombat';
+import EncounterTracker from '../../src/ui/EncounterTracker.vue';
+import { createVueCombat } from '../../src/combat/vueCombat';
 
 it('selects a theme after closing its picker and restores it independently of combat', async () => {
   const values = new Map<string, string>();

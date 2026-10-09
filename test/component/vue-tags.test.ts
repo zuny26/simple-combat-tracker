@@ -1,7 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { expect, it } from 'vitest';
-import EncounterTracker from '../src/ui/EncounterTracker.vue';
-import { createVueCombat } from '../src/combat/vueCombat';
+import EncounterTracker from '../../src/ui/EncounterTracker.vue';
+import { createVueCombat } from '../../src/combat/vueCombat';
 
 it('adds an offered condition to the intended creature and closes before saving', async () => {
   let observeSave = () => {};

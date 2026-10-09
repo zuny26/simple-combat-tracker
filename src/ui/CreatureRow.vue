@@ -85,7 +85,7 @@ function finishHP(field: HPField) {
         <span class="turn-flag">TURN</span>
       </div>
     </td>
-    <td class="cell-name">
+    <td class="cell-name" data-label="Name">
       <input
         class="f-name"
         type="text"

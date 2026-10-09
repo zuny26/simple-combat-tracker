@@ -46,9 +46,31 @@ async function expectTabletGrouping(row) {
   expect(conditions.x + conditions.width).toBeCloseTo(boxes.at(-1).x + boxes.at(-1).width, 1);
 }
 
-test('768px aligns shared table headings and wraps tags below compact creature controls', async ({
-  page,
-}) => {
+async function expectRowCaptions(row) {
+  const fields = row.locator(
+    '.cell-init, .cell-name, .cell-ac, .cell-maxhp, .cell-temphp, .cell-current, .cell-adjust, .cell-actions',
+  );
+  const captions = await fields.evaluateAll((elements) =>
+    elements.map((el) => {
+      const caption = window.getComputedStyle(el, '::before');
+      return { text: caption.content, display: caption.display };
+    }),
+  );
+  expect(captions.map((caption) => caption.text)).toEqual(
+    ['Init', 'Name', 'AC', 'Max HP', 'Temp HP', 'Current HP', 'Damage / Heal', 'Actions'].map(
+      (label) => `"${label}"`,
+    ),
+  );
+  expect(captions.every((caption) => caption.display !== 'none')).toBe(true);
+  const name = row.getByRole('textbox', { name: 'Name', exact: true });
+  const captionHeight = await name.evaluate((el) => {
+    const cell = el.closest('td');
+    return el.getBoundingClientRect().top - cell.getBoundingClientRect().top;
+  });
+  expect(captionHeight).toBeGreaterThan(0);
+}
+
+test('768px labels each creature above its controls and wraps tags below', async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 900 });
   await page.goto('./');
   const row = await addCreature(page, 1);
@@ -59,17 +81,12 @@ test('768px aligns shared table headings and wraps tags below compact creature c
     expect(bounds.height).toBeLessThanOrEqual(48);
     expect(bounds.width).toBeGreaterThanOrEqual(46);
   }
-  const headers = page.locator('.combat-table thead th:visible');
-  const fields = row.locator(
-    '.cell-init, .cell-name, .cell-ac, .cell-maxhp, .cell-temphp, .cell-current, .cell-adjust, .cell-actions',
-  );
-  await expect(headers).toHaveCount(8);
-  for (let i = 0; i < 8; i++) {
-    const header = await headers.nth(i).boundingBox();
-    const field = await fields.nth(i).boundingBox();
-    expect(header.x).toBeCloseTo(field.x, 1);
-    expect(header.width).toBeCloseTo(field.width, 1);
-  }
+  await expect(page.locator('.combat-table thead')).toBeHidden();
+  await expectRowCaptions(row);
+  await page.locator('#add-btn').click();
+  const emptyRow = page.locator('tr[data-id="2"]');
+  await expectTabletGrouping(emptyRow);
+  await expectRowCaptions(emptyRow);
   expect((await row.locator('.f-adjust').boundingBox()).width).toBeLessThanOrEqual(60);
   await expect(row.locator('.hp-number')).toHaveText('137 / 125');
   await expect(row.locator('.hp-track')).toBeVisible();
@@ -152,6 +169,7 @@ test('crowded rows grow and keep menus, pickers, and turn order usable across ta
     }
     if (width >= 768 && width <= 1400) {
       await expectTabletGrouping(first);
+      await expectRowCaptions(first);
       for (const control of await first.locator('.r-side, .btn-menu').all()) {
         expect((await control.boundingBox()).height).toBeGreaterThanOrEqual(46);
       }

@@ -1734,38 +1734,11 @@ tr.downed .f-name {
   }
 }
 
-/* Tablet: a continuous table with shared headings. Each creature's tag fields
+/* Tablet: a continuous table with headings above each creature. Each creature's tag fields
    wrap onto full-width lines below its primary controls. */
 @media (min-width: 768px) and (max-width: 1400px) {
   .combat-table {
     --tablet-columns: 52px minmax(0, 1fr) repeat(3, 54px) clamp(112px, 14vw, 170px) 174px 46px;
-  }
-  .combat-table thead {
-    display: block;
-  }
-  .combat-table thead tr {
-    display: grid;
-    grid-template-columns: var(--tablet-columns);
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-3);
-    border-bottom: 1px solid var(--color-divider);
-  }
-  .combat-table thead th {
-    width: auto;
-    min-width: 0;
-    padding: 0;
-    border: 0;
-    font-size: 9px;
-    letter-spacing: 0.03em;
-    text-align: center;
-  }
-  .combat-table thead .col-name {
-    text-align: left;
-    padding-left: var(--space-2);
-  }
-  .combat-table thead .col-conditions,
-  .combat-table thead .col-other {
-    display: none;
   }
   .combat-table tbody tr:not(.empty-row) {
     display: grid;
@@ -1802,7 +1775,20 @@ tr.downed .f-name {
     align-self: start;
   }
   .combat-table tbody td::before {
-    display: none;
+    content: attr(data-label);
+    display: block;
+    margin: 0 0 var(--space-1);
+    padding: 0;
+    font: 700 9px/12px var(--font-body);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    text-align: center;
+    white-space: nowrap;
+    color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  }
+  .combat-table tbody td.cell-name::before {
+    text-align: left;
+    padding-left: var(--space-2);
   }
   .cell-init {
     display: block;
@@ -1881,25 +1867,7 @@ tr.downed .f-name {
   .combat-table tbody td input.f-name {
     padding-left: var(--space-2);
   }
-  /* Empty numeric fields name themselves when the shared headings are far away. */
-  .combat-table td:is(.cell-init, .cell-ac, .cell-maxhp, .cell-temphp) {
-    position: relative;
-  }
-  .combat-table td:is(.cell-init, .cell-ac, .cell-maxhp, .cell-temphp)::after {
-    pointer-events: none;
-  }
-  .combat-table
-    td:is(.cell-init, .cell-ac, .cell-maxhp, .cell-temphp):has(input:placeholder-shown)::after {
-    content: attr(data-label);
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    font: 600 11px var(--font-body);
-    color: color-mix(in srgb, var(--color-text) 50%, transparent);
-    white-space: nowrap;
-  }
-  .combat-table td:is(.cell-init, .cell-ac, .cell-maxhp, .cell-temphp) input::placeholder {
+  .combat-table tbody td input.f-name::placeholder {
     color: transparent;
   }
   .cell-current .hp-cell {
@@ -1959,8 +1927,7 @@ tr.downed .f-name {
     flex: 0 0 80px;
     padding: 0;
     margin: 0;
-    white-space: nowrap;
-    font-size: 9px;
+    text-align: left;
   }
   .vue-tags {
     min-width: 0;

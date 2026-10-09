@@ -413,6 +413,7 @@ it('supplies readable captions for the responsive creature fields', () => {
       wrapper.findAll('tr[data-id] td[data-label]').map((cell) => cell.attributes('data-label')),
     ).toEqual([
       'Init',
+      'Name',
       'AC',
       'Max HP',
       'Temp HP',

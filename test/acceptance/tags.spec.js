@@ -14,6 +14,9 @@ for (const width of [1600, 320]) {
     await page.goto('./');
     await page.locator('#add-btn').click();
     const row = page.locator('tr[data-id="1"]');
+    const columnWidths = await page
+      .locator('.combat-table th')
+      .evaluateAll((headers) => headers.map((header) => header.getBoundingClientRect().width));
     const trigger = row.getByRole('button', { name: 'Add a condition', exact: true });
     const search = page.getByRole('textbox', { name: 'Add a condition', exact: true });
     const panel = page.locator('.cond-pop');
@@ -50,8 +53,29 @@ for (const width of [1600, 320]) {
     await page.getByRole('textbox', { name: 'Add a note', exact: true }).press('Enter');
     await expect(row.locator('img')).toHaveCount(0);
     const tags = row.locator('.cond-pill');
+    if (width === 1600) {
+      const populatedWidths = await page
+        .locator('.combat-table th')
+        .evaluateAll((headers) => headers.map((header) => header.getBoundingClientRect().width));
+      for (const [index, initialWidth] of columnWidths.entries()) {
+        expect(Math.abs(populatedWidths[index] - initialWidth)).toBeLessThan(1);
+      }
+      const conditionTags = await row.locator('.cell-conditions .cond-pill').all();
+      const first = await conditionTags[0].boundingBox();
+      const second = await conditionTags[1].boundingBox();
+      expect(second.y).toBeGreaterThanOrEqual(first.y + first.height);
+    }
     for (const tag of await tags.all()) {
       expect(await tag.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+      if (width === 1600) {
+        expect(
+          await tag.evaluate((el) => {
+            const bounds = el.getBoundingClientRect();
+            const cell = el.closest('td').getBoundingClientRect();
+            return bounds.left >= cell.left && bounds.right <= cell.right;
+          }),
+        ).toBe(true);
+      }
     }
     if (width === 320 || width === 1600) {
       expect(

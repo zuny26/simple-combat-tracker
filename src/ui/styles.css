@@ -609,8 +609,8 @@ body {
     width: 240px;
   }
   .col-current {
-    width: 140px;
-    min-width: 140px;
+    width: 180px;
+    min-width: 180px;
   }
   .col-conditions,
   .col-other {

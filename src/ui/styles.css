@@ -1745,7 +1745,8 @@ tr.downed .f-name {
    wrap onto full-width lines below its primary controls. */
 @media (min-width: 768px) and (max-width: 1400px) {
   .combat-table {
-    --tablet-columns: 52px minmax(0, 1fr) repeat(3, 54px) clamp(112px, 14vw, 170px) 174px 46px;
+    --tablet-columns: 52px minmax(0, 2fr) repeat(3, minmax(54px, 0.5fr)) minmax(112px, 1fr)
+      minmax(174px, 1fr) 46px;
   }
   .combat-table tbody tr:not(.empty-row) {
     display: grid;
@@ -1874,9 +1875,6 @@ tr.downed .f-name {
   .combat-table tbody td input.f-name {
     padding-left: var(--space-2);
   }
-  .combat-table tbody td input.f-name::placeholder {
-    color: transparent;
-  }
   .cell-current .hp-cell {
     min-height: var(--card-field-h);
     flex-direction: column;
@@ -1895,7 +1893,7 @@ tr.downed .f-name {
     width: var(--card-field-h);
   }
   .cell-adjust .r-ctl {
-    width: 174px;
+    width: 100%;
     max-width: 100%;
   }
   .combat-table tbody td input.r-amt {

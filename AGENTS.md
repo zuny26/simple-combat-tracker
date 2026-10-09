@@ -10,7 +10,7 @@ one page; encounters and preferences live in `localStorage`.
   and [combat ownership](docs/adr/0002-combat-state-ownership.md).
 - Adding or changing tests: [testing policy](docs/adr/0003-behavior-focused-testing.md).
 - Changing hosting: [production guide](docs/production.md).
-- Creating, reading, or updating tickets: [local issue tracker](docs/agents/issue-tracker.md).
+- Creating, reading, or updating tickets: [GitHub issue tracker](docs/agents/issue-tracker.md).
 - Triaging: [status labels](docs/agents/triage-labels.md).
 
 ## Setup and validation

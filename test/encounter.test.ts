@@ -375,3 +375,15 @@ it('wraps accepted removal of the last active creature without incrementing the 
     wrapper.unmount();
   }
 });
+
+it('supplies readable captions for the responsive creature fields', () => {
+  const combat = createVueCombat();
+  combat.addCreature();
+  const wrapper = mount(EncounterTracker, { props: { combat } });
+  try {
+    expect(wrapper.findAll('tr[data-id] td[data-label]').map(cell => cell.attributes('data-label')))
+      .toEqual(['Init', 'AC', 'Max HP', 'Temp HP', 'Current HP', 'Damage / Heal', 'Conditions', 'Other', 'Actions']);
+  } finally {
+    wrapper.unmount();
+  }
+});

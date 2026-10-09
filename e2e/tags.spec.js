@@ -5,10 +5,10 @@ test.beforeEach(async ({ page }) => {
     route.fulfill({ status: 200, contentType: 'text/css', body: '' }));
 });
 
-for (const width of [1280, 768, 320]) {
+for (const width of [1600, 320]) {
   test(`Vue condition and note pickers dismiss, restore focus, and fit at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 720 });
-    await page.goto('vue.html');
+    await page.goto('./');
     await page.locator('#add-btn').click();
     const row = page.locator('tr[data-id="1"]');
     const trigger = row.getByRole('button', { name: 'Add a condition', exact: true });
@@ -50,7 +50,7 @@ for (const width of [1280, 768, 320]) {
     for (const tag of await tags.all()) {
       expect(await tag.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
     }
-    if (width === 320 || width === 1280) {
+    if (width === 320 || width === 1600) {
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     }
     await noteTrigger.click();
@@ -71,7 +71,7 @@ for (const width of [1280, 768, 320]) {
 
 test('Vue keeps a growing note picker above the viewport bottom', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 360 });
-  await page.goto('vue.html');
+  await page.goto('./');
   for (let count = 0; count < 4; count++) await page.locator('#add-btn').click();
   const trigger = page.locator('tr[data-id="2"]').getByRole('button', { name: 'Add a note', exact: true });
   await trigger.evaluate(el => el.scrollIntoView({ block: 'end' }));

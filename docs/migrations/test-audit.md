@@ -1,10 +1,11 @@
-# Existing test responsibility audit — milestone 1
+# Test responsibility audit
 
 Governing decisions: [testing ADR](../adr/0003-behavior-focused-testing.md),
 [state ownership ADR](../adr/0002-combat-state-ownership.md), and
 [migration plan](vue-migration.md).
 
-All 108 existing cases are **retained now** because the legacy app remains active:
+The following is the historical milestone-1 inventory. At that milestone all 108
+existing cases were retained because the legacy app remained active:
 76 node:test cases and 32 Chromium cases. The decision column below records what happens
 when the relevant implementation is replaced, not permission to remove coverage early.
 Port = rewrite against the agreed public seam; consolidate = fold the guarantee into a
@@ -16,6 +17,7 @@ Combat actions/state, injected persistence, mounted Vue UI, and production brows
 are the agreed seams. Browser focus, Tab, dismissal, and geometry stay in Chromium. Node
 identity is meaningful for the current renderer, but is not a requirement on keyed Vue rows.
 Retire a legacy check only when its implementation disappears or its replacement passes.
+The ticket-09 reconciliation below records completed replacements for this inventory.
 
 ## `test/hp.test.js`
 
@@ -224,3 +226,34 @@ and browser focus, pre-paint, storage-getter failure, reload, and viewport respo
 in `e2e/vue-preferences.spec.js`. Existing Vue destructive browser cases now open row actions
 through the card menu, retaining their confirmation keyboard, dismissal, and reload assertions.
 Legacy checks remain applicable to their independent entry.
+
+## Ticket 09: completed retirement and current coverage
+
+The maintained root entry is now Vue. All legacy JavaScript application modules except
+`js/themes.js` and its declaration are removed, together with `vue.html`, node:test cases,
+custom global/jsdom bootstrapping, legacy browser specs, and the test-only tooling probe.
+The tables above remain the per-case historical record; every Port/Consolidate behavior
+now belongs to the passing replacement seams below. Retire decisions concern obsolete
+implementation or old-format compatibility contracts, rather than lost user workflows.
+
+| Historical responsibility | Current replacement and retained failure cases |
+| --- | --- |
+| HP rules (`hp.test.js`) | `test/combat.test.ts`: derived totals, temporary HP above max, fully absorbed ordinary damage with existing injuries, overflow and excess damage, healing with temporary HP, max changes, downed/unconfigured, invalid amounts. `test/encounter.test.ts`: visible HP and drafts; `e2e/production.spec.js`: real damage/heal/reload. Self-clamping unnormalized state and standalone clamp contracts retire; named actions own invariants. |
+| Ordering (`order.test.js`, ordering parts of `reorder.dom.test.js`) | `test/combat.test.ts`: descending finite numeric initiative, zero/negative values, stable case-insensitive ties, parked insertion order, nonmutating derived order. `test/encounter.test.ts`: saved input/deferred display order. `e2e/production.spec.js` and `e2e/encounter.spec.js`: initiative/name Tab/click, active identity and values after reorder. |
+| Turns (`turns.test.js`) | `test/combat.test.ts`: parked start, start/next/wrap, departing middle/last/final active creature, non-active removal, pre-combat departure, downed eligibility, active identity during ties. Mounted encounter checks show highlight/round/reset outcomes. Captured-index and direct mutation fallback helpers retire. |
+| Persistence and creature actions (`state.test.js`) | `test/persistence.test.ts`: versioned round trips, malformed/invalid shape/version/HP/ID/progression recovery, ignored unknown fields, unavailable reads/writes and save retry, no write on load/rejected actions, allocation across reset/reload and safe-integer boundaries. `test/combat.test.ts`: duplication names/stats/insertion/unknown ID, independent tags, trim/case/blank handling, reset. Old conversion/coercion/backfill and unused toggle contracts retire; offered conditions use add/remove. |
+| Rendering and routing (`render.dom.test.js`, `wiring.dom.test.js`) | `test/encounter.test.ts`: fields/actions, own-row HP adjustments and Enter, deferred sorting with pending drafts, max-HP clamp, zero/unconfigured/downed output, literal names, responsive captions, duplicate/removal/reset and confirmation persistence. `test/vue-tags.test.ts`: literal offered/custom conditions/notes, individual removal/restoration and sequencing. Routing classes and manual node/rebuild contracts retire. |
+| Browser smoke and production | `e2e/production.spec.js`: actual root Pages URL and generated module, Add focus, creation/round advancement, initiative Tab/click, actual UI saves/reloads, parked recovery, fractional HP and pending-amount isolation. Real mounted SFCs replace the tooling probe. |
+| Browser popovers and confirmations | `e2e/encounter.spec.js`: name editing plus one narrow confirmation workflow covering trapped Tab, Escape/Cancel/backdrop, bounds, trigger/Add restoration, and reload. `e2e/tags.spec.js`: desktop/narrow picker focus/dismissal/bounds, long literal tags, pending inputs, reload, growing panel near viewport bottom. `e2e/preferences.spec.js`: desktop/tablet/narrow menus, keyboard/dismissal/focus, theme/help/reset independence, pre-paint module-blocked preferences, throwing localStorage getter. |
+
+Browser permutations are consolidated to 12 cases: two production workflows, name editing,
+one narrow modal workflow, two representative tag layouts and one dynamic-height case,
+three representative preference/control layouts, and two startup cases. Tablet geometry
+remains in the preference/control workflow; desktop/narrow tag checks retain the distinct
+table/card layouts. Repeated desktop modal cancellation is covered by the mounted decisions
+and narrow real-browser keyboard workflow. No focus/layout assertion moves to jsdom.
+
+`npm test`/`test:unit` now run only Vitest. `npm run check:all` runs lint, strict typechecking,
+Vitest, build, then Chromium against that artifact. Push CI uses the same command and has
+no deployment job. Source retirement on the migration branch does not change public hosting;
+Pages inspection, configuration recording, and deployment remain ticket 10.

@@ -1,4 +1,4 @@
-// Shared registry for the independent legacy and Vue applications.
+// Theme registry for the desktop and mobile Vue controls.
 export const THEMES = [
   { id: 'light',   label: 'Organic Day',   swatchBg: '#ebddc5', swatchDot: '#c67139' },
   { id: 'dark',    label: 'Organic Night', swatchBg: '#2d2921', swatchDot: '#e58f52' },

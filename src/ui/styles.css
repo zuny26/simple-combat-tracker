@@ -182,7 +182,7 @@ body {
 
 .app-card {
   position: relative;
-  width: 1400px;
+  width: 1600px;
   max-width: 100%;
   background: var(--color-bg);
   border-radius: var(--radius-lg);
@@ -600,6 +600,20 @@ body {
 .col-actions {
   width: 92px;
 } /* holds the duplicate + remove buttons */
+
+@media (min-width: 1401px) {
+  .col-name {
+    width: 240px;
+  }
+  .col-current {
+    width: 140px;
+    min-width: 140px;
+  }
+  .col-conditions,
+  .col-other {
+    min-width: 200px;
+  }
+}
 
 /* ---- Inline-editable fields (borderless, reveal on interaction) ---- */
 .combat-table input {

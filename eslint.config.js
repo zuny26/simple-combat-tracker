@@ -38,7 +38,7 @@ export default [
 
   // The theme registry and typed UI run in the browser.
   {
-    files: ['js/**/*.js', 'src/**/*.ts', 'src/**/*.vue'],
+    files: ['src/**/*.ts', 'src/**/*.vue'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

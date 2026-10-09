@@ -1,4 +1,4 @@
-import type { Theme } from '../../js/themes.js';
+import type { Theme } from './themes';
 
 export interface MenuItem {
   id: string;

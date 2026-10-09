@@ -4,7 +4,7 @@ import type { Combat } from '../combat/combat';
 import CreatureRow from './CreatureRow.vue';
 import ActionMenu from './ActionMenu.vue';
 import { createPreferences } from './preferences';
-import { THEMES } from '../../js/themes.js';
+import { THEMES } from './themes';
 import type { EncounterStorage } from '../combat/persistence';
 
 const { combat, preferenceStorage } = defineProps<{ combat: Combat; preferenceStorage?: EncounterStorage }>();

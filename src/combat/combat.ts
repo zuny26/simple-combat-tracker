@@ -59,13 +59,16 @@ export interface CombatOptions {
 
 // The observer wraps fresh owned state; the default needs no framework or globals.
 export function createCombat(
-  observe: (value: CombatState) => CombatState = value => value,
+  observe: (value: CombatState) => CombatState = (value) => value,
   options: CombatOptions = {},
 ): Combat {
-  const state = observe(options.initial ? structuredClone(options.initial.state) :
-    { creatures: [], round: 0, activeId: null, started: false });
+  const state = observe(
+    options.initial
+      ? structuredClone(options.initial.state)
+      : { creatures: [], round: 0, activeId: null, started: false },
+  );
   let nextId = options.initial?.nextId ?? 1;
-  const allocatedIds = new Set(state.creatures.map(creature => creature.id));
+  const allocatedIds = new Set(state.creatures.map((creature) => creature.id));
   const allocateId = () => {
     const id = nextId;
     allocatedIds.add(id);
@@ -76,12 +79,20 @@ export function createCombat(
   };
   // Actions notify only after completing their state changes and invariants.
   const changed = () => options.onChange?.(state, nextId);
-  const find = (id: number) => state.creatures.find(creature => creature.id === id);
+  const find = (id: number) => state.creatures.find((creature) => creature.id === id);
   const isEmptyCreature = (id: number) => {
     const creature = find(id);
-    return !!creature && creature.init === '' && creature.name === '' && creature.ac === '' &&
-      creature.maxHP === 0 && creature.tempHP === 0 && creature.damageTaken === 0 &&
-      creature.conditions.length === 0 && creature.other.length === 0;
+    return (
+      !!creature &&
+      creature.init === '' &&
+      creature.name === '' &&
+      creature.ac === '' &&
+      creature.maxHP === 0 &&
+      creature.tempHP === 0 &&
+      creature.damageTaken === 0 &&
+      creature.conditions.length === 0 &&
+      creature.other.length === 0
+    );
   };
 
   const preCombat = () => {
@@ -98,18 +109,29 @@ export function createCombat(
 
   return {
     state: state as ReadonlyCombatState,
-    get displayOrder() { return displayOrder(state.creatures); },
+    get displayOrder() {
+      return displayOrder(state.creatures);
+    },
     addCreature() {
       const id = allocateId();
-      state.creatures.push({ id, init: '', name: '', ac: '', maxHP: 0, tempHP: 0,
-        damageTaken: 0, conditions: [], other: [] });
+      state.creatures.push({
+        id,
+        init: '',
+        name: '',
+        ac: '',
+        maxHP: 0,
+        tempHP: 0,
+        damageTaken: 0,
+        conditions: [],
+        other: [],
+      });
       changed();
       return id;
     },
     editCreature(id: number, edits: CreatureEdits) {
       const creature = find(id);
       if (!creature) return;
-      const previousIndex = turnOrder(state.creatures).findIndex(entry => entry.id === id);
+      const previousIndex = turnOrder(state.creatures).findIndex((entry) => entry.id === id);
       let edited = false;
       for (const field of ['init', 'name', 'ac'] as const) {
         const value = edits[field];
@@ -136,8 +158,15 @@ export function createCombat(
     duplicateCreature(id: number) {
       const source = find(id);
       if (!source) return null;
-      const copy: Creature = { ...source, id: allocateId(), name: duplicateName(source.name, state.creatures),
-        damageTaken: 0, tempHP: 0, conditions: [], other: [] };
+      const copy: Creature = {
+        ...source,
+        id: allocateId(),
+        name: duplicateName(source.name, state.creatures),
+        damageTaken: 0,
+        tempHP: 0,
+        conditions: [],
+        other: [],
+      };
       state.creatures.splice(state.creatures.indexOf(source) + 1, 0, copy);
       changed();
       return copy.id;
@@ -145,7 +174,11 @@ export function createCombat(
     addTag(id: number, field: 'conditions' | 'other', value: string) {
       const creature = find(id);
       const clean = value.trim();
-      if (creature && clean && !creature[field].some(tag => tag.toLowerCase() === clean.toLowerCase())) {
+      if (
+        creature &&
+        clean &&
+        !creature[field].some((tag) => tag.toLowerCase() === clean.toLowerCase())
+      ) {
         creature[field].push(clean);
         changed();
       }
@@ -154,7 +187,7 @@ export function createCombat(
       const creature = find(id);
       if (!creature) return;
       const key = value.trim().toLowerCase();
-      const remaining = creature[field].filter(tag => tag.toLowerCase() !== key);
+      const remaining = creature[field].filter((tag) => tag.toLowerCase() !== key);
       if (remaining.length === creature[field].length) return;
       creature[field] = remaining;
       changed();
@@ -191,8 +224,8 @@ export function createCombat(
     },
     removeCreature(id: number) {
       if (!find(id)) return;
-      const previousIndex = turnOrder(state.creatures).findIndex(creature => creature.id === id);
-      state.creatures = state.creatures.filter(creature => creature.id !== id);
+      const previousIndex = turnOrder(state.creatures).findIndex((creature) => creature.id === id);
+      state.creatures = state.creatures.filter((creature) => creature.id !== id);
       if (state.activeId === id) reassign(previousIndex);
       changed();
     },
@@ -207,17 +240,20 @@ export function createCombat(
     next() {
       if (!state.started) return;
       const order = turnOrder(state.creatures);
-      const index = order.findIndex(creature => creature.id === state.activeId);
+      const index = order.findIndex((creature) => creature.id === state.activeId);
       const following = order[(index + 1) % order.length];
       if (!following) return;
-      const round = index === order.length - 1 ?
-        Math.min(Number.MAX_SAFE_INTEGER, state.round + 1) : state.round;
+      const round =
+        index === order.length - 1
+          ? Math.min(Number.MAX_SAFE_INTEGER, state.round + 1)
+          : state.round;
       if (state.activeId === following.id && state.round === round) return;
       state.activeId = following.id;
       state.round = round;
       changed();
     },
     isEmptyCreature,
-    hasMeaningfulData: () => state.started || state.creatures.some(creature => !isEmptyCreature(creature.id)),
+    hasMeaningfulData: () =>
+      state.started || state.creatures.some((creature) => !isEmptyCreature(creature.id)),
   };
 }

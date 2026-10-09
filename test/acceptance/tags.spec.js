@@ -1,12 +1,15 @@
 import { test, expect } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
-  await page.route(/fonts\.(googleapis|gstatic)\.com/, route =>
-    route.fulfill({ status: 200, contentType: 'text/css', body: '' }));
+  await page.route(/fonts\.(googleapis|gstatic)\.com/, (route) =>
+    route.fulfill({ status: 200, contentType: 'text/css', body: '' }),
+  );
 });
 
 for (const width of [1600, 320]) {
-  test(`Vue condition and note pickers dismiss, restore focus, and fit at ${width}px`, async ({ page }) => {
+  test(`Vue condition and note pickers dismiss, restore focus, and fit at ${width}px`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width, height: 720 });
     await page.goto('./');
     await page.locator('#add-btn').click();
@@ -39,7 +42,7 @@ for (const width of [1600, 320]) {
     await trigger.click();
     const longTag = 'CustomCondition'.repeat(12);
     await search.fill(longTag);
-    expect(await panel.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+    expect(await panel.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
     await search.press('Enter');
     const noteTrigger = row.getByRole('button', { name: 'Add a note', exact: true });
     await noteTrigger.click();
@@ -48,10 +51,12 @@ for (const width of [1600, 320]) {
     await expect(row.locator('img')).toHaveCount(0);
     const tags = row.locator('.cond-pill');
     for (const tag of await tags.all()) {
-      expect(await tag.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+      expect(await tag.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
     }
     if (width === 320 || width === 1600) {
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      ).toBe(true);
     }
     await noteTrigger.click();
     await page.getByRole('textbox', { name: 'Add a note', exact: true }).fill('unsaved draft');
@@ -73,8 +78,10 @@ test('Vue keeps a growing note picker above the viewport bottom', async ({ page 
   await page.setViewportSize({ width: 320, height: 360 });
   await page.goto('./');
   for (let count = 0; count < 4; count++) await page.locator('#add-btn').click();
-  const trigger = page.locator('tr[data-id="2"]').getByRole('button', { name: 'Add a note', exact: true });
-  await trigger.evaluate(el => el.scrollIntoView({ block: 'end' }));
+  const trigger = page
+    .locator('tr[data-id="2"]')
+    .getByRole('button', { name: 'Add a note', exact: true });
+  await trigger.evaluate((el) => el.scrollIntoView({ block: 'end' }));
   await trigger.click();
   await page.getByRole('textbox', { name: 'Add a note', exact: true }).fill('LongNote'.repeat(24));
   const bounds = await page.locator('.cond-pop').boundingBox();

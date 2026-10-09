@@ -14,10 +14,10 @@ The current layout changes from a desktop table to full-width creature cards at 
 
 ## Field arrangement
 
-| Line | Fields in order |
-| --- | --- |
-| First | Initiative, name, AC, Max HP, Temp HP, current HP, creature menu |
-| Second | Damage/healing, Conditions, Other |
+| Line   | Fields in order                                                  |
+| ------ | ---------------------------------------------------------------- |
+| First  | Initiative, name, AC, Max HP, Temp HP, current HP, creature menu |
+| Second | Damage/healing, Conditions, Other                                |
 
 Give name and current HP flexible space and keep numeric inputs compact. Retain the existing HP bar and current HP display.
 

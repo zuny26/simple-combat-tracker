@@ -22,6 +22,8 @@ export async function expectNoOverflow(page) {
     return { limit: vw, worst: found };
   });
 
-  expect(worst, `something overflows the ${limit}px layout width: ${JSON.stringify(worst)}`)
-    .toBeNull();
+  expect(
+    worst,
+    `something overflows the ${limit}px layout width: ${JSON.stringify(worst)}`,
+  ).toBeNull();
 }

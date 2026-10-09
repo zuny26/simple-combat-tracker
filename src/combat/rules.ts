@@ -7,12 +7,20 @@ export function initiative(value: string): number | null {
 }
 
 export function turnOrder(creatures: readonly ReadonlyCreature[]): ReadonlyCreature[] {
-  return creatures.filter(creature => initiative(creature.init) !== null).sort((a, b) =>
-    (initiative(b.init)! - initiative(a.init)!) || a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+  return creatures
+    .filter((creature) => initiative(creature.init) !== null)
+    .sort(
+      (a, b) =>
+        initiative(b.init)! - initiative(a.init)! ||
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
+    );
 }
 
 export function displayOrder(creatures: readonly ReadonlyCreature[]): ReadonlyCreature[] {
-  return [...turnOrder(creatures), ...creatures.filter(creature => initiative(creature.init) === null)];
+  return [
+    ...turnOrder(creatures),
+    ...creatures.filter((creature) => initiative(creature.init) === null),
+  ];
 }
 
 export function hp(creature: ReadonlyCreature) {

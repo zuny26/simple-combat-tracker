@@ -25,7 +25,10 @@ it('adds an offered condition to the intended creature and closes before saving'
       saves++;
     };
     await tracker.get(`tr[data-id="${first}"] .cell-conditions .cond-add`).trigger('click');
-    await tracker.findAll('.cond-opt').find(option => option.text() === 'Poisoned')!.trigger('click');
+    await tracker
+      .findAll('.cond-opt')
+      .find((option) => option.text() === 'Poisoned')!
+      .trigger('click');
     await flushPromises();
     expect(saves).toBe(1);
     expect(actions).toBe(1);
@@ -38,8 +41,12 @@ it('adds an offered condition to the intended creature and closes before saving'
 
 it('trims custom conditions and notes, rejects blanks and duplicates, renders text, and restores removals', async () => {
   const values = new Map<string, string>();
-  const storage = { getItem: (key: string) => values.get(key) ?? null,
-    setItem: (key: string, value: string) => { values.set(key, value); } };
+  const storage = {
+    getItem: (key: string) => values.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      values.set(key, value);
+    },
+  };
   const combat = createVueCombat(storage);
   combat.addCreature();
   const tracker = mount(EncounterTracker, { props: { combat } });
@@ -70,34 +77,61 @@ it('trims custom conditions and notes, rejects blanks and duplicates, renders te
     const restored = mount(EncounterTracker, { props: { combat: createVueCombat(storage) } });
     try {
       expect(restored.find('.cond-pop').exists()).toBe(false);
-      expect(restored.findAll('.vue-tag-text').map(tag => tag.text())).toEqual([payload, payload]);
+      expect(restored.findAll('.vue-tag-text').map((tag) => tag.text())).toEqual([
+        payload,
+        payload,
+      ]);
       await restored.get('.cell-other .cond-x').trigger('click');
       expect(restored.find('.cell-other .cond-pill').exists()).toBe(false);
-      expect(createVueCombat(storage).state.creatures[0]).toMatchObject({ conditions: [payload], other: [] });
+      expect(createVueCombat(storage).state.creatures[0]).toMatchObject({
+        conditions: [payload],
+        other: [],
+      });
       await restored.get('.cell-conditions .cond-x').trigger('click');
-      expect(createVueCombat(storage).state.creatures[0]).toMatchObject({ conditions: [], other: [] });
-    } finally { restored.unmount(); }
-  } finally { tracker.unmount(); }
+      expect(createVueCombat(storage).state.creatures[0]).toMatchObject({
+        conditions: [],
+        other: [],
+      });
+    } finally {
+      restored.unmount();
+    }
+  } finally {
+    tracker.unmount();
+  }
 });
 
 it('filters offered conditions and dismisses without saving or persisting the query', async () => {
   let saves = 0;
-  const combat = createVueCombat({ getItem: () => null, setItem: () => { saves++; } });
+  const combat = createVueCombat({
+    getItem: () => null,
+    setItem: () => {
+      saves++;
+    },
+  });
   combat.addCreature();
   const tracker = mount(EncounterTracker, { props: { combat } });
   try {
     await tracker.get('.cell-conditions .cond-add').trigger('click');
     await tracker.get('.cond-search').setValue('pOiS');
-    expect(tracker.findAll('.cond-opt:not(.cond-opt-custom)').map(option => option.text())).toEqual(['Poisoned']);
+    expect(
+      tracker.findAll('.cond-opt:not(.cond-opt-custom)').map((option) => option.text()),
+    ).toEqual(['Poisoned']);
     await tracker.get('.cond-search').trigger('keydown', { key: 'Enter' });
     await flushPromises();
     expect(tracker.get('.vue-tag-text').text()).toBe('Poisoned');
     await tracker.get('.cell-conditions .cond-add').trigger('click');
-    expect(tracker.findAll('.cond-opt').find(option => option.text() === 'Poisoned')!.attributes('disabled')).toBeDefined();
+    expect(
+      tracker
+        .findAll('.cond-opt')
+        .find((option) => option.text() === 'Poisoned')!
+        .attributes('disabled'),
+    ).toBeDefined();
     await tracker.get('.cond-search').setValue('unsaved');
     await tracker.get('.cond-backdrop').trigger('click');
     expect(saves).toBe(2);
     await tracker.get('.cell-other .cond-add').trigger('click');
     expect((tracker.get('.cond-search').element as HTMLInputElement).value).toBe('');
-  } finally { tracker.unmount(); }
+  } finally {
+    tracker.unmount();
+  }
 });

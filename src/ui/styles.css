@@ -23,8 +23,8 @@
   --shadow-md: 0 3px 10px color-mix(in srgb, #2e2b25 16%, transparent);
   --page-bg: #d9d2c4;
 
-  --font-heading: "Caprasimo", system-ui, sans-serif;
-  --font-body: "Figtree", system-ui, sans-serif;
+  --font-heading: 'Caprasimo', system-ui, sans-serif;
+  --font-body: 'Figtree', system-ui, sans-serif;
 
   --space-1: 4.4px;
   --space-2: 8.8px;
@@ -45,7 +45,7 @@
   --control-h-sm: 36px; /* tier 1 — theme picker, help, and the ☰ app-menu trigger */
 }
 
-[data-theme="dark"] {
+[data-theme='dark'] {
   --color-bg: #211e19;
   --color-surface: #2d2921;
   --color-text: #f1e6d2;
@@ -75,7 +75,7 @@
    copied 1:1: Purple drives the UI chrome (buttons, focus, turn flag, active
    row), Green is the healthy HP bar, Cyan the temp-HP "shield" segment, Pink
    the bloodied bar, and Red the downed tag — a green→pink→red severity ramp. */
-[data-theme="dracula"] {
+[data-theme='dracula'] {
   --color-bg: #282a36; /* Background — the app card */
   --color-surface: #44475a; /* Current Line / Selection — topbar, inputs, pills */
   --color-text: #f8f8f2; /* Foreground */
@@ -110,7 +110,7 @@
    — Purple chrome, Green healthy HP, Cyan temp-HP, Pink bloodied, Red downed —
    but oriented for a light surface, so the scale runs 100 = lightest tint →
    800 = darkest ink, using Alucard's deeper shades of each Dracula hue. */
-[data-theme="alucard"] {
+[data-theme='alucard'] {
   --color-bg: #fffbeb; /* Background — the app card */
   --color-surface: #e9e4cd; /* line-highlight cream — topbar, inputs, pills */
   --color-text: #1f1f1f; /* Foreground */
@@ -325,7 +325,7 @@ body {
   border: 1px solid color-mix(in srgb, #000 18%, transparent);
 }
 .theme-swatch::after {
-  content: "";
+  content: '';
   position: absolute;
   left: 3px;
   bottom: 3px;
@@ -383,7 +383,7 @@ body {
   stroke-linejoin: round;
   opacity: 0;
 }
-.theme-option[aria-selected="true"] .theme-check {
+.theme-option[aria-selected='true'] .theme-check {
   opacity: 1;
 }
 
@@ -1187,7 +1187,7 @@ tr.downed .f-name {
 }
 /* .theme-check ships opacity: 0 and reveals on the picker's aria-selected; these rows are
    role="menuitemradio", so they reveal on aria-checked instead. */
-.app-menu-item[aria-checked="true"] .theme-check {
+.app-menu-item[aria-checked='true'] .theme-check {
   opacity: 1;
 }
 .app-menu-sep {
@@ -1632,7 +1632,7 @@ tr.downed .f-name {
      enough for two per line — so the break is explicit. Zero height, and the negative
      margin on the cells below cancels the row-gap its own flex line would add. */
   .combat-table tbody tr::after {
-    content: "";
+    content: '';
     order: 6;
     flex: 0 0 100%;
     height: 0;
@@ -1739,10 +1739,12 @@ tr.downed .f-name {
 @media (min-width: 768px) and (max-width: 1400px) {
   .combat-table tbody tr:not(.empty-row) {
     display: grid;
-    grid-template-columns: 64px minmax(0, 1fr) 64px 64px 64px minmax(110px, 1fr) var(--card-field-h);
+    grid-template-columns:
+      64px minmax(0, 1fr) 64px 64px 64px minmax(110px, 1fr)
+      var(--card-field-h);
     grid-template-areas:
-      "init name ac maxhp temphp current actions"
-      "adjust adjust . . . . .";
+      'init name ac maxhp temphp current actions'
+      'adjust adjust . . . . .';
     align-items: end;
     row-gap: var(--space-2);
     padding: var(--space-2) var(--space-3);
@@ -1758,13 +1760,27 @@ tr.downed .f-name {
     display: block;
     grid-area: init;
   }
-  .cell-name { grid-area: name; }
-  .cell-ac { grid-area: ac; }
-  .cell-maxhp { grid-area: maxhp; }
-  .cell-temphp { grid-area: temphp; }
-  .cell-current { grid-area: current; }
-  .cell-actions { grid-area: actions; }
-  .cell-adjust { grid-area: adjust; }
+  .cell-name {
+    grid-area: name;
+  }
+  .cell-ac {
+    grid-area: ac;
+  }
+  .cell-maxhp {
+    grid-area: maxhp;
+  }
+  .cell-temphp {
+    grid-area: temphp;
+  }
+  .cell-current {
+    grid-area: current;
+  }
+  .cell-actions {
+    grid-area: actions;
+  }
+  .cell-adjust {
+    grid-area: adjust;
+  }
   /* Split the space beside Damage / Heal evenly, independently of the numeric
      and flexible columns used by the first line. */
   .cell-conditions,

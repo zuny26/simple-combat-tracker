@@ -1,5 +1,5 @@
 import { reactive, readonly } from 'vue';
-import { THEMES } from '../../js/themes.js';
+import { THEMES } from './themes';
 import type { EncounterStorage } from '../combat/persistence';
 
 export function createPreferences(storage?: EncounterStorage) {

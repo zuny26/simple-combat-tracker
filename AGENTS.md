@@ -42,7 +42,7 @@ Keep drafts, displayed row order, menus, pickers, and confirmation in the UI. Ro
 
 - Use Conventional Commits with a domain scope where useful, e.g. `feat(combat): add turn advancement`.
 - Render user text with Vue interpolation and bound values; SVG markup is static.
-- Register themes in `js/themes.js` and add their variable block in `styles.css`. Both theme controls use that registry.
+- Register themes in `src/ui/themes.ts` and add their variable block in `src/ui/styles.css`. Both theme controls use that registry.
 - Use CSS custom properties for colors, spacing, radii, and `--control-h` alignment.
 - Keep the same DOM at every viewport. CSS selects row menus at 1400px and app menus at 640px; cells use `data-label` captions. Avoid resize handlers and viewport-conditional rendering.
 - Add browser APIs used by JavaScript to the hand-listed globals in `eslint.config.js`. Strict `vue-tsc` checks TypeScript/Vue identifiers.

@@ -9,7 +9,7 @@
       (function () {
         try {
           // Apply whatever id is stored, without listing valid themes here (that
-          // lives in js/themes.js). An unknown id simply falls back to the default
+          // lives in src/ui/themes.ts). An unknown id simply falls back to the default
           // :root theme and Vue reconciles it on load — so adding a theme
           // needs no change to this script.
           var t = localStorage.getItem("dnd-ct-theme");
@@ -24,7 +24,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Figtree:wght@400;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div id="app"></div>

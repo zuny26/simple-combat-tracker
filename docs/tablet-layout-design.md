@@ -1,51 +1,33 @@
 # Tablet encounter layout
 
-Status: implemented and validated. The tablet range remains 768px through 1400px.
+Status: final design. The tablet range remains 768px through 1400px.
 
-## Problem
+## Layout
 
-The current layout changes from a desktop table to full-width creature cards at 1400px. At tablet widths, separate full-width sections and capped input widths leave substantial empty space and reduce the number of creatures visible together.
+Use a continuous table with shared column headings and horizontal creature separators. Each creature wraps onto three lines without card borders, rounded containers, or gaps between creatures.
 
-## Agreed direction
+| Line   | Fields in order                                                                  |
+| ------ | -------------------------------------------------------------------------------- |
+| First  | Initiative, name, AC, Max HP, Temp HP, current HP, damage/healing, creature menu |
+| Second | Conditions, across the full row                                                  |
+| Third  | Other, across the full row                                                       |
 
-- Use compact full-width creature rows with two lines of controls in the usual case and one clear top-to-bottom turn order.
-- Keep name, initiative, HP, damage/healing, and existing conditions visible and directly usable.
-- Put less frequent actions, such as removing a creature, in the creature menu.
+Current HP sits beside damage/healing. Keep the amount input compact, numeric columns narrow, and the name column flexible. Current HP gains space at wider tablet widths. Main controls retain 46–48px heights; tag controls use the compact desktop style. Conditions and Other have inline captions that anchor their empty Add controls. Tags wrap naturally and crowded creatures grow taller.
 
-## Field arrangement
-
-| Line   | Fields in order                                                  |
-| ------ | ---------------------------------------------------------------- |
-| First  | Initiative, name, AC, Max HP, Temp HP, current HP, creature menu |
-| Second | Damage/healing, Conditions, Other                                |
-
-Give name and current HP flexible space and keep numeric inputs compact. Retain the existing HP bar and current HP display.
-
-Conditions and Other each occupy half of the space beside Damage/healing, with a gap between them.
-
-Keep tablet controls approximately 46–48px tall. Gain density through horizontal arrangement and tighter spacing. Conditions and notes wrap naturally; a crowded creature grows taller so all tags remain visible. Two lines are the normal arrangement, not a fixed row height.
+Keep the existing HP bar, active-turn stripe and TURN flag, downed indicator, and creature menu. Shared headings replace repeated field captions for the first line.
 
 ## Responsive behavior
 
-Initially target tablet rows at browser widths from 768px through 1400px, retaining phone cards below the tablet range and the desktop table above it. Select the layout by available browser width, including rotation and split-screen, rather than by device identity. Retain the existing app-menu breakpoint at 640px.
+Below 768px, keep phone cards. Above 1400px, keep the desktop table. Retain the app-menu breakpoint at 640px. Use the same DOM at every viewport, with CSS controlling layout and no resize handlers or viewport-conditional rendering.
 
-The lower tablet boundary is provisional until populated rows demonstrate that the controls fit. If 768px cannot support this arrangement with the agreed touch sizes, bring the boundary adjustment back for review.
+Combat actions and browser persistence remain independent of presentation. Damage/healing requires an explicit action, and the existing keyboard and editing behavior continues to apply.
 
-## Existing constraints
+## Validation
 
-Use the same DOM at every viewport and CSS for responsive layout, without resize handlers or viewport-conditional rendering. Keep combat actions and persistence behavior independent of presentation.
+Check populated and crowded encounters at 768px, 1024px, and 1366px, plus widths immediately around the tablet boundaries and existing phone/desktop coverage. Assert shared heading alignment, adjacent health controls, full-width tag lines, visible tags, growing row height, and absence of overflow. Verify menus and pickers remain within the viewport, along with focus restoration, active/downed indicators, and turn order.
 
-## Validation before completion
+Run `npm run check:all` before committing UI changes.
 
-- Verify populated encounters at 768px, 1024px, and 1366px, including long creature names, populated HP, multiple conditions, and long notes.
-- Verify widths immediately around the tablet boundaries, plus existing phone and desktop coverage.
-- Check field grouping, visible controls, touch target sizes, and absence of horizontal page overflow with relational browser assertions.
-- Check that condition pickers and creature menus remain usable and within the viewport.
-- Verify active-creature and downed indicators remain clear, and crowded rows grow without overlapping controls.
-- Run the repository's full UI validation command, `npm run check:all`, before committing an implementation.
+## Design source
 
-## Implementation validation
-
-- Populated rows pass relational Chromium checks at 768px, 1024px, and 1366px, with boundary coverage at 767px, 769px, 1399px, 1400px, and 1401px, plus phone and desktop coverage at 320px and 1600px.
-- Compact controls retain 46–48px heights; conditions and long notes grow the row without overlap or horizontal overflow. Creature menus, condition pickers, and growing note pickers stay within the viewport.
-- `npm run check:all` passes on Node 24.15.0: lint, strict type checking, 97 unit/component tests, production build, and 14 Chromium acceptance tests.
+The selected wrapped-table prototype, including the final column widths, is preserved on the local branch `prototype/tablet-layout-20261009`. The production application contains the chosen layout without sample data or prototype controls.

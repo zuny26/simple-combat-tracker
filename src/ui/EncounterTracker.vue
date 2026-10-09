@@ -259,8 +259,8 @@ async function addCreature() {
               <th class="col-hpnum">Temp HP</th>
               <th class="col-current">Current HP</th>
               <th class="col-adjust">Damage / Heal</th>
-              <th>Conditions</th>
-              <th>Other</th>
+              <th class="col-conditions">Conditions</th>
+              <th class="col-other">Other</th>
               <th class="col-actions">Actions</th>
             </tr>
           </thead>

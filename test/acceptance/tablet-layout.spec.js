@@ -22,7 +22,7 @@ async function addCreature(page, id) {
 
 async function expectTabletGrouping(row) {
   const firstLine = row.locator(
-    '.init-wrap, .cell-name, .cell-ac, .cell-maxhp, .cell-temphp, .cell-current, .cell-actions',
+    '.cell-init, .cell-name, .cell-ac, .cell-maxhp, .cell-temphp, .cell-current, .cell-adjust, .cell-actions',
   );
   const boxes = await firstLine.evaluateAll((elements) =>
     elements.map((el) => {
@@ -36,34 +36,41 @@ async function expectTabletGrouping(row) {
       Math.max(boxes[i].y, boxes[0].y),
     );
   }
-  const secondLine = [];
-  for (const selector of ['.cell-adjust', '.cell-conditions', '.cell-other']) {
-    secondLine.push(await row.locator(selector).boundingBox());
-  }
-  expect(secondLine[1].width).toBeCloseTo(secondLine[2].width, 1);
-  for (let i = 0; i < secondLine.length; i++) {
-    expect(secondLine[i].y).toBeGreaterThanOrEqual(
-      Math.max(...boxes.map((box) => box.y + box.height)),
-    );
-    expect(secondLine[i].y).toBeCloseTo(secondLine[0].y, 0);
-    if (i > 0)
-      expect(secondLine[i].x).toBeGreaterThanOrEqual(secondLine[i - 1].x + secondLine[i - 1].width);
-  }
+  const conditions = await row.locator('.cell-conditions').boundingBox();
+  const other = await row.locator('.cell-other').boundingBox();
+  expect(conditions.y).toBeGreaterThanOrEqual(Math.max(...boxes.map((box) => box.y + box.height)));
+  expect(other.y).toBeGreaterThanOrEqual(conditions.y + conditions.height);
+  expect(conditions.x).toBeCloseTo(boxes[0].x, 1);
+  expect(other.x).toBeCloseTo(conditions.x, 1);
+  expect(conditions.width).toBeCloseTo(other.width, 1);
+  expect(conditions.x + conditions.width).toBeCloseTo(boxes.at(-1).x + boxes.at(-1).width, 1);
 }
 
-test('768px keeps populated creature controls in two compact lines with touch targets', async ({
+test('768px aligns shared table headings and wraps tags below compact creature controls', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 768, height: 900 });
   await page.goto('./');
   const row = await addCreature(page, 1);
   await expectTabletGrouping(row);
-  for (const control of await row.locator('input:not(.cond-search), button:visible').all()) {
+  for (const control of await row.locator('input:not(.cond-search), .r-side, .btn-menu').all()) {
     const bounds = await control.boundingBox();
     expect(bounds.height).toBeGreaterThanOrEqual(46);
     expect(bounds.height).toBeLessThanOrEqual(48);
     expect(bounds.width).toBeGreaterThanOrEqual(46);
   }
+  const headers = page.locator('.combat-table thead th:visible');
+  const fields = row.locator(
+    '.cell-init, .cell-name, .cell-ac, .cell-maxhp, .cell-temphp, .cell-current, .cell-adjust, .cell-actions',
+  );
+  await expect(headers).toHaveCount(8);
+  for (let i = 0; i < 8; i++) {
+    const header = await headers.nth(i).boundingBox();
+    const field = await fields.nth(i).boundingBox();
+    expect(header.x).toBeCloseTo(field.x, 1);
+    expect(header.width).toBeCloseTo(field.width, 1);
+  }
+  expect((await row.locator('.f-adjust').boundingBox()).width).toBeLessThanOrEqual(60);
   await expect(row.locator('.hp-number')).toHaveText('137 / 125');
   await expect(row.locator('.hp-track')).toBeVisible();
   await expect(row.getByRole('button', { name: 'Creature actions' })).toBeVisible();
@@ -78,6 +85,22 @@ async function addTag(page, row, field, value) {
   await search.fill(value);
   await search.press('Enter');
 }
+
+test('tabbing from AC moves the highlighted border to Max HP while the pointer stays on AC', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await page.goto('./');
+  const row = await addCreature(page, 1);
+  const ac = row.getByRole('textbox', { name: 'AC', exact: true });
+  const maxHP = row.getByRole('textbox', { name: 'Max HP', exact: true });
+  await ac.click();
+  const focusedBorder = await ac.evaluate((el) => window.getComputedStyle(el).borderColor);
+  await ac.press('Tab');
+  await expect(maxHP).toBeFocused();
+  await expect(maxHP).toHaveCSS('border-color', focusedBorder);
+  await expect(ac).not.toHaveCSS('border-color', focusedBorder);
+});
 
 async function expectInViewport(page, locator) {
   const bounds = await locator.boundingBox();
@@ -129,8 +152,11 @@ test('crowded rows grow and keep menus, pickers, and turn order usable across ta
     }
     if (width >= 768 && width <= 1400) {
       await expectTabletGrouping(first);
-      for (const control of await first.locator('button:visible').all()) {
+      for (const control of await first.locator('.r-side, .btn-menu').all()) {
         expect((await control.boundingBox()).height).toBeGreaterThanOrEqual(46);
+      }
+      for (const control of await first.locator('.cond-add, .cond-x').all()) {
+        expect((await control.boundingBox()).height).toBeGreaterThanOrEqual(30);
       }
       await second.getByRole('button', { name: 'Creature actions' }).click();
       await expectInViewport(page, page.getByRole('menu', { name: 'Creature actions' }));

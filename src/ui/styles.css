@@ -1734,27 +1734,75 @@ tr.downed .f-name {
   }
 }
 
-/* Tablet rows share the card's touch styling, but arrange the encounter in two
-   bands. Flexible name/HP columns take the space left by compact numeric fields. */
+/* Tablet: a continuous table with shared headings. Each creature's tag fields
+   wrap onto full-width lines below its primary controls. */
 @media (min-width: 768px) and (max-width: 1400px) {
+  .combat-table {
+    --tablet-columns: 52px minmax(0, 1fr) repeat(3, 54px) clamp(112px, 14vw, 170px) 174px 46px;
+  }
+  .combat-table thead {
+    display: block;
+  }
+  .combat-table thead tr {
+    display: grid;
+    grid-template-columns: var(--tablet-columns);
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--color-divider);
+  }
+  .combat-table thead th {
+    width: auto;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    font-size: 9px;
+    letter-spacing: 0.03em;
+    text-align: center;
+  }
+  .combat-table thead .col-name {
+    text-align: left;
+    padding-left: var(--space-2);
+  }
+  .combat-table thead .col-conditions,
+  .combat-table thead .col-other {
+    display: none;
+  }
   .combat-table tbody tr:not(.empty-row) {
     display: grid;
-    grid-template-columns:
-      64px minmax(0, 1fr) 64px 64px 64px minmax(110px, 1fr)
-      var(--card-field-h);
+    grid-template-columns: var(--tablet-columns);
     grid-template-areas:
-      'init name ac maxhp temphp current actions'
-      'adjust adjust . . . . .';
-    align-items: end;
-    row-gap: var(--space-2);
+      'init name ac maxhp temphp current adjust actions'
+      'conditions conditions conditions conditions conditions conditions conditions conditions'
+      'other other other other other other other other';
+    align-items: start;
+    column-gap: var(--space-2);
+    row-gap: var(--space-1);
     padding: var(--space-2) var(--space-3);
+    margin: 0;
+    border: 0;
+    border-bottom: 1px solid var(--color-divider);
+    border-radius: 0;
+    background: transparent;
   }
   .combat-table tbody tr::after {
     content: none;
   }
+  .combat-table tbody tr.active {
+    background: var(--color-accent-100);
+    box-shadow: inset 3px 0 var(--color-accent);
+  }
+  .combat-table tbody tr.downed:not(.active) {
+    background: color-mix(in srgb, var(--color-text) 5%, transparent);
+  }
   .combat-table tbody td {
     margin: 0;
     max-width: none;
+    width: auto;
+    justify-self: stretch;
+    align-self: start;
+  }
+  .combat-table tbody td::before {
+    display: none;
   }
   .cell-init {
     display: block;
@@ -1775,74 +1823,161 @@ tr.downed .f-name {
   .cell-current {
     grid-area: current;
   }
-  .cell-actions {
-    grid-area: actions;
-  }
   .cell-adjust {
     grid-area: adjust;
   }
-  /* Split the space beside Damage / Heal evenly, independently of the numeric
-     and flexible columns used by the first line. */
-  .cell-conditions,
-  .cell-other {
-    grid-area: 2 / 3 / 3 / -1;
-    width: calc((100% - var(--space-2)) / 2);
+  .cell-actions {
+    grid-area: actions;
   }
-  .cell-other {
-    justify-self: end;
-  }
-
   .init-wrap,
   .ac-wrap {
     width: 100%;
     padding: 0;
     justify-content: center;
+    border: 0;
+    background: transparent;
+    border-radius: 0;
+  }
+  .init-wrap {
+    flex-direction: column;
+    gap: 0;
+  }
+  .combat-table tbody tr.active .init-wrap {
+    background: transparent;
+    border-color: transparent;
   }
   .init-shoe,
   .ac-shield {
     display: none;
+  }
+  .turn-flag {
+    position: static;
+    transform: none;
+    font-size: 7px;
+    padding: 1px 5px;
   }
   .combat-table td.cell-init input.f-init,
   .combat-table td.cell-ac input.f-ac {
     width: 100%;
     height: var(--card-field-h);
   }
-  .combat-table tbody td input.f-maxhp,
-  .combat-table tbody td input.f-temphp {
+  .combat-table tbody td input:not(.r-amt) {
     padding-inline: var(--space-1);
+    background: transparent;
+    border-color: transparent;
+    border-radius: 999px;
   }
-  .cell-init::before,
-  .cell-ac::before,
-  .cell-current::before,
-  .cell-adjust::before {
+  .combat-table tbody tr.active input.f-init {
+    height: 30px;
+    min-height: 30px;
+  }
+  .combat-table tbody td input:not(.r-amt):hover {
+    border-color: var(--color-divider);
+  }
+  .combat-table tbody td input:not(.r-amt):focus {
+    border-color: var(--color-accent);
+    background: var(--color-surface);
+  }
+  .combat-table tbody td input.f-name {
+    padding-left: var(--space-2);
+  }
+  /* Empty numeric fields name themselves when the shared headings are far away. */
+  .combat-table td:is(.cell-init, .cell-ac, .cell-maxhp, .cell-temphp) {
+    position: relative;
+  }
+  .combat-table td:is(.cell-init, .cell-ac, .cell-maxhp, .cell-temphp)::after {
+    pointer-events: none;
+  }
+  .combat-table
+    td:is(.cell-init, .cell-ac, .cell-maxhp, .cell-temphp):has(input:placeholder-shown)::after {
     content: attr(data-label);
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font: 600 11px var(--font-body);
+    color: color-mix(in srgb, var(--color-text) 50%, transparent);
+    white-space: nowrap;
+  }
+  .combat-table td:is(.cell-init, .cell-ac, .cell-maxhp, .cell-temphp) input::placeholder {
+    color: transparent;
   }
   .cell-current .hp-cell {
     min-height: var(--card-field-h);
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: 5px;
+  }
+  .cell-current .hp-track {
+    flex: none;
+    width: 100%;
+  }
+  .hp-number {
+    text-align: center;
   }
   .btn-menu {
     width: var(--card-field-h);
   }
-  .cell-adjust,
+  .cell-adjust .r-ctl {
+    width: 174px;
+    max-width: 100%;
+  }
+  .combat-table tbody td input.r-amt {
+    flex: 0 0 52px;
+    width: 52px;
+    min-width: 52px;
+    padding: 0 4px;
+    min-height: var(--card-field-h);
+  }
+  .cell-adjust .r-side {
+    flex: 1;
+    min-width: var(--card-field-h);
+    min-height: var(--card-field-h);
+    padding-inline: 6px;
+    gap: 2px;
+  }
+  .cell-adjust .r-side svg {
+    width: 10px;
+  }
   .cell-conditions,
   .cell-other {
-    align-self: start;
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding: 0 var(--space-2);
   }
-  .cell-adjust .r-ctl {
-    max-width: none;
+  .cell-conditions {
+    grid-area: conditions;
   }
-  .combat-table tbody td input.r-amt,
-  .cell-adjust .r-side {
-    min-height: var(--card-field-h);
-    min-width: var(--card-field-h);
+  .cell-other {
+    grid-area: other;
   }
-  .cond-add,
+  .combat-table tbody td.cell-conditions::before,
+  .combat-table tbody td.cell-other::before {
+    display: block;
+    flex: 0 0 80px;
+    padding: 0;
+    margin: 0;
+    white-space: nowrap;
+    font-size: 9px;
+  }
+  .vue-tags {
+    min-width: 0;
+    flex: 1;
+  }
+  .cond-add {
+    min-width: 46px;
+    height: 32px;
+  }
   .cond-x {
-    min-width: var(--card-field-h);
-    height: var(--card-field-h);
+    min-width: 24px;
+    width: 24px;
+    height: 30px;
   }
   .cond-pill {
     padding-block: 0;
+    font-size: 12px;
   }
   .cond-opt,
   .row-menu .row-menu-item {

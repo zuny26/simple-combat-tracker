@@ -866,15 +866,17 @@ tr.downed .f-name {
 /* Both columns render the same `.cond-*` pill design (the Other picker just has no
    predefined list). The cell: pills wrap to multiple lines, the + Add button sits last. */
 .cond-cell {
+  --tag-control-h: 27px;
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   gap: 5px;
   padding: 2px 0;
 }
 .cond-pill {
   display: inline-flex;
+  min-height: var(--tag-control-h);
   align-items: center;
   gap: 1px;
   padding: 3px 4px 3px 11px;
@@ -911,7 +913,7 @@ tr.downed .f-name {
 }
 .cond-add {
   min-width: 27px;
-  height: 27px;
+  min-height: var(--tag-control-h);
   padding: 0 9px;
   border-radius: 999px;
   border: 1.5px dashed color-mix(in srgb, var(--color-accent) 45%, transparent);
@@ -1694,6 +1696,9 @@ tr.downed .f-name {
   }
 
   /* ---- Conditions / Other: pills, one field per line ---- */
+  .cond-cell {
+    --tag-control-h: 31px;
+  }
   .cell-conditions {
     order: 11;
     flex: 1 1 100%;
@@ -1712,7 +1717,6 @@ tr.downed .f-name {
   }
   .cond-add {
     min-width: 31px;
-    height: 31px;
     font-size: 13px;
   }
 
@@ -1949,12 +1953,12 @@ tr.downed .f-name {
     text-align: left;
   }
   .vue-tags {
+    --tag-control-h: 33px;
     min-width: 0;
     flex: 1;
   }
   .cond-add {
     min-width: 46px;
-    height: 32px;
   }
   .cond-x {
     min-width: 24px;

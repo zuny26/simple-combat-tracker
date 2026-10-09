@@ -220,3 +220,26 @@ it('retains existing injuries when temporary HP fully absorbs a large finite dam
   expect(combat.hp(id)?.current).toBe(6);
   expect(combat.state.creatures[0]?.damageTaken).toBe(4);
 });
+
+it('absorbs ordinary damage entirely in temporary HP without changing existing injuries', () => {
+  const combat = createCombat();
+  const id = combat.addCreature();
+  combat.editCreature(id, { maxHP: 10 });
+  combat.damage(id, 4);
+  combat.editCreature(id, { tempHP: 5 });
+  combat.damage(id, 2);
+  expect(combat.state.creatures[0]).toMatchObject({ tempHP: 3, damageTaken: 4 });
+  expect(combat.hp(id)).toEqual({ current: 9, configured: true, downed: false });
+});
+
+it('keeps removal and parking before combat in pre-combat', () => {
+  const combat = createCombat();
+  const first = combat.addCreature();
+  const second = combat.addCreature();
+  combat.editCreature(first, { init: '20' });
+  combat.editCreature(second, { init: '10' });
+  combat.removeCreature(first);
+  combat.editCreature(second, { init: '' });
+  expect(combat.state).toMatchObject({ round: 0, activeId: null, started: false });
+  expect(combat.displayOrder.map(creature => creature.id)).toEqual([second]);
+});

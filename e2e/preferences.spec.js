@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 for (const width of [1600, 768, 320]) {
   test(`Vue preferences and encounter controls work at ${width}px without overflow`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });
-    await page.goto('vue.html');
+    await page.goto('./');
     await page.locator('#usage-dismiss-btn').click();
     await page.locator('#add-btn').click();
     const row = page.locator('tr[data-id="1"]');
@@ -81,7 +81,7 @@ for (const width of [1600, 768, 320]) {
 }
 
 test('Vue applies saved preferences before its application module runs', async ({ page }) => {
-  await page.goto('vue.html');
+  await page.goto('./');
   await page.evaluate(() => {
     localStorage.setItem('dnd-ct-theme', 'dark');
     localStorage.setItem('sct-usage-dismissed', '1');
@@ -100,7 +100,7 @@ test('Vue starts and preference controls work when localStorage access throws', 
   await page.addInitScript(() => {
     Object.defineProperty(window, 'localStorage', { get() { throw new Error('blocked'); } });
   });
-  await page.goto('vue.html');
+  await page.goto('./');
   await page.locator('#theme-trigger').click();
   await page.getByRole('menuitemradio', { name: 'Alucard' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'alucard');

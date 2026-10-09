@@ -3,7 +3,7 @@
 ## Notes
 
 - [Specification](spec.md) and [migration plan](../../docs/migrations/vue-migration.md).
-- Milestone 1 retains the legacy application as the only running combat owner.
+- The maintained local root entry is Vue; public deployment cutover remains ticket 10.
 
 ## Decisions-so-far
 
@@ -60,9 +60,17 @@
   reopening, reset independence, and sequencing; Chromium covers focus, actual reloads,
   pre-paint presentation, and relational bounds at representative widths.
 
+- [09: Retire legacy code and consolidate verification](issues/09-retire-legacy-and-consolidate-checks.md):
+  Vue is the maintained root entry with one app-scoped combat owner. Legacy singleton,
+  manual DOM widgets/routing, custom bootstrap harnesses, and obsolete tests retire after
+  the [audit reconciliation](../../docs/migrations/test-audit.md#ticket-09-completed-retirement-and-current-coverage).
+  Vitest owns rules/storage/mounted behavior; 12 Chromium cases retain production-path,
+  editing, reload, modal/menu/picker focus and representative geometry responsibilities.
+  `check:all` and push-only CI verify without publishing; hosting cutover stays ticket 10.
+
 ## Fog
 
 - Actual Pages configuration, published URL, and default branch must be verified before
   cutover. This milestone does not change remote hosting settings.
-- The independent Vue entry now covers encounter editing, turns, damage/healing, and tags;
-  responsive menus and preferences are also implemented.
+- Migration branch source now requires a Vite build; keep it off the existing raw-source
+  deployment branch until ticket 10 publishes the checked artifact.

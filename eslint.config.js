@@ -1,4 +1,4 @@
-// Legacy JavaScript keeps no-undef; TypeScript uses vue-tsc for identifier checks.
+// JavaScript keeps no-undef; TypeScript uses vue-tsc for identifier checks.
 
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
@@ -37,7 +37,7 @@ export default [
     },
   },
 
-  // The still-active legacy app and future typed UI run in the browser.
+  // The theme registry and typed UI run in the browser.
   {
     files: ['js/**/*.js', 'src/**/*.ts', 'src/**/*.vue'],
     languageOptions: {
@@ -47,7 +47,7 @@ export default [
     },
   },
 
-  // Tests — run under node --test.
+  // Mounted UI and combat tests run under Vitest.
   {
     files: ['test/**/*.js', 'test/**/*.ts', 'test/**/*.vue'],
     languageOptions: {

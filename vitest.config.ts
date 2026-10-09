@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [vue()],
   test: {
     environment: 'jsdom',
-    // Keep node:test and Playwright files in their own runners.
+    // Run the typed combat, persistence, and mounted UI seams; Playwright stays separate.
     include: ['test/**/*.test.ts', 'src/**/*.test.ts'],
   },
 });

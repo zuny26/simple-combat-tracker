@@ -1883,7 +1883,7 @@ tr.downed .f-name {
   }
 }
 
-/* Vue menus share the legacy panel styling and remain viewport-clamped. */
+/* Menus share panel styling and remain viewport-clamped. */
 .vue-action-menu {
   max-width: calc(100vw - 16px);
   max-height: calc(100dvh - 16px);

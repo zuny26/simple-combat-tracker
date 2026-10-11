@@ -2,9 +2,10 @@ import { mount } from '@vue/test-utils';
 import { defineComponent, h, ref } from 'vue';
 import { expect, it } from 'vitest';
 import { usePanelLifecycle } from '../../src/ui/usePanelLifecycle';
+import type { PanelLifecycle } from '../../src/ui/usePanelLifecycle';
 
 function mountPanel(selectionFocus: 'before' | 'after' = 'before') {
-  let lifecycle!: ReturnType<typeof usePanelLifecycle>;
+  let lifecycle!: PanelLifecycle;
   const wrapper = mount(
     defineComponent({
       setup() {

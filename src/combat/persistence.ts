@@ -23,7 +23,16 @@ export function createBrowserStorage(): EncounterStorage {
 
 export const ENCOUNTER_KEY = 'dnd-combat-tracker-v1';
 
-function snapshot(state: ReadonlyCombatState, nextId: number) {
+interface EncounterSnapshotV1 {
+  version: 1;
+  nextId: number;
+  round: number;
+  activeId: number | null;
+  started: boolean;
+  creatures: Creature[];
+}
+
+function snapshot(state: ReadonlyCombatState, nextId: number): EncounterSnapshotV1 {
   return {
     version: 1,
     nextId,

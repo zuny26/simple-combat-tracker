@@ -1,4 +1,5 @@
 import { nextTick, onBeforeUnmount, readonly, ref } from 'vue';
+import type { Ref } from 'vue';
 
 interface PanelOptions {
   alignment: 'left' | 'right';
@@ -10,7 +11,19 @@ interface PanelOptions {
   selectionFocus?: 'before' | 'after';
 }
 
-export function usePanelLifecycle(options: PanelOptions) {
+export interface PanelLifecycle {
+  readonly open: Readonly<Ref<boolean>>;
+  readonly trigger: Ref<HTMLButtonElement | undefined>;
+  readonly panel: Ref<HTMLDivElement | undefined>;
+  readonly position: Ref<{ left: string; top: string }>;
+  show(): Promise<void>;
+  // False when a newer operation or unmount supersedes this dismissal.
+  close(restoreFocus?: boolean): Promise<boolean>;
+  reposition(): void;
+  runAfterClose(action: () => void): Promise<void>;
+}
+
+export function usePanelLifecycle(options: PanelOptions): PanelLifecycle {
   const open = ref(false);
   const trigger = ref<HTMLButtonElement>();
   const panel = ref<HTMLDivElement>();

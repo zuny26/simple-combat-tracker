@@ -145,7 +145,7 @@ function newCombat(trigger: HTMLElement) {
           >
             <span>+ Add<span class="lbl-long"> creature</span></span>
           </button>
-          <span class="sep history-separator" aria-hidden="true"></span>
+          <span class="spacer"></span>
           <div class="history-controls">
             <button
               id="undo-btn"
@@ -194,7 +194,7 @@ function newCombat(trigger: HTMLElement) {
               <span>Redo</span>
             </button>
           </div>
-          <span class="spacer"></span>
+          <span class="sep history-separator" aria-hidden="true"></span>
           <button
             id="reset-btn"
             type="button"

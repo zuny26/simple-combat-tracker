@@ -7,6 +7,67 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
+test('encounter toolbar stays on one row through the compact 800px cutoff', async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('button', { name: '+ Add creature', exact: true }).click();
+  await page.locator('tr[data-id="1"] .f-init').fill('20');
+
+  for (const started of [false, true]) {
+    if (started) await page.locator('#start-next-btn').click();
+    for (const width of [640, 641, 768, 790, 800, 801]) {
+      await page.setViewportSize({ width, height: 900 });
+      const bounds = [];
+      for (const selector of [
+        '#start-next-btn',
+        '#add-btn',
+        '#undo-btn',
+        '#redo-btn',
+        '#reset-btn',
+      ]) {
+        const button = page.locator(selector);
+        await expect(button).toBeVisible();
+        bounds.push(await button.boundingBox());
+      }
+      for (let index = 1; index < bounds.length; index++) {
+        expect(bounds[index].y).toBeCloseTo(bounds[0].y, 0);
+        expect(bounds[index].x).toBeGreaterThanOrEqual(
+          bounds[index - 1].x + bounds[index - 1].width,
+        );
+      }
+      await expect(page.locator('#add-btn')).toHaveAccessibleName('+ Add creature');
+      for (const name of ['Undo', 'Redo']) {
+        const button = page.getByRole('button', { name, exact: true });
+        const box = await button.boundingBox();
+        const label = button.locator('.lbl-long');
+        if (width <= 800) {
+          expect(box.width).toBeCloseTo(box.height, 1);
+          await expect(label).toHaveCSS('clip', 'rect(0px, 0px, 0px, 0px)');
+        } else {
+          expect(box.width).toBeGreaterThan(box.height);
+          await expect(label).toHaveCSS('position', 'static');
+        }
+      }
+      await expect(page.locator('#add-btn .lbl-long')).toHaveCSS(
+        'position',
+        width <= 800 ? 'absolute' : 'static',
+      );
+      await expect(page.locator('#reset-btn .lbl-long')).toHaveCSS(
+        'position',
+        width <= 640 ? 'absolute' : 'static',
+      );
+      if (width > 640) {
+        const resetRight = bounds.at(-1).x + bounds.at(-1).width;
+        const toolbarRight = await page.locator('.tier2').evaluate((el) => {
+          const box = el.getBoundingClientRect();
+          return box.right - parseFloat(window.getComputedStyle(el).paddingRight);
+        });
+        expect(resetRight).toBeCloseTo(toolbarRight, 1);
+      }
+      await expectNoOverflow(page);
+    }
+  }
+});
+
 for (const width of [1600, 768, 320]) {
   test(`undo and redo restore edits, turns and removed creatures at ${width}px`, async ({
     page,

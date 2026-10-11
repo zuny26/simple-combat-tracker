@@ -1,7 +1,12 @@
-import { flushPromises, mount } from '@vue/test-utils';
+import { flushPromises, mount, VueWrapper } from '@vue/test-utils';
 import { expect, it } from 'vitest';
 import EncounterTracker from '../../src/ui/EncounterTracker.vue';
 import { createVueCombat } from '../../src/combat/vueCombat';
+
+function expectPanelsClosed(tracker: VueWrapper) {
+  expect(tracker.find('[role="menu"], .cond-pop').exists()).toBe(false);
+  expect(tracker.find('.cond-backdrop').exists()).toBe(false);
+}
 
 it('adds an offered condition to the intended creature and closes before saving', async () => {
   let observeSave = () => {};
@@ -12,16 +17,14 @@ it('adds an offered condition to the intended creature and closes before saving'
   const addTag = combat.addTag;
   let actions = 0;
   combat.addTag = (...args) => {
-    expect(tracker.find('.cond-pop').exists()).toBe(false);
-    expect(tracker.find('.cond-backdrop').exists()).toBe(false);
+    expectPanelsClosed(tracker);
     actions++;
     addTag(...args);
   };
   let saves = 0;
   try {
     observeSave = () => {
-      expect(tracker.find('.cond-pop').exists()).toBe(false);
-      expect(tracker.find('.cond-backdrop').exists()).toBe(false);
+      expectPanelsClosed(tracker);
       saves++;
     };
     await tracker.get(`tr[data-id="${first}"] .cell-conditions .cond-add`).trigger('click');

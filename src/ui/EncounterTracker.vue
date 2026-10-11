@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watchEffect } from 'vue';
+import { computed, ref, watchEffect } from 'vue';
 import type { Combat } from '../combat/combat';
 import CreatureRow from './CreatureRow.vue';
 import ActionMenu from './ActionMenu.vue';
+import EncounterConfirmation from './EncounterConfirmation.vue';
 import { createPreferences } from './preferences';
 import { THEMES } from './themes';
+import { useDisplayedCreatureOrder } from './useDisplayedCreatureOrder';
 import type { EncounterStorage } from '../combat/persistence';
 
 const { combat, preferenceStorage } = defineProps<{
@@ -34,99 +36,35 @@ function appAction(id: string, trigger: HTMLElement) {
   else if (id === 'reset') void newCombat(trigger);
   else preferences.selectTheme(id);
 }
-// Presentation order is transient: edits save now, sorting waits for blur.
-const rowIds = ref(combat.displayOrder.map((creature) => creature.id));
-const body = ref<HTMLTableSectionElement>();
-const confirmation = ref<{ kind: 'remove'; id: number; name: string } | { kind: 'reset' } | null>(
-  null,
-);
-const cancelButton = ref<HTMLButtonElement>();
-const acceptButton = ref<HTMLButtonElement>();
-let confirmationTrigger: HTMLElement | null = null;
-
-async function removeCreature(id: number, trigger: HTMLElement) {
-  if (combat.isEmptyCreature(id)) {
-    combat.removeCreature(id);
-    return;
-  }
+const { rows, body, finishEdit, addCreature } = useDisplayedCreatureOrder(combat);
+const confirmation = ref<InstanceType<typeof EncounterConfirmation>>();
+const addButton = ref<HTMLButtonElement>();
+function removeCreature(id: number, trigger: HTMLElement) {
   const creature = combat.state.creatures.find((creature) => creature.id === id);
   if (!creature) return;
-  confirmationTrigger = trigger;
-  confirmation.value = { kind: 'remove', id, name: creature.name };
-  await nextTick();
-  cancelButton.value?.focus();
+  return confirmation.value?.confirm(
+    {
+      title: 'Remove creature?',
+      message: `Remove ${creature.name || 'this creature'} from the encounter? This cannot be undone.`,
+      acceptLabel: 'Remove',
+      required: !combat.isEmptyCreature(id),
+      onAccept: () => combat.removeCreature(id),
+    },
+    trigger,
+  );
 }
 
-async function newCombat(trigger: HTMLElement) {
-  if (!combat.hasMeaningfulData()) {
-    combat.reset();
-    rowIds.value = [];
-    return;
-  }
-  confirmationTrigger = trigger;
-  confirmation.value = { kind: 'reset' };
-  await nextTick();
-  cancelButton.value?.focus();
-}
-
-async function closeConfirmation(accepted = false) {
-  const pending = confirmation.value;
-  confirmation.value = null;
-  if (accepted && pending) {
-    if (pending.kind === 'remove') combat.removeCreature(pending.id);
-    else {
-      combat.reset();
-      rowIds.value = [];
-    }
-  }
-  await nextTick();
-  if (confirmationTrigger?.isConnected) confirmationTrigger.focus();
-  else body.value?.closest('.app-card')?.querySelector<HTMLButtonElement>('#add-btn')?.focus();
-  confirmationTrigger = null;
-}
-
-function confirmationKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape') {
-    event.preventDefault();
-    void closeConfirmation();
-  } else if (event.key === 'Tab') {
-    event.preventDefault();
-    if (document.activeElement === cancelButton.value) acceptButton.value?.focus();
-    else cancelButton.value?.focus();
-  }
-}
-const rows = computed(() => {
-  const creatures = new Map(combat.state.creatures.map((creature) => [creature.id, creature]));
-  const ids = [
-    ...rowIds.value,
-    ...combat.state.creatures
-      .filter((creature) => !rowIds.value.includes(creature.id))
-      .map((creature) => creature.id),
-  ];
-  return ids.flatMap((id) => {
-    const creature = creatures.get(id);
-    return creature ? [creature] : [];
-  });
-});
-
-async function sortRows(event: FocusEvent) {
-  rowIds.value = combat.displayOrder.map((creature) => creature.id);
-  // A keyed row move can blur the destination of Tab/click in Chromium.
-  // Restore that destination only if the patch left focus on the document body.
-  const destination = event.relatedTarget;
-  await nextTick();
-  if (
-    destination instanceof HTMLElement &&
-    destination.isConnected &&
-    document.activeElement === document.body
-  )
-    destination.focus();
-}
-
-async function addCreature() {
-  const id = combat.addCreature();
-  await nextTick();
-  body.value?.querySelector<HTMLInputElement>(`tr[data-id="${id}"] .f-init`)?.focus();
+function newCombat(trigger: HTMLElement) {
+  return confirmation.value?.confirm(
+    {
+      title: 'New Combat?',
+      message: 'Clear all creatures and begin a new combat? This cannot be undone.',
+      acceptLabel: 'New Combat',
+      required: combat.hasMeaningfulData(),
+      onAccept: () => combat.reset(),
+    },
+    trigger,
+  );
 }
 </script>
 
@@ -134,7 +72,7 @@ async function addCreature() {
   <div class="app-shell">
     <div
       class="app-card"
-      :inert="confirmation ? true : undefined"
+      :inert="confirmation?.open ? true : undefined"
       :class="{ 'combat-started': combat.state.started }"
     >
       <header class="topbar">
@@ -192,7 +130,13 @@ async function addCreature() {
             </div>
           </div>
           <span class="sep" aria-hidden="true"></span>
-          <button id="add-btn" type="button" class="btn btn-add" @click="addCreature">
+          <button
+            id="add-btn"
+            ref="addButton"
+            type="button"
+            class="btn btn-add"
+            @click="addCreature"
+          >
             <span>+ Add<span class="lbl-long"> creature</span></span>
           </button>
           <span class="spacer"></span>
@@ -270,7 +214,7 @@ async function addCreature() {
               :key="creature.id"
               :creature="creature"
               :combat="combat"
-              @sort="sortRows"
+              @edit-finished="finishEdit"
               @remove="removeCreature"
             />
             <tr v-if="rows.length === 0" class="empty-row">
@@ -280,52 +224,6 @@ async function addCreature() {
         </table>
       </main>
     </div>
-    <div
-      v-if="confirmation"
-      class="confirm-backdrop"
-      @click.self="closeConfirmation()"
-      @keydown="confirmationKeydown"
-    >
-      <section
-        class="confirm-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="confirm-title"
-        aria-describedby="confirm-body"
-      >
-        <h2 id="confirm-title" class="confirm-title">
-          {{ confirmation.kind === 'remove' ? 'Remove creature?' : 'New Combat?' }}
-        </h2>
-        <p id="confirm-body" class="confirm-body">
-          <template v-if="confirmation.kind === 'remove'"
-            >Remove {{ confirmation.name || 'this creature' }} from the encounter? This cannot be
-            undone.</template
-          >
-          <template v-else
-            >Clear all creatures and begin a new combat? This cannot be undone.</template
-          >
-        </p>
-        <div class="confirm-actions">
-          <button
-            id="confirm-cancel-btn"
-            ref="cancelButton"
-            type="button"
-            class="btn"
-            @click="closeConfirmation()"
-          >
-            Cancel
-          </button>
-          <button
-            id="confirm-ok-btn"
-            ref="acceptButton"
-            type="button"
-            class="btn btn-danger"
-            @click="closeConfirmation(true)"
-          >
-            {{ confirmation.kind === 'remove' ? 'Remove' : 'New Combat' }}
-          </button>
-        </div>
-      </section>
-    </div>
+    <EncounterConfirmation ref="confirmation" :focus-fallback="() => addButton?.focus()" />
   </div>
 </template>

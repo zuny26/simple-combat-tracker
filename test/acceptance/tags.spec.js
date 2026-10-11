@@ -77,11 +77,9 @@ for (const width of [1600, 320]) {
         ).toBe(true);
       }
     }
-    if (width === 320 || width === 1600) {
-      expect(
-        await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
-      ).toBe(true);
-    }
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
     await noteTrigger.click();
     await page.getByRole('textbox', { name: 'Add a note', exact: true }).fill('unsaved draft');
     await page.reload();

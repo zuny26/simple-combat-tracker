@@ -23,9 +23,41 @@ export function displayOrder(creatures: readonly ReadonlyCreature[]): ReadonlyCr
   ];
 }
 
-export function hp(creature: ReadonlyCreature) {
-  const current = creature.maxHP - creature.damageTaken + creature.tempHP;
-  return { current, configured: creature.maxHP > 0, downed: creature.maxHP > 0 && current === 0 };
+export interface HP {
+  readonly total: number;
+  readonly normal: number;
+  readonly temporary: number;
+  readonly current: number;
+  readonly configured: boolean;
+  readonly downed: boolean;
+  readonly bloodied: boolean;
+  readonly proportions: {
+    readonly normal: number;
+    readonly temporary: number;
+  };
+}
+
+export function hp(creature: ReadonlyCreature): HP {
+  const total = creature.maxHP;
+  const normal = total - creature.damageTaken;
+  const temporary = creature.tempHP;
+  const current = normal + temporary;
+  const configured = total > 0;
+  // Missing normal HP leaves empty capacity; only remaining Temp HP adds capacity.
+  const capacity = total + temporary;
+  return {
+    total,
+    normal,
+    temporary,
+    current,
+    configured,
+    downed: configured && current === 0,
+    bloodied: configured && normal <= total / 2,
+    proportions: {
+      normal: capacity > 0 ? normal / capacity : 0,
+      temporary: capacity > 0 ? temporary / capacity : 0,
+    },
+  };
 }
 
 function baseName(name: string): string {

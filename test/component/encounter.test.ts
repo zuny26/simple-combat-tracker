@@ -86,11 +86,15 @@ it('updates maximum HP immediately and keeps downed creatures eligible for turns
     await row.get('.f-adjust').setValue('8');
     await row.get('button.r-dmg').trigger('click');
     expect(row.get('.hp-number').text()).toBe('7 / 12');
+    expect(row.get('.hp-fill').classes()).not.toContain('hp-fill-bloodied');
+    expect(row.get('.hp-number > span').classes()).not.toContain('hp-cur-bloodied');
     await row.get('.f-maxhp').setValue('4');
     expect(row.get('.cell-current').text()).toBe('DOWNED');
     expect(row.classes()).toContain('downed');
     await row.get('.f-maxhp').setValue('6');
     expect(row.get('.hp-number').text()).toBe('2 / 6');
+    expect(row.get('.hp-fill').classes()).toContain('hp-fill-bloodied');
+    expect(row.get('.hp-number > span').classes()).toContain('hp-cur-bloodied');
     await row.get('.f-adjust').setValue('100');
     await row.get('button.r-dmg').trigger('click');
     expect(row.get('.cell-current').text()).toBe('DOWNED');
@@ -205,6 +209,37 @@ it('saves sorting edits during input but waits for blur to change displayed orde
     await wrapper.get('tr[data-id="1"] .f-name').trigger('blur');
     expect(ids()).toEqual(['2', '1']);
     expect(wrapper.get('tr.active').attributes('data-id')).toBe('1');
+  } finally {
+    wrapper.unmount();
+  }
+});
+
+it('reconciles additions and removals without sorting an unfinished edit, then displays a fresh encounter', async () => {
+  const combat = createVueCombat();
+  const first = combat.addCreature();
+  combat.editCreature(first, { init: '10' });
+  const second = combat.addCreature();
+  combat.editCreature(second, { init: '20' });
+  const wrapper = mount(EncounterTracker, { props: { combat } });
+  const ids = () => wrapper.findAll('tr[data-id]').map((row) => row.attributes('data-id'));
+  try {
+    expect(ids()).toEqual([String(second), String(first)]);
+    await wrapper.get(`tr[data-id="${second}"] .f-init`).setValue('5');
+    await wrapper.get('#add-btn').trigger('click');
+    const added = combat.state.creatures.at(-1)!.id;
+    expect(ids()).toEqual([String(second), String(first), String(added)]);
+    await wrapper.get(`tr[data-id="${added}"] .btn-remove`).trigger('click');
+    expect(ids()).toEqual([String(second), String(first)]);
+    await wrapper.get(`tr[data-id="${second}"] .f-init`).trigger('blur');
+    expect(ids()).toEqual([String(first), String(second)]);
+    await wrapper.get(`tr[data-id="${first}"] .btn-remove`).trigger('click');
+    await wrapper.get('#confirm-ok-btn').trigger('click');
+    expect(ids()).toEqual([String(second)]);
+    await wrapper.get('#reset-btn').trigger('click');
+    await wrapper.get('#confirm-ok-btn').trigger('click');
+    expect(ids()).toEqual([]);
+    await wrapper.get('#add-btn').trigger('click');
+    expect(ids()).toEqual([String(combat.state.creatures[0]!.id)]);
   } finally {
     wrapper.unmount();
   }

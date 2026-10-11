@@ -2,7 +2,16 @@ import { reactive, readonly } from 'vue';
 import { THEMES } from './themes';
 import type { EncounterStorage } from '../combat/persistence';
 
-export function createPreferences(storage?: EncounterStorage) {
+export interface Preferences {
+  readonly state: {
+    readonly helpDismissed: boolean;
+    readonly theme: string;
+  };
+  selectTheme(id: string): void;
+  setHelpDismissed(dismissed: boolean): void;
+}
+
+export function createPreferences(storage?: EncounterStorage): Preferences {
   function read(key: string) {
     try {
       return storage?.getItem(key);

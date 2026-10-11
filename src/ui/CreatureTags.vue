@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { Combat, ReadonlyCreature } from '../combat/combat';
+import { usePanelLifecycle } from './usePanelLifecycle';
 
 const { combat, creature, field } = defineProps<{
   combat: Combat;
@@ -28,12 +29,21 @@ const offered =
         'Unconscious',
       ]
     : [];
-const open = ref(false);
 const query = ref('');
-const trigger = ref<HTMLButtonElement>();
 const search = ref<HTMLInputElement>();
-const panel = ref<HTMLDivElement>();
-const position = ref({ left: '8px', top: '8px' });
+const { open, trigger, panel, position, show, close, reposition, runAfterClose } =
+  usePanelLifecycle({
+    alignment: 'left',
+    focusOnShow: () => search.value?.focus(),
+    onShow: () => {
+      query.value = '';
+    },
+    onClose: () => {
+      query.value = '';
+    },
+    restoreFocusOnDismiss: false,
+    selectionFocus: 'after',
+  });
 const label = field === 'conditions' ? 'Add a condition' : 'Add a note';
 const filtered = computed(() =>
   offered.filter((value) => value.toLowerCase().includes(query.value.trim().toLowerCase())),
@@ -47,48 +57,15 @@ const custom = computed(
     !offered.some((value) => value.toLowerCase() === query.value.trim().toLowerCase()),
 );
 
-function positionPicker() {
-  if (!open.value || !panel.value || !trigger.value) return;
-  const anchor = trigger.value!.getBoundingClientRect();
-  const bounds = panel.value!.getBoundingClientRect();
-  position.value = {
-    left: `${Math.max(8, Math.min(anchor.left, window.innerWidth - bounds.width - 8))}px`,
-    top: `${Math.max(8, Math.min(anchor.bottom + 6, window.innerHeight - bounds.height - 8))}px`,
-  };
-}
 // Query changes can grow the free-text option after an initially short panel opens.
-watch(query, positionPicker, { flush: 'post' });
-async function show() {
-  query.value = '';
-  open.value = true;
-  document.addEventListener('keydown', keydown);
-  await nextTick();
-  if (!open.value) return;
-  positionPicker();
-  search.value?.focus();
-}
-async function close() {
-  open.value = false;
-  query.value = '';
-  document.removeEventListener('keydown', keydown);
-  await nextTick();
-}
-function keydown(event: KeyboardEvent) {
-  if (event.key !== 'Escape') return;
-  event.preventDefault();
-  void close().then(() => trigger.value?.focus());
-}
-async function apply(value: string) {
-  // Wait for the Vue patch: no action or save can run under a visible picker.
-  await close();
-  combat.addTag(creature.id, field, value);
-  trigger.value?.focus();
+watch(query, reposition, { flush: 'post' });
+function apply(value: string) {
+  return runAfterClose(() => combat.addTag(creature.id, field, value));
 }
 function enter() {
   if (!query.value.trim()) return;
   void apply(filtered.value[0] ?? query.value.trim());
 }
-onBeforeUnmount(() => document.removeEventListener('keydown', keydown));
 </script>
 
 <template>
@@ -116,7 +93,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', keydown));
       <span class="cond-add-plus">+</span> Add
     </button>
     <template v-if="open">
-      <div class="cond-backdrop" @click="close"></div>
+      <div class="cond-backdrop" @click="close()"></div>
       <div
         ref="panel"
         class="cond-pop vue-tag-picker"

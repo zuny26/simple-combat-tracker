@@ -1,7 +1,12 @@
-import { flushPromises, mount } from '@vue/test-utils';
+import { flushPromises, mount, VueWrapper } from '@vue/test-utils';
 import { expect, it } from 'vitest';
 import EncounterTracker from '../../src/ui/EncounterTracker.vue';
 import { createVueCombat } from '../../src/combat/vueCombat';
+
+function expectPanelsClosed(tracker: VueWrapper) {
+  expect(tracker.find('[role="menu"], .cond-pop').exists()).toBe(false);
+  expect(tracker.find('.cond-backdrop').exists()).toBe(false);
+}
 
 it('selects a theme after closing its picker and restores it independently of combat', async () => {
   const values = new Map<string, string>();
@@ -19,8 +24,7 @@ it('selects a theme after closing its picker and restores it independently of co
   try {
     await tracker.get('#theme-trigger').trigger('click');
     observeSave = () => {
-      expect(tracker.find('[role="menu"]').exists()).toBe(false);
-      expect(tracker.find('.cond-backdrop').exists()).toBe(false);
+      expectPanelsClosed(tracker);
     };
     await tracker
       .findAll('[role="menuitemradio"]')
@@ -84,8 +88,7 @@ it('restores dismissed help, reopens it from either control, and preserves prefe
       .find((option) => option.text() === 'New Combat')!
       .trigger('click');
     await flushPromises();
-    expect(tracker.find('[role="menu"]').exists()).toBe(false);
-    expect(tracker.find('.cond-backdrop').exists()).toBe(false);
+    expectPanelsClosed(tracker);
     expect(tracker.find('.confirm-dialog').exists()).toBe(true);
     await tracker.get('#confirm-ok-btn').trigger('click');
     const restored = mount(EncounterTracker, {
@@ -149,17 +152,22 @@ it('closes row menus before duplication saves or removal opens confirmation', as
   const tracker = mount(EncounterTracker, { props: { combat } });
   try {
     observeSave = () => {
-      expect(tracker.find('[role="menu"]').exists()).toBe(false);
-      expect(tracker.find('.cond-backdrop').exists()).toBe(false);
+      expectPanelsClosed(tracker);
     };
     await tracker.get('tr[data-id="1"] .btn-menu').trigger('click');
-    await tracker.get('[role="menuitem"]:first-child').trigger('click');
+    await tracker
+      .findAll('[role="menuitem"]')
+      .find((item) => item.text() === 'Duplicate creature')!
+      .trigger('click');
     await flushPromises();
     expect(
       tracker.findAll('.f-name').map((input) => (input.element as HTMLInputElement).value),
     ).toEqual(['Goblin', 'Goblin 2']);
     await tracker.get('tr[data-id="1"] .btn-menu').trigger('click');
-    await tracker.get('[role="menuitem"]:last-child').trigger('click');
+    await tracker
+      .findAll('[role="menuitem"]')
+      .find((item) => item.text() === 'Remove creature')!
+      .trigger('click');
     await flushPromises();
     expect(tracker.find('[role="menu"]').exists()).toBe(false);
     expect(tracker.find('.confirm-dialog').exists()).toBe(true);

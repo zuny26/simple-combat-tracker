@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, ref, useId } from 'vue';
+import { useId } from 'vue';
 import type { MenuItem } from './menu';
+import { usePanelLifecycle } from './usePanelLifecycle';
 
 const props = defineProps<{
   label: string;
@@ -10,45 +11,30 @@ const props = defineProps<{
   items: readonly MenuItem[];
 }>();
 const emit = defineEmits<{ select: [id: string, trigger: HTMLButtonElement] }>();
-const open = ref(false);
-const trigger = ref<HTMLButtonElement>();
-const panel = ref<HTMLDivElement>();
+const { open, trigger, panel, position, show, close, runAfterClose } = usePanelLifecycle({
+  alignment: 'right',
+  focusOnShow() {
+    const options = buttons();
+    (
+      options.find((button) => button.getAttribute('aria-checked') === 'true') ?? options[0]
+    )?.focus();
+  },
+  keydown,
+});
 const menuId = useId();
-const position = ref({ left: '8px', top: '8px' });
 const buttons = () =>
   Array.from(panel.value?.querySelectorAll<HTMLButtonElement>('[role^="menuitem"]') ?? []);
 
-async function close(restoreFocus = true) {
-  open.value = false;
-  document.removeEventListener('keydown', keydown);
-  await nextTick();
-  if (restoreFocus) trigger.value?.focus();
-}
 async function toggle() {
   if (open.value) return close();
-  open.value = true;
-  document.addEventListener('keydown', keydown);
-  await nextTick();
-  if (!open.value || !trigger.value || !panel.value) return;
-  const anchor = trigger.value.getBoundingClientRect();
-  const bounds = panel.value.getBoundingClientRect();
-  position.value = {
-    left: `${Math.max(8, Math.min(anchor.right - bounds.width, window.innerWidth - bounds.width - 8))}px`,
-    top: `${Math.max(8, Math.min(anchor.bottom + 6, window.innerHeight - bounds.height - 8))}px`,
-  };
-  const options = buttons();
-  (options.find((button) => button.getAttribute('aria-checked') === 'true') ?? options[0])?.focus();
+  await show();
 }
-async function select(id: string) {
-  await close();
-  if (trigger.value) emit('select', id, trigger.value);
+function select(id: string) {
+  return runAfterClose(() => {
+    if (trigger.value) emit('select', id, trigger.value);
+  });
 }
 function keydown(event: KeyboardEvent) {
-  if (event.key === 'Escape') {
-    event.preventDefault();
-    void close();
-    return;
-  }
   if (event.key === 'Tab') {
     // Resume native Tab navigation from the trigger, rather than a removed menu item.
     trigger.value?.focus();
@@ -68,7 +54,6 @@ function keydown(event: KeyboardEvent) {
     destination.focus();
   }
 }
-onBeforeUnmount(() => document.removeEventListener('keydown', keydown));
 </script>
 
 <template>

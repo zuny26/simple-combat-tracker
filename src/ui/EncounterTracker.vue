@@ -7,6 +7,7 @@ import EncounterConfirmation from './EncounterConfirmation.vue';
 import { createPreferences } from './preferences';
 import { THEMES } from './themes';
 import { useDisplayedCreatureOrder } from './useDisplayedCreatureOrder';
+import { useCombatEditGrouping } from './useCombatEditGrouping';
 import type { EncounterStorage } from '../combat/persistence';
 
 const { combat, preferenceStorage } = defineProps<{
@@ -22,21 +23,17 @@ const themeItems = computed(() =>
     checked: preferences.state.theme === theme.id,
   })),
 );
-const appItems = computed(() => [
-  ...themeItems.value,
-  { id: 'help', label: 'How to run a fight' },
-  { id: 'reset', label: 'New Combat', danger: true },
-]);
+const appItems = computed(() => [...themeItems.value, { id: 'help', label: 'How to run a fight' }]);
 watchEffect(() => {
   document.documentElement.dataset.theme = preferences.state.theme;
   document.documentElement.classList.toggle('usage-dismissed', preferences.state.helpDismissed);
 });
-function appAction(id: string, trigger: HTMLElement) {
+function appAction(id: string) {
   if (id === 'help') preferences.setHelpDismissed(false);
-  else if (id === 'reset') void newCombat(trigger);
   else preferences.selectTheme(id);
 }
 const { rows, body, finishEdit, addCreature } = useDisplayedCreatureOrder(combat);
+const editGrouping = useCombatEditGrouping(combat);
 const confirmation = ref<InstanceType<typeof EncounterConfirmation>>();
 const addButton = ref<HTMLButtonElement>();
 function removeCreature(id: number, trigger: HTMLElement) {
@@ -45,7 +42,7 @@ function removeCreature(id: number, trigger: HTMLElement) {
   return confirmation.value?.confirm(
     {
       title: 'Remove creature?',
-      message: `Remove ${creature.name || 'this creature'} from the encounter? This cannot be undone.`,
+      message: `Remove ${creature.name || 'this creature'} from the encounter?`,
       acceptLabel: 'Remove',
       required: !combat.isEmptyCreature(id),
       onAccept: () => combat.removeCreature(id),
@@ -111,7 +108,9 @@ function newCombat(trigger: HTMLElement) {
             :items="appItems"
             @select="appAction"
           >
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
           </ActionMenu>
         </div>
         <div class="tier2">
@@ -140,6 +139,55 @@ function newCombat(trigger: HTMLElement) {
             <span>+ Add<span class="lbl-long"> creature</span></span>
           </button>
           <span class="spacer"></span>
+          <div class="history-controls">
+            <button
+              id="undo-btn"
+              type="button"
+              class="btn btn-secondary"
+              :disabled="combat.history.undoCount === 0"
+              @click="combat.undo()"
+            >
+              <!-- Lucide undo-2; ISC license in public/lucide-license.txt. -->
+              <svg
+                class="history-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M9 14 4 9l5-5" />
+                <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" />
+              </svg>
+              <span class="lbl-long">Undo</span>
+            </button>
+            <button
+              id="redo-btn"
+              type="button"
+              class="btn btn-secondary"
+              :disabled="combat.history.redoCount === 0"
+              @click="combat.redo()"
+            >
+              <!-- Lucide redo-2; ISC license in public/lucide-license.txt. -->
+              <svg
+                class="history-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m15 14 5-5-5-5" />
+                <path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13" />
+              </svg>
+              <span class="lbl-long">Redo</span>
+            </button>
+          </div>
+          <span class="sep history-separator" aria-hidden="true"></span>
           <button
             id="reset-btn"
             type="button"
@@ -193,7 +241,11 @@ function newCombat(trigger: HTMLElement) {
             </li>
           </ol>
         </div>
-        <table class="combat-table">
+        <table
+          class="combat-table"
+          @focus.capture="editGrouping.focus"
+          @blur.capture="editGrouping.blur"
+        >
           <thead>
             <tr>
               <th class="col-init">Initiative</th>

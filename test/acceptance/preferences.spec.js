@@ -29,6 +29,7 @@ for (const width of [1600, 768, 320]) {
     await trigger.click();
     await expect(trigger).toHaveAttribute('aria-expanded', 'true');
     const menu = page.getByRole('menu', { name: mobile ? 'Menu' : 'Theme', exact: true });
+    await expect(menu.getByRole('menuitem', { name: /^(Undo|Redo|New Combat)$/ })).toHaveCount(0);
     await expect(menu.getByRole('menuitemradio', { name: 'Organic Day' })).toBeFocused();
     await page.keyboard.press('ArrowDown');
     await expect(menu.getByRole('menuitemradio', { name: 'Organic Night' })).toBeFocused();
@@ -78,10 +79,7 @@ for (const width of [1600, 768, 320]) {
       await page.getByRole('menuitem', { name: 'Duplicate creature' }).click();
     } else await row.getByRole('button', { name: 'Duplicate creature' }).click();
     await expect(page.locator('tr[data-id="2"] .f-name')).toHaveValue('Goblin 2');
-    if (mobile) {
-      await trigger.click();
-      await menu.getByRole('menuitem', { name: 'New Combat' }).click();
-    } else await page.locator('#reset-btn').click();
+    await page.locator('#reset-btn').click();
     await expect(page.getByRole('menu')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
     await page.locator('#confirm-ok-btn').click();

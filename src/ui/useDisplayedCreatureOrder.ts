@@ -1,4 +1,4 @@
-import { computed, nextTick, ref } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import type { Combat } from '../combat/combat';
 
 // Presentation order is transient: combat saves edits now, rows move on blur.
@@ -20,6 +20,13 @@ export function useDisplayedCreatureOrder(combat: Combat) {
       return creature ? [creature] : [];
     });
   });
+
+  watch(
+    () => combat.history.revision,
+    () => {
+      rowIds.value = combat.displayOrder.map((creature) => creature.id);
+    },
+  );
 
   async function finishEdit(event: FocusEvent) {
     rowIds.value = combat.displayOrder.map((creature) => creature.id);

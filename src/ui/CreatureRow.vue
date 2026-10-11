@@ -63,21 +63,6 @@ function beginHP(field: HPField) {
   >
     <td class="cell-init" data-label="Init">
       <div class="init-wrap">
-        <svg
-          class="init-shoe"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <path d="m15 10.42 4.8-5.07M19 18h3" />
-          <path
-            d="M9.5 22 21.414 9.415A2 2 0 0 0 21.2 6.4l-5.61-4.208A1 1 0 0 0 14 3v2a2 2 0 0 1-1.394 1.906L8.677 8.053A1 1 0 0 0 8 9c-.155 6.393-2.082 9-4 9a2 2 0 0 0 0 4h14"
-          />
-        </svg>
         <input
           class="f-init"
           data-combat-field="init"
@@ -106,20 +91,6 @@ function beginHP(field: HPField) {
     </td>
     <td class="cell-ac" data-label="AC">
       <div class="ac-wrap">
-        <svg
-          class="ac-shield"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <path
-            d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
-          />
-        </svg>
         <input
           class="f-ac"
           data-combat-field="ac"

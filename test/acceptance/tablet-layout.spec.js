@@ -46,6 +46,59 @@ async function expectTabletGrouping(row) {
   expect(conditions.x + conditions.width).toBeCloseTo(boxes.at(-1).x + boxes.at(-1).width, 1);
 }
 
+async function expectMobileGrouping(row) {
+  const boxes = {};
+  for (const cell of [
+    'init',
+    'name',
+    'ac',
+    'actions',
+    'maxhp',
+    'temphp',
+    'adjust',
+    'current',
+    'conditions',
+    'other',
+  ]) {
+    boxes[cell] = await row.locator(`.cell-${cell}`).boundingBox();
+  }
+  const header = ['init', 'name', 'ac', 'actions'];
+  for (let i = 1; i < header.length; i++) {
+    expect(boxes[header[i]].y).toBeCloseTo(boxes.init.y, 1);
+    expect(boxes[header[i]].x).toBeGreaterThanOrEqual(
+      boxes[header[i - 1]].x + boxes[header[i - 1]].width,
+    );
+  }
+  expect(boxes.maxhp.y).toBeGreaterThanOrEqual(
+    Math.max(...header.map((cell) => boxes[cell].y + boxes[cell].height)),
+  );
+  expect(boxes.maxhp.y).toBeCloseTo(boxes.temphp.y, 1);
+  expect(boxes.maxhp.width).toBeCloseTo(boxes.temphp.width, 1);
+  if (Math.abs(boxes.adjust.y - boxes.maxhp.y) < 1) {
+    expect(boxes.adjust.x).toBeGreaterThanOrEqual(boxes.temphp.x + boxes.temphp.width);
+  } else {
+    expect(boxes.adjust.y).toBeGreaterThanOrEqual(boxes.maxhp.y + boxes.maxhp.height);
+    expect(boxes.adjust.width).toBeCloseTo(boxes.current.width, 1);
+  }
+  for (const [above, below] of [
+    ['adjust', 'current'],
+    ['current', 'conditions'],
+    ['conditions', 'other'],
+  ]) {
+    expect(boxes[below].y).toBeGreaterThanOrEqual(boxes[above].y + boxes[above].height);
+  }
+  for (const cell of ['current', 'conditions', 'other']) {
+    expect(boxes[cell].x).toBeCloseTo(boxes.init.x, 1);
+    expect(boxes[cell].x + boxes[cell].width).toBeCloseTo(boxes.actions.x + boxes.actions.width, 1);
+  }
+  const nameInput = await row.locator('.f-name').boundingBox();
+  const adjustment = await row.locator('.r-ctl').boundingBox();
+  expect(boxes.current.y - adjustment.y - adjustment.height).toBeCloseTo(
+    boxes.maxhp.y - nameInput.y - nameInput.height,
+    1,
+  );
+}
+
 async function expectRowCaptions(row) {
   const fields = row.locator(
     '.cell-init, .cell-name, .cell-ac, .cell-maxhp, .cell-temphp, .cell-current, .cell-adjust, .cell-actions',
@@ -93,6 +146,55 @@ test('768px labels each creature above its controls and wraps tags below', async
   await expect(row.getByRole('button', { name: 'Creature actions' })).toBeVisible();
   await expect(row.getByRole('button', { name: 'Remove creature', exact: true })).toBeHidden();
   await expectNoOverflow(page);
+});
+
+test('mobile keeps captioned continuous rows, visible inputs, and intact HP controls', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 900 });
+  await page.goto('./');
+  const row = await addCreature(page, 1);
+  await page.locator('#add-btn').click();
+  const emptyRow = page.locator('tr[data-id="2"]');
+  await page.locator('#start-next-btn').click();
+
+  for (const width of [320, 360, 375, 390, 640, 767]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const creature of [row, emptyRow]) {
+      await expectMobileGrouping(creature);
+      await expectRowCaptions(creature);
+      await expect(
+        creature.getByRole('button', { name: 'Add a condition', exact: true }),
+      ).toBeVisible();
+      await expect(creature.getByRole('button', { name: 'Add a note', exact: true })).toBeVisible();
+      await expect(creature).toHaveCSS('border-radius', '0px');
+      const outlines = await creature.locator('input:not(.r-amt)').evaluateAll((inputs) =>
+        inputs.map((input) => {
+          const style = window.getComputedStyle(input);
+          return style.borderColor !== 'rgba(0, 0, 0, 0)' && parseFloat(style.borderWidth) > 0;
+        }),
+      );
+      expect(outlines.every(Boolean)).toBe(true);
+    }
+    const maxHP = await row.locator('.cell-maxhp').boundingBox();
+    const adjust = await row.locator('.cell-adjust').boundingBox();
+    if (width <= 360) expect(adjust.y).toBeGreaterThan(maxHP.y);
+    else expect(adjust.y).toBeCloseTo(maxHP.y, 1);
+    const segments = await row.locator('.r-amt, .r-side').evaluateAll((elements) =>
+      elements.map((el) => {
+        const { x, y, width, height } = el.getBoundingClientRect();
+        return { x, y, width, height };
+      }),
+    );
+    for (const segment of segments) {
+      expect(segment.width).toBeCloseTo(segments[0].width, 1);
+      expect(segment.height).toBeGreaterThanOrEqual(46);
+      expect(segment.y).toBeCloseTo(segments[0].y, 1);
+    }
+    const populated = await row.boundingBox();
+    expect((await emptyRow.boundingBox()).y).toBeCloseTo(populated.y + populated.height, 1);
+    await expectNoOverflow(page);
+  }
 });
 
 async function addTag(page, row, field, value) {
@@ -148,7 +250,9 @@ test('crowded rows grow and keep menus, pickers, and turn order usable across ta
   await second.getByRole('button', { name: 'Damage', exact: true }).click();
   await page.locator('#start-next-btn').click();
 
-  for (const width of [320, 767, 768, 769, 1024, 1199, 1200, 1366, 1399, 1400, 1401, 1600]) {
+  for (const width of [
+    320, 360, 375, 390, 767, 768, 769, 1024, 1199, 1200, 1366, 1399, 1400, 1401, 1600,
+  ]) {
     await page.setViewportSize({ width, height: 900 });
     await expect(first).toHaveClass(/active/);
     await expect(first.locator('.turn-flag')).toBeVisible();
@@ -199,12 +303,8 @@ test('crowded rows grow and keep menus, pickers, and turn order usable across ta
       await noteSearch.press('Escape');
     } else if (width < 768) {
       await expect(first.getByRole('button', { name: 'Creature actions' })).toBeVisible();
-      expect((await first.locator('.cell-current').boundingBox()).y).toBeGreaterThanOrEqual(
-        (await first.locator('.cell-maxhp').boundingBox()).y,
-      );
-      expect((await first.locator('.cell-other').boundingBox()).y).toBeGreaterThan(
-        (await first.locator('.cell-conditions').boundingBox()).y,
-      );
+      await expectMobileGrouping(first);
+      await expectRowCaptions(first);
     } else {
       await expect(page.locator('.combat-table thead')).toBeVisible();
       await expect(first.getByRole('button', { name: 'Creature actions' })).toBeHidden();

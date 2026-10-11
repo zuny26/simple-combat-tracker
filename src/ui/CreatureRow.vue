@@ -40,7 +40,6 @@ function editHP(field: HPField) {
   combat.editCreature(creature.id, { [field]: Number(drafts[field]) });
 }
 function finishHP(field: HPField) {
-  combat.endEdit();
   editingHP.value = null;
   drafts[field] = hpText(creature[field]);
 }
@@ -54,7 +53,6 @@ watch(
 );
 function beginHP(field: HPField) {
   editingHP.value = field;
-  combat.beginEdit(creature.id, field);
 }
 </script>
 
@@ -82,17 +80,14 @@ function beginHP(field: HPField) {
         </svg>
         <input
           class="f-init"
+          data-combat-field="init"
           type="text"
           inputmode="decimal"
           aria-label="Initiative"
           placeholder="—"
           :value="creature.init"
-          @focus="combat.beginEdit(creature.id, 'init')"
           @input="editText('init', $event)"
-          @blur="
-            combat.endEdit();
-            $emit('edit-finished', $event);
-          "
+          @blur="$emit('edit-finished', $event)"
         />
         <span class="turn-flag">TURN</span>
       </div>
@@ -100,16 +95,13 @@ function beginHP(field: HPField) {
     <td class="cell-name" data-label="Name">
       <input
         class="f-name"
+        data-combat-field="name"
         type="text"
         aria-label="Name"
         placeholder="—"
         :value="creature.name"
-        @focus="combat.beginEdit(creature.id, 'name')"
         @input="editText('name', $event)"
-        @blur="
-          combat.endEdit();
-          $emit('edit-finished', $event);
-        "
+        @blur="$emit('edit-finished', $event)"
       />
     </td>
     <td class="cell-ac" data-label="AC">
@@ -130,13 +122,12 @@ function beginHP(field: HPField) {
         </svg>
         <input
           class="f-ac"
+          data-combat-field="ac"
           type="text"
           inputmode="numeric"
           aria-label="AC"
           placeholder="—"
           :value="creature.ac"
-          @focus="combat.beginEdit(creature.id, 'ac')"
-          @blur="combat.endEdit()"
           @input="editText('ac', $event)"
         />
       </div>
@@ -145,6 +136,7 @@ function beginHP(field: HPField) {
       <input
         v-model="drafts.maxHP"
         class="f-maxhp"
+        data-combat-field="maxHP"
         type="text"
         inputmode="decimal"
         aria-label="Max HP"
@@ -158,6 +150,7 @@ function beginHP(field: HPField) {
       <input
         v-model="drafts.tempHP"
         class="f-temphp"
+        data-combat-field="tempHP"
         type="text"
         inputmode="decimal"
         aria-label="Temp HP"

@@ -7,6 +7,7 @@ import EncounterConfirmation from './EncounterConfirmation.vue';
 import { createPreferences } from './preferences';
 import { THEMES } from './themes';
 import { useDisplayedCreatureOrder } from './useDisplayedCreatureOrder';
+import { useCombatEditGrouping } from './useCombatEditGrouping';
 import type { EncounterStorage } from '../combat/persistence';
 
 const { combat, preferenceStorage } = defineProps<{
@@ -32,6 +33,7 @@ function appAction(id: string) {
   else preferences.selectTheme(id);
 }
 const { rows, body, finishEdit, addCreature } = useDisplayedCreatureOrder(combat);
+const editGrouping = useCombatEditGrouping(combat);
 const confirmation = ref<InstanceType<typeof EncounterConfirmation>>();
 const addButton = ref<HTMLButtonElement>();
 function removeCreature(id: number, trigger: HTMLElement) {
@@ -239,7 +241,11 @@ function newCombat(trigger: HTMLElement) {
             </li>
           </ol>
         </div>
-        <table class="combat-table">
+        <table
+          class="combat-table"
+          @focus.capture="editGrouping.focus"
+          @blur.capture="editGrouping.blur"
+        >
           <thead>
             <tr>
               <th class="col-init">Initiative</th>

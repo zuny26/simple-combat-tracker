@@ -463,3 +463,46 @@ it('supplies readable captions for the responsive creature fields', () => {
     wrapper.unmount();
   }
 });
+
+it('groups field inputs and refreshes order and HP drafts through undo and redo controls', async () => {
+  const combat = createVueCombat();
+  const first = combat.addCreature();
+  combat.editCreature(first, { init: '20', name: 'Goblin', maxHP: 12, tempHP: 3 });
+  const second = combat.addCreature();
+  combat.editCreature(second, { init: '10', name: 'Orc' });
+  const wrapper = mount(EncounterTracker, { props: { combat } });
+  try {
+    const row = () => wrapper.get(`tr[data-id="${first}"]`);
+    await row().get('.f-init').trigger('focus');
+    await row().get('.f-init').setValue('');
+    await row().get('.f-init').setValue('5');
+    await row().get('.f-init').trigger('blur');
+    expect(wrapper.findAll('tr[data-id]').map((entry) => entry.attributes('data-id'))).toEqual([
+      '2',
+      '1',
+    ]);
+    await wrapper.get('#undo-btn').trigger('click');
+    expect(row().get<HTMLInputElement>('.f-init').element.value).toBe('20');
+    expect(wrapper.findAll('tr[data-id]').map((entry) => entry.attributes('data-id'))).toEqual([
+      '1',
+      '2',
+    ]);
+    await wrapper.get('#redo-btn').trigger('click');
+    expect(row().get<HTMLInputElement>('.f-init').element.value).toBe('5');
+    await row().get('.f-maxhp').trigger('focus');
+    await row().get('.f-maxhp').setValue('1');
+    await row().get('.f-maxhp').setValue('10');
+    await wrapper.get('#undo-btn').trigger('click');
+    expect(row().get<HTMLInputElement>('.f-maxhp').element.value).toBe('12');
+    await wrapper.get('#redo-btn').trigger('click');
+    expect(row().get<HTMLInputElement>('.f-maxhp').element.value).toBe('10');
+    await row().get('.f-adjust').setValue('5');
+    await row().get('.r-dmg').trigger('click');
+    expect(row().get<HTMLInputElement>('.f-temphp').element.value).toBe('');
+    await wrapper.get('#undo-btn').trigger('click');
+    expect(row().get<HTMLInputElement>('.f-temphp').element.value).toBe('3');
+    expect(row().get('.hp-number').text()).toBe('13 / 10');
+  } finally {
+    wrapper.unmount();
+  }
+});

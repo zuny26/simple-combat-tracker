@@ -24,6 +24,8 @@ const themeItems = computed(() =>
 );
 const appItems = computed(() => [
   ...themeItems.value,
+  { id: 'undo', label: 'Undo', disabled: combat.history.undoCount === 0 },
+  { id: 'redo', label: 'Redo', disabled: combat.history.redoCount === 0 },
   { id: 'help', label: 'How to run a fight' },
   { id: 'reset', label: 'New Combat', danger: true },
 ]);
@@ -32,7 +34,9 @@ watchEffect(() => {
   document.documentElement.classList.toggle('usage-dismissed', preferences.state.helpDismissed);
 });
 function appAction(id: string, trigger: HTMLElement) {
-  if (id === 'help') preferences.setHelpDismissed(false);
+  if (id === 'undo') combat.undo();
+  else if (id === 'redo') combat.redo();
+  else if (id === 'help') preferences.setHelpDismissed(false);
   else if (id === 'reset') void newCombat(trigger);
   else preferences.selectTheme(id);
 }
@@ -45,7 +49,7 @@ function removeCreature(id: number, trigger: HTMLElement) {
   return confirmation.value?.confirm(
     {
       title: 'Remove creature?',
-      message: `Remove ${creature.name || 'this creature'} from the encounter? This cannot be undone.`,
+      message: `Remove ${creature.name || 'this creature'} from the encounter?`,
       acceptLabel: 'Remove',
       required: !combat.isEmptyCreature(id),
       onAccept: () => combat.removeCreature(id),
@@ -111,7 +115,9 @@ function newCombat(trigger: HTMLElement) {
             :items="appItems"
             @select="appAction"
           >
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
           </ActionMenu>
         </div>
         <div class="tier2">
@@ -139,6 +145,26 @@ function newCombat(trigger: HTMLElement) {
           >
             <span>+ Add<span class="lbl-long"> creature</span></span>
           </button>
+          <div class="history-controls">
+            <button
+              id="undo-btn"
+              type="button"
+              class="btn btn-secondary"
+              :disabled="combat.history.undoCount === 0"
+              @click="combat.undo()"
+            >
+              Undo
+            </button>
+            <button
+              id="redo-btn"
+              type="button"
+              class="btn btn-secondary"
+              :disabled="combat.history.redoCount === 0"
+              @click="combat.redo()"
+            >
+              Redo
+            </button>
+          </div>
           <span class="spacer"></span>
           <button
             id="reset-btn"

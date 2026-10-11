@@ -40,8 +40,21 @@ function editHP(field: HPField) {
   combat.editCreature(creature.id, { [field]: Number(drafts[field]) });
 }
 function finishHP(field: HPField) {
+  combat.endEdit();
   editingHP.value = null;
   drafts[field] = hpText(creature[field]);
+}
+watch(
+  () => combat.history.revision,
+  () => {
+    editingHP.value = null;
+    drafts.maxHP = hpText(creature.maxHP);
+    drafts.tempHP = hpText(creature.tempHP);
+  },
+);
+function beginHP(field: HPField) {
+  editingHP.value = field;
+  combat.beginEdit(creature.id, field);
 }
 </script>
 
@@ -74,8 +87,12 @@ function finishHP(field: HPField) {
           aria-label="Initiative"
           placeholder="—"
           :value="creature.init"
+          @focus="combat.beginEdit(creature.id, 'init')"
           @input="editText('init', $event)"
-          @blur="$emit('edit-finished', $event)"
+          @blur="
+            combat.endEdit();
+            $emit('edit-finished', $event);
+          "
         />
         <span class="turn-flag">TURN</span>
       </div>
@@ -87,8 +104,12 @@ function finishHP(field: HPField) {
         aria-label="Name"
         placeholder="—"
         :value="creature.name"
+        @focus="combat.beginEdit(creature.id, 'name')"
         @input="editText('name', $event)"
-        @blur="$emit('edit-finished', $event)"
+        @blur="
+          combat.endEdit();
+          $emit('edit-finished', $event);
+        "
       />
     </td>
     <td class="cell-ac" data-label="AC">
@@ -114,6 +135,8 @@ function finishHP(field: HPField) {
           aria-label="AC"
           placeholder="—"
           :value="creature.ac"
+          @focus="combat.beginEdit(creature.id, 'ac')"
+          @blur="combat.endEdit()"
           @input="editText('ac', $event)"
         />
       </div>
@@ -126,7 +149,7 @@ function finishHP(field: HPField) {
         inputmode="decimal"
         aria-label="Max HP"
         placeholder="—"
-        @focus="editingHP = 'maxHP'"
+        @focus="beginHP('maxHP')"
         @input="editHP('maxHP')"
         @blur="finishHP('maxHP')"
       />
@@ -139,7 +162,7 @@ function finishHP(field: HPField) {
         inputmode="decimal"
         aria-label="Temp HP"
         placeholder="—"
-        @focus="editingHP = 'tempHP'"
+        @focus="beginHP('tempHP')"
         @input="editHP('tempHP')"
         @blur="finishHP('tempHP')"
       />

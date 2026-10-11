@@ -2140,3 +2140,20 @@ tr.downed .f-name {
   max-height: calc(100dvh - 16px);
   overflow-y: auto;
 }
+
+/* History shares the encounter controls, with menu entries on small screens. */
+.history-controls {
+  display: flex;
+  gap: var(--space-2);
+}
+.btn:disabled,
+.app-menu-item:disabled {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+}
+@media (max-width: 640px) {
+  .history-controls {
+    display: none;
+  }
+}

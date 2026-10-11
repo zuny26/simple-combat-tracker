@@ -1,4 +1,5 @@
 import { displayOrder, duplicateName, hp, initiative, turnOrder } from './rules';
+import type { HP } from './rules';
 
 export interface Creature {
   id: number;
@@ -37,7 +38,7 @@ export interface Combat {
   removeCreature(id: number): void;
   addTag(id: number, field: 'conditions' | 'other', value: string): void;
   removeTag(id: number, field: 'conditions' | 'other', value: string): void;
-  hp(id: number): { current: number; configured: boolean; downed: boolean } | null;
+  hp(id: number): HP | null;
   damage(id: number, amount: number): void;
   heal(id: number, amount: number): void;
   start(): void;

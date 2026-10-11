@@ -14,11 +14,6 @@ function rowAction(action: string, trigger: HTMLElement) {
   else emit('remove', creature.id, trigger);
 }
 const health = computed(() => combat.hp(creature.id)!);
-const baseHP = computed(() => creature.maxHP - creature.damageTaken);
-const bloodied = computed(() => baseHP.value / creature.maxHP <= 0.5);
-const barCapacity = computed(() => creature.maxHP + creature.tempHP);
-const fillPercent = computed(() => (baseHP.value / barCapacity.value) * 100);
-const tempPercent = computed(() => (creature.tempHP / barCapacity.value) * 100);
 type HPField = 'maxHP' | 'tempHP';
 const hpText = (value: number) => (value === 0 ? '' : String(value));
 const drafts = reactive({ maxHP: hpText(creature.maxHP), tempHP: hpText(creature.tempHP) });
@@ -165,18 +160,18 @@ function finishHP(field: HPField) {
           <div class="hp-track hp-track-alive">
             <div
               class="hp-fill"
-              :class="{ 'hp-fill-bloodied': bloodied }"
-              :style="{ width: `${fillPercent}%` }"
+              :class="{ 'hp-fill-bloodied': health.bloodied }"
+              :style="{ width: `${health.proportions.normal * 100}%` }"
             ></div>
             <div
-              v-if="creature.tempHP > 0"
+              v-if="health.temporary > 0"
               class="hp-temp-seg"
-              :style="{ width: `${tempPercent}%` }"
+              :style="{ width: `${health.proportions.temporary * 100}%` }"
             ></div>
           </div>
           <span class="hp-number"
-            ><span :class="{ 'hp-cur-bloodied': bloodied }">{{ health.current }}</span
-            ><span class="hp-max-of"> / {{ creature.maxHP }}</span></span
+            ><span :class="{ 'hp-cur-bloodied': health.bloodied }">{{ health.current }}</span
+            ><span class="hp-max-of"> / {{ health.total }}</span></span
           >
         </template>
       </div>

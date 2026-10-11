@@ -103,23 +103,208 @@ it('does not change the active creature when another creature leaves', () => {
 it('derives HP, absorbs damage with temporary HP, and heals normal HP without changing temporary HP', () => {
   const combat = createCombat();
   const id = combat.addCreature();
-  expect(combat.hp(id)).toEqual({ current: 0, configured: false, downed: false });
+  expect(combat.hp(id)).toMatchObject({ current: 0, configured: false, downed: false });
   combat.editCreature(id, { maxHP: 20, tempHP: 5, init: '10' });
   combat.damage(id, 8);
-  expect(combat.hp(id)).toEqual({ current: 17, configured: true, downed: false });
+  expect(combat.hp(id)).toMatchObject({ current: 17, configured: true, downed: false });
   combat.editCreature(id, { tempHP: 4 });
   combat.heal(id, 2);
   expect(combat.hp(id)?.current).toBe(23);
   combat.heal(id, 100);
   expect(combat.hp(id)?.current).toBe(24);
   combat.damage(id, 100);
-  expect(combat.hp(id)).toEqual({ current: 0, configured: true, downed: true });
+  expect(combat.hp(id)).toMatchObject({ current: 0, configured: true, downed: true });
   combat.start();
   expect(combat.state.activeId).toBe(id);
   combat.editCreature(id, { maxHP: 10 });
   expect(combat.state.creatures[0]?.damageTaken).toBe(10);
   combat.editCreature(id, { maxHP: 15 });
   expect(combat.hp(id)?.current).toBe(5);
+});
+
+it.each([
+  {
+    total: 0,
+    temporary: 0,
+    remainingTemporary: 0,
+    damage: 0,
+    normal: 0,
+    current: 0,
+    configured: false,
+    downed: false,
+    bloodied: false,
+    proportions: [0, 0],
+  },
+  {
+    total: 0,
+    temporary: 5,
+    remainingTemporary: 3,
+    damage: 2,
+    normal: 0,
+    current: 3,
+    configured: false,
+    downed: false,
+    bloodied: false,
+    proportions: [0, 1],
+  },
+  {
+    total: 20,
+    temporary: 10,
+    remainingTemporary: 10,
+    damage: 0,
+    normal: 20,
+    current: 30,
+    configured: true,
+    downed: false,
+    bloodied: false,
+    proportions: [2 / 3, 1 / 3],
+  },
+  {
+    total: 20,
+    temporary: 10,
+    remainingTemporary: 5,
+    damage: 5,
+    normal: 20,
+    current: 25,
+    configured: true,
+    downed: false,
+    bloodied: false,
+    proportions: [0.8, 0.2],
+  },
+  {
+    total: 20,
+    temporary: 0,
+    remainingTemporary: 0,
+    damage: 9,
+    normal: 11,
+    current: 11,
+    configured: true,
+    downed: false,
+    bloodied: false,
+    proportions: [0.55, 0],
+  },
+  {
+    total: 20,
+    temporary: 0,
+    remainingTemporary: 0,
+    damage: 10,
+    normal: 10,
+    current: 10,
+    configured: true,
+    downed: false,
+    bloodied: true,
+    proportions: [0.5, 0],
+  },
+  {
+    total: 20,
+    temporary: 0,
+    remainingTemporary: 0,
+    damage: 100,
+    normal: 0,
+    current: 0,
+    configured: true,
+    downed: true,
+    bloodied: true,
+    proportions: [0, 0],
+  },
+  {
+    total: 2.5,
+    temporary: 0.5,
+    remainingTemporary: 0,
+    damage: 1.75,
+    normal: 1.25,
+    current: 1.25,
+    configured: true,
+    downed: false,
+    bloodied: true,
+    proportions: [0.5, 0],
+  },
+])(
+  'derives coherent HP facts for Total HP $total, Temp HP $temporary, and damage $damage',
+  ({
+    total,
+    temporary,
+    remainingTemporary,
+    damage,
+    normal,
+    current,
+    configured,
+    downed,
+    bloodied,
+    proportions,
+  }) => {
+    const combat = createCombat();
+    const id = combat.addCreature();
+    combat.editCreature(id, { maxHP: total, tempHP: temporary });
+    combat.damage(id, damage);
+    expect(combat.hp(id)).toEqual({
+      total,
+      normal,
+      temporary: remainingTemporary,
+      current,
+      configured,
+      downed,
+      bloodied,
+      proportions: { normal: proportions[0], temporary: proportions[1] },
+    });
+  },
+);
+
+it('derives bloodied and downed status from normal and current HP respectively after edits and healing', () => {
+  const combat = createCombat();
+  const id = combat.addCreature();
+  combat.editCreature(id, { maxHP: 20 });
+  combat.damage(id, 20);
+  combat.editCreature(id, { tempHP: 20 });
+  expect(combat.hp(id)).toEqual({
+    total: 20,
+    normal: 0,
+    temporary: 20,
+    current: 20,
+    configured: true,
+    downed: false,
+    bloodied: true,
+    proportions: { normal: 0, temporary: 0.5 },
+  });
+  combat.heal(id, 10);
+  expect(combat.hp(id)).toMatchObject({
+    normal: 10,
+    temporary: 20,
+    current: 30,
+    bloodied: true,
+    proportions: { normal: 0.25, temporary: 0.5 },
+  });
+  combat.heal(id, 1);
+  expect(combat.hp(id)).toMatchObject({ normal: 11, temporary: 20, current: 31, bloodied: false });
+  combat.editCreature(id, { maxHP: 5 });
+  expect(combat.hp(id)).toMatchObject({
+    total: 5,
+    normal: 0,
+    temporary: 20,
+    current: 20,
+    downed: false,
+    bloodied: true,
+    proportions: { normal: 0, temporary: 0.8 },
+  });
+  combat.heal(id, 100);
+  expect(combat.hp(id)).toMatchObject({
+    normal: 5,
+    temporary: 20,
+    current: 25,
+    bloodied: false,
+    proportions: { normal: 0.2, temporary: 0.8 },
+  });
+  combat.editCreature(id, { maxHP: 0 });
+  expect(combat.hp(id)).toMatchObject({
+    total: 0,
+    normal: 0,
+    temporary: 20,
+    current: 20,
+    configured: false,
+    downed: false,
+    bloodied: false,
+    proportions: { normal: 0, temporary: 1 },
+  });
 });
 
 it('ignores invalid HP adjustments and keeps HP edits finite and nonnegative', () => {
@@ -134,7 +319,7 @@ it('ignores invalid HP adjustments and keeps HP edits finite and nonnegative', (
   combat.editCreature(id, { maxHP: NaN, tempHP: Infinity });
   expect(combat.hp(id)?.current).toBe(12);
   combat.editCreature(id, { maxHP: -1, tempHP: -3 });
-  expect(combat.hp(id)).toEqual({ current: 0, configured: false, downed: false });
+  expect(combat.hp(id)).toMatchObject({ current: 0, configured: false, downed: false });
   combat.damage(999, 2);
   combat.heal(999, 2);
   expect(combat.hp(999)).toBeNull();
@@ -258,7 +443,7 @@ it('absorbs ordinary damage entirely in temporary HP without changing existing i
   combat.editCreature(id, { tempHP: 5 });
   combat.damage(id, 2);
   expect(combat.state.creatures[0]).toMatchObject({ tempHP: 3, damageTaken: 4 });
-  expect(combat.hp(id)).toEqual({ current: 9, configured: true, downed: false });
+  expect(combat.hp(id)).toMatchObject({ current: 9, configured: true, downed: false });
 });
 
 it('keeps removal and parking before combat in pre-combat', () => {

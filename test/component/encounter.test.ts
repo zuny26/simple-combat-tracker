@@ -86,11 +86,15 @@ it('updates maximum HP immediately and keeps downed creatures eligible for turns
     await row.get('.f-adjust').setValue('8');
     await row.get('button.r-dmg').trigger('click');
     expect(row.get('.hp-number').text()).toBe('7 / 12');
+    expect(row.get('.hp-fill').classes()).not.toContain('hp-fill-bloodied');
+    expect(row.get('.hp-number > span').classes()).not.toContain('hp-cur-bloodied');
     await row.get('.f-maxhp').setValue('4');
     expect(row.get('.cell-current').text()).toBe('DOWNED');
     expect(row.classes()).toContain('downed');
     await row.get('.f-maxhp').setValue('6');
     expect(row.get('.hp-number').text()).toBe('2 / 6');
+    expect(row.get('.hp-fill').classes()).toContain('hp-fill-bloodied');
+    expect(row.get('.hp-number > span').classes()).toContain('hp-cur-bloodied');
     await row.get('.f-adjust').setValue('100');
     await row.get('button.r-dmg').trigger('click');
     expect(row.get('.cell-current').text()).toBe('DOWNED');

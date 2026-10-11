@@ -37,4 +37,17 @@ test('HP bar keeps normal and temporary HP proportional, including missing norma
   await row.getByRole('textbox', { name: 'Temp HP', exact: true }).fill('5');
   await expect(row.locator('.hp-number')).toHaveText('7 / 5');
   await expectSegments(0.2, 0.5);
+  await row.getByRole('textbox', { name: 'Temp HP', exact: true }).fill('0');
+  await row.getByRole('textbox', { name: 'Damage or healing amount' }).fill('2');
+  await row.getByRole('button', { name: 'Damage', exact: true }).click();
+  await row.getByRole('textbox', { name: 'Temp HP', exact: true }).fill('5');
+  await expect(row.locator('.hp-number')).toHaveText('5 / 5');
+  await expect(row).not.toHaveClass(/downed/);
+  await expect(row.locator('.hp-fill')).toHaveClass(/hp-fill-bloodied/);
+  await expectSegments(0, 0.5);
+  await row.getByRole('textbox', { name: 'Damage or healing amount' }).fill('3');
+  await row.getByRole('button', { name: 'Heal', exact: true }).click();
+  await expect(row.locator('.hp-number')).toHaveText('8 / 5');
+  await expect(row.locator('.hp-fill')).not.toHaveClass(/hp-fill-bloodied/);
+  await expectSegments(0.3, 0.5);
 });

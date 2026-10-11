@@ -32,6 +32,16 @@ for (const width of [1600, 768, 320]) {
     await expect(menu.getByRole('menuitemradio', { name: 'Organic Day' })).toBeFocused();
     await page.keyboard.press('ArrowDown');
     await expect(menu.getByRole('menuitemradio', { name: 'Organic Night' })).toBeFocused();
+    await page.keyboard.press('ArrowUp');
+    await expect(menu.getByRole('menuitemradio', { name: 'Organic Day' })).toBeFocused();
+    await page.keyboard.press('End');
+    await expect(menu.getByRole(mobile ? 'menuitem' : 'menuitemradio').last()).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(menu.getByRole('menuitemradio', { name: 'Organic Day' })).toBeFocused();
+    await page.keyboard.press('ArrowUp');
+    await expect(menu.getByRole(mobile ? 'menuitem' : 'menuitemradio').last()).toBeFocused();
+    await page.keyboard.press('Home');
+    await expect(menu.getByRole('menuitemradio', { name: 'Organic Day' })).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(menu).toHaveCount(0);
     await expect(trigger).toBeFocused();
@@ -82,6 +92,23 @@ for (const width of [1600, 768, 320]) {
     await expectNoOverflow(page);
   });
 }
+
+test('menu Tab dismissal resumes native navigation from its trigger', async ({ page }) => {
+  await page.goto('./');
+  const trigger = page.locator('#theme-trigger');
+  const menu = page.getByRole('menu', { name: 'Theme', exact: true });
+  await trigger.click();
+  await page.keyboard.press('Tab');
+  await expect(menu).toHaveCount(0);
+  await expect(page.locator('#usage-help-btn')).toBeFocused();
+
+  await trigger.click();
+  await page.keyboard.press('Shift+Tab');
+  await expect(menu).toHaveCount(0);
+  await expect(trigger).not.toBeFocused();
+  // The first control has no preceding app control; native navigation leaves the app.
+  await expect(page.locator('.app-card :focus')).toHaveCount(0);
+});
 
 test('Vue applies saved preferences before its application module runs', async ({ page }) => {
   await page.goto('./');

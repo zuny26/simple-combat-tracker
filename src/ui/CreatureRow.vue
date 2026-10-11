@@ -6,7 +6,7 @@ import ActionMenu from './ActionMenu.vue';
 
 const { combat, creature } = defineProps<{ combat: Combat; creature: ReadonlyCreature }>();
 const emit = defineEmits<{
-  sort: [event: FocusEvent];
+  'edit-finished': [event: FocusEvent];
   remove: [id: number, trigger: HTMLElement];
 }>();
 function rowAction(action: string, trigger: HTMLElement) {
@@ -75,7 +75,7 @@ function finishHP(field: HPField) {
           placeholder="—"
           :value="creature.init"
           @input="editText('init', $event)"
-          @blur="$emit('sort', $event)"
+          @blur="$emit('edit-finished', $event)"
         />
         <span class="turn-flag">TURN</span>
       </div>
@@ -88,7 +88,7 @@ function finishHP(field: HPField) {
         placeholder="—"
         :value="creature.name"
         @input="editText('name', $event)"
-        @blur="$emit('sort', $event)"
+        @blur="$emit('edit-finished', $event)"
       />
     </td>
     <td class="cell-ac" data-label="AC">

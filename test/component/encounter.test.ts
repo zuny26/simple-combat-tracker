@@ -214,6 +214,37 @@ it('saves sorting edits during input but waits for blur to change displayed orde
   }
 });
 
+it('reconciles additions and removals without sorting an unfinished edit, then displays a fresh encounter', async () => {
+  const combat = createVueCombat();
+  const first = combat.addCreature();
+  combat.editCreature(first, { init: '10' });
+  const second = combat.addCreature();
+  combat.editCreature(second, { init: '20' });
+  const wrapper = mount(EncounterTracker, { props: { combat } });
+  const ids = () => wrapper.findAll('tr[data-id]').map((row) => row.attributes('data-id'));
+  try {
+    expect(ids()).toEqual([String(second), String(first)]);
+    await wrapper.get(`tr[data-id="${second}"] .f-init`).setValue('5');
+    await wrapper.get('#add-btn').trigger('click');
+    const added = combat.state.creatures.at(-1)!.id;
+    expect(ids()).toEqual([String(second), String(first), String(added)]);
+    await wrapper.get(`tr[data-id="${added}"] .btn-remove`).trigger('click');
+    expect(ids()).toEqual([String(second), String(first)]);
+    await wrapper.get(`tr[data-id="${second}"] .f-init`).trigger('blur');
+    expect(ids()).toEqual([String(first), String(second)]);
+    await wrapper.get(`tr[data-id="${first}"] .btn-remove`).trigger('click');
+    await wrapper.get('#confirm-ok-btn').trigger('click');
+    expect(ids()).toEqual([String(second)]);
+    await wrapper.get('#reset-btn').trigger('click');
+    await wrapper.get('#confirm-ok-btn').trigger('click');
+    expect(ids()).toEqual([]);
+    await wrapper.get('#add-btn').trigger('click');
+    expect(ids()).toEqual([String(combat.state.creatures[0]!.id)]);
+  } finally {
+    wrapper.unmount();
+  }
+});
+
 it('shows restored downed HP, clamps maximum edits, and preserves decimal drafts while typing', async () => {
   const combat = createVueCombat();
   const id = combat.addCreature();

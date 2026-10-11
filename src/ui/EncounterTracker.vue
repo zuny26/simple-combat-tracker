@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watchEffect } from 'vue';
+import { computed, ref, watchEffect } from 'vue';
 import type { Combat } from '../combat/combat';
 import CreatureRow from './CreatureRow.vue';
 import ActionMenu from './ActionMenu.vue';
 import EncounterConfirmation from './EncounterConfirmation.vue';
 import { createPreferences } from './preferences';
 import { THEMES } from './themes';
+import { useDisplayedCreatureOrder } from './useDisplayedCreatureOrder';
 import type { EncounterStorage } from '../combat/persistence';
 
 const { combat, preferenceStorage } = defineProps<{
@@ -35,9 +36,7 @@ function appAction(id: string, trigger: HTMLElement) {
   else if (id === 'reset') void newCombat(trigger);
   else preferences.selectTheme(id);
 }
-// Presentation order is transient: edits save now, sorting waits for blur.
-const rowIds = ref(combat.displayOrder.map((creature) => creature.id));
-const body = ref<HTMLTableSectionElement>();
+const { rows, body, finishEdit, addCreature } = useDisplayedCreatureOrder(combat);
 const confirmation = ref<InstanceType<typeof EncounterConfirmation>>();
 const addButton = ref<HTMLButtonElement>();
 function removeCreature(id: number, trigger: HTMLElement) {
@@ -62,47 +61,10 @@ function newCombat(trigger: HTMLElement) {
       message: 'Clear all creatures and begin a new combat? This cannot be undone.',
       acceptLabel: 'New Combat',
       required: combat.hasMeaningfulData(),
-      onAccept: () => {
-        combat.reset();
-        rowIds.value = [];
-      },
+      onAccept: () => combat.reset(),
     },
     trigger,
   );
-}
-
-const rows = computed(() => {
-  const creatures = new Map(combat.state.creatures.map((creature) => [creature.id, creature]));
-  const ids = [
-    ...rowIds.value,
-    ...combat.state.creatures
-      .filter((creature) => !rowIds.value.includes(creature.id))
-      .map((creature) => creature.id),
-  ];
-  return ids.flatMap((id) => {
-    const creature = creatures.get(id);
-    return creature ? [creature] : [];
-  });
-});
-
-async function sortRows(event: FocusEvent) {
-  rowIds.value = combat.displayOrder.map((creature) => creature.id);
-  // A keyed row move can blur the destination of Tab/click in Chromium.
-  // Restore that destination only if the patch left focus on the document body.
-  const destination = event.relatedTarget;
-  await nextTick();
-  if (
-    destination instanceof HTMLElement &&
-    destination.isConnected &&
-    document.activeElement === document.body
-  )
-    destination.focus();
-}
-
-async function addCreature() {
-  const id = combat.addCreature();
-  await nextTick();
-  body.value?.querySelector<HTMLInputElement>(`tr[data-id="${id}"] .f-init`)?.focus();
 }
 </script>
 
@@ -252,7 +214,7 @@ async function addCreature() {
               :key="creature.id"
               :creature="creature"
               :combat="combat"
-              @sort="sortRows"
+              @edit-finished="finishEdit"
               @remove="removeCreature"
             />
             <tr v-if="rows.length === 0" class="empty-row">

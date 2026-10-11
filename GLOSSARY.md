@@ -16,6 +16,8 @@ A tracker for a DM to manage creatures, hit points, conditions, and turns in a c
 
 **Pre-combat**: The state before combat starts, with no active creature and round zero.
 
+**Encounter confirmation**: A request for the DM to accept or cancel removing a creature with meaningful data or clearing an encounter with meaningful data.
+
 **Total HP**: A creature's maximum normal hit points, excluding Temp HP.
 
 **Temp HP**: Additional hit points consumed before normal HP when taking damage.

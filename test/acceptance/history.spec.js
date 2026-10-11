@@ -13,23 +13,13 @@ for (const width of [1600, 768, 320]) {
   }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('./');
-    const mobile = width <= 640;
     const history = async (name) => {
-      if (mobile) {
-        await page.locator('#app-menu-btn').click();
-        await page.getByRole('menuitem', { name, exact: true }).click();
-        await expect(page.getByRole('menu')).toHaveCount(0);
-        await expect(page.locator('#app-menu-btn')).toBeFocused();
-      } else await page.getByRole('button', { name, exact: true }).click();
+      await page.getByRole('button', { name, exact: true }).click();
     };
     const disabledHistory = async () => {
-      if (mobile) await page.locator('#app-menu-btn').click();
       for (const name of ['Undo', 'Redo']) {
-        await expect(
-          page.getByRole(mobile ? 'menuitem' : 'button', { name, exact: true }),
-        ).toBeDisabled();
+        await expect(page.getByRole('button', { name, exact: true })).toBeDisabled();
       }
-      if (mobile) await page.keyboard.press('Escape');
     };
     await disabledHistory();
     await page.locator('#add-btn').click();
@@ -47,6 +37,21 @@ for (const width of [1600, 768, 320]) {
     await second.locator('.f-init').fill('10');
     await second.locator('.f-name').fill('Orc');
     await page.locator('#start-next-btn').click();
+    if (width <= 640) {
+      const buttons = ['#start-next-btn', '#add-btn', '#undo-btn', '#redo-btn', '#reset-btn'];
+      const bounds = [];
+      for (const selector of buttons) {
+        await expect(page.locator(selector)).toBeVisible();
+        bounds.push(await page.locator(selector).boundingBox());
+      }
+      for (let index = 1; index < bounds.length; index++) {
+        expect(bounds[index].y).toBeCloseTo(bounds[0].y, 0);
+        expect(bounds[index].x).toBeGreaterThanOrEqual(
+          bounds[index - 1].x + bounds[index - 1].width,
+        );
+      }
+      await expectNoOverflow(page);
+    }
     await first.locator('.f-init').fill('5');
     // Clicking Undo must settle blur/reordering and restore order in the same interaction.
     await history('Undo');

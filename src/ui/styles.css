@@ -2013,13 +2013,11 @@ tr.downed .f-name {
     left: var(--space-3);
   }
 
-  /* Tier 2 on one line: [ Next turn │ 2 ]—stretches—  [ + Add ]  │  [ ↻ ]
-     Ordered with `order` rather than by moving nodes — the card layout's idiom — so the
-     single hairline already in the markup moves from after Round to just before New Combat,
-     where it keeps the destructive control visibly out of the group beside it. */
+  /* Keep encounter actions visible on one line, with icon-only history and reset. */
   .tier2 {
     flex-wrap: nowrap;
-    gap: var(--space-2);
+    gap: var(--space-1);
+    padding-inline: var(--space-2);
   }
   .tier2 .spacer {
     display: none;
@@ -2036,9 +2034,24 @@ tr.downed .f-name {
   }
   #add-btn {
     order: 2;
+    flex: none;
+    padding-inline: var(--space-2);
   }
   .tier2 .sep {
     order: 3;
+    margin-inline: calc(var(--space-1) / 2);
+  }
+  .tier2 .history-controls {
+    order: 4;
+    flex: none;
+    gap: var(--space-1);
+  }
+  .tier2 .history-controls .btn {
+    width: var(--control-h);
+    padding: 0;
+  }
+  .tier2 .history-separator {
+    order: 5;
   }
 
   /* The counter welds on as the button's contrasting right-hand segment, so the pair reads
@@ -2050,6 +2063,7 @@ tr.downed .f-name {
     flex: 1;
     min-width: 0;
     height: auto;
+    padding-inline: var(--space-1);
     border-radius: 0;
   }
   /* The welded pill clips its children, so .btn:focus-visible's outward ring would be cut
@@ -2070,7 +2084,7 @@ tr.downed .f-name {
     flex: none;
     height: auto;
     align-items: center;
-    padding: 0 var(--space-3);
+    padding: 0 var(--space-1);
     border-radius: 0;
     background: var(--color-accent-700);
     color: var(--color-bg);
@@ -2100,7 +2114,7 @@ tr.downed .f-name {
     border: 0;
   }
   #reset-btn {
-    order: 4;
+    order: 6;
     flex: none;
     width: var(--control-h);
     padding: 0;
@@ -2141,7 +2155,7 @@ tr.downed .f-name {
   overflow-y: auto;
 }
 
-/* History shares the encounter controls, with menu entries on small screens. */
+/* History shares the encounter controls at every viewport. */
 .history-controls {
   display: flex;
   gap: var(--space-2);
@@ -2156,10 +2170,4 @@ tr.downed .f-name {
   opacity: 0.45;
   cursor: default;
   pointer-events: none;
-}
-@media (max-width: 640px) {
-  .history-controls,
-  .history-separator {
-    display: none;
-  }
 }

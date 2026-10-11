@@ -22,22 +22,13 @@ const themeItems = computed(() =>
     checked: preferences.state.theme === theme.id,
   })),
 );
-const appItems = computed(() => [
-  ...themeItems.value,
-  { id: 'undo', label: 'Undo', disabled: combat.history.undoCount === 0 },
-  { id: 'redo', label: 'Redo', disabled: combat.history.redoCount === 0 },
-  { id: 'help', label: 'How to run a fight' },
-  { id: 'reset', label: 'New Combat', danger: true },
-]);
+const appItems = computed(() => [...themeItems.value, { id: 'help', label: 'How to run a fight' }]);
 watchEffect(() => {
   document.documentElement.dataset.theme = preferences.state.theme;
   document.documentElement.classList.toggle('usage-dismissed', preferences.state.helpDismissed);
 });
-function appAction(id: string, trigger: HTMLElement) {
-  if (id === 'undo') combat.undo();
-  else if (id === 'redo') combat.redo();
-  else if (id === 'help') preferences.setHelpDismissed(false);
-  else if (id === 'reset') void newCombat(trigger);
+function appAction(id: string) {
+  if (id === 'help') preferences.setHelpDismissed(false);
   else preferences.selectTheme(id);
 }
 const { rows, body, finishEdit, addCreature } = useDisplayedCreatureOrder(combat);
@@ -168,7 +159,7 @@ function newCombat(trigger: HTMLElement) {
                 <path d="M9 14 4 9l5-5" />
                 <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" />
               </svg>
-              <span>Undo</span>
+              <span class="lbl-long">Undo</span>
             </button>
             <button
               id="redo-btn"
@@ -191,7 +182,7 @@ function newCombat(trigger: HTMLElement) {
                 <path d="m15 14 5-5-5-5" />
                 <path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13" />
               </svg>
-              <span>Redo</span>
+              <span class="lbl-long">Redo</span>
             </button>
           </div>
           <span class="sep history-separator" aria-hidden="true"></span>

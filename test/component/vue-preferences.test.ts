@@ -82,11 +82,7 @@ it('restores dismissed help, reopens it from either control, and preserves prefe
     expect(tracker.find('[role="menu"]').exists()).toBe(false);
     expect(tracker.find('.usage-callout').exists()).toBe(true);
     await tracker.get('#usage-dismiss-btn').trigger('click');
-    await tracker.get('#app-menu-btn').trigger('click');
-    await tracker
-      .findAll('[role="menuitem"]')
-      .find((option) => option.text() === 'New Combat')!
-      .trigger('click');
+    await tracker.get('#reset-btn').trigger('click');
     await flushPromises();
     expectPanelsClosed(tracker);
     expect(tracker.find('.confirm-dialog').exists()).toBe(true);

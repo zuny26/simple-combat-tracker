@@ -145,6 +145,7 @@ function newCombat(trigger: HTMLElement) {
           >
             <span>+ Add<span class="lbl-long"> creature</span></span>
           </button>
+          <span class="sep history-separator" aria-hidden="true"></span>
           <div class="history-controls">
             <button
               id="undo-btn"
@@ -153,7 +154,21 @@ function newCombat(trigger: HTMLElement) {
               :disabled="combat.history.undoCount === 0"
               @click="combat.undo()"
             >
-              Undo
+              <!-- Lucide undo-2; ISC license in public/lucide-license.txt. -->
+              <svg
+                class="history-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M9 14 4 9l5-5" />
+                <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" />
+              </svg>
+              <span>Undo</span>
             </button>
             <button
               id="redo-btn"
@@ -162,7 +177,21 @@ function newCombat(trigger: HTMLElement) {
               :disabled="combat.history.redoCount === 0"
               @click="combat.redo()"
             >
-              Redo
+              <!-- Lucide redo-2; ISC license in public/lucide-license.txt. -->
+              <svg
+                class="history-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m15 14 5-5-5-5" />
+                <path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13" />
+              </svg>
+              <span>Redo</span>
             </button>
           </div>
           <span class="spacer"></span>

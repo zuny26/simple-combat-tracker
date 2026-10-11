@@ -226,7 +226,7 @@ body {
   flex: 1;
 }
 
-/* Hairline rule between the turn controls and Add creature. */
+/* Hairline rules between encounter control groups. */
 .sep {
   flex: none;
   width: 1px;
@@ -2146,6 +2146,11 @@ tr.downed .f-name {
   display: flex;
   gap: var(--space-2);
 }
+.history-icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
 .btn:disabled,
 .app-menu-item:disabled {
   opacity: 0.45;
@@ -2153,7 +2158,8 @@ tr.downed .f-name {
   pointer-events: none;
 }
 @media (max-width: 640px) {
-  .history-controls {
+  .history-controls,
+  .history-separator {
     display: none;
   }
 }

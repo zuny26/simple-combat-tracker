@@ -43,6 +43,17 @@ function finishHP(field: HPField) {
   editingHP.value = null;
   drafts[field] = hpText(creature[field]);
 }
+watch(
+  () => combat.history.revision,
+  () => {
+    editingHP.value = null;
+    drafts.maxHP = hpText(creature.maxHP);
+    drafts.tempHP = hpText(creature.tempHP);
+  },
+);
+function beginHP(field: HPField) {
+  editingHP.value = field;
+}
 </script>
 
 <template>
@@ -69,6 +80,7 @@ function finishHP(field: HPField) {
         </svg>
         <input
           class="f-init"
+          data-combat-field="init"
           type="text"
           inputmode="decimal"
           aria-label="Initiative"
@@ -83,6 +95,7 @@ function finishHP(field: HPField) {
     <td class="cell-name" data-label="Name">
       <input
         class="f-name"
+        data-combat-field="name"
         type="text"
         aria-label="Name"
         placeholder="—"
@@ -109,6 +122,7 @@ function finishHP(field: HPField) {
         </svg>
         <input
           class="f-ac"
+          data-combat-field="ac"
           type="text"
           inputmode="numeric"
           aria-label="AC"
@@ -122,11 +136,12 @@ function finishHP(field: HPField) {
       <input
         v-model="drafts.maxHP"
         class="f-maxhp"
+        data-combat-field="maxHP"
         type="text"
         inputmode="decimal"
         aria-label="Max HP"
         placeholder="—"
-        @focus="editingHP = 'maxHP'"
+        @focus="beginHP('maxHP')"
         @input="editHP('maxHP')"
         @blur="finishHP('maxHP')"
       />
@@ -135,11 +150,12 @@ function finishHP(field: HPField) {
       <input
         v-model="drafts.tempHP"
         class="f-temphp"
+        data-combat-field="tempHP"
         type="text"
         inputmode="decimal"
         aria-label="Temp HP"
         placeholder="—"
-        @focus="editingHP = 'tempHP'"
+        @focus="beginHP('tempHP')"
         @input="editHP('tempHP')"
         @blur="finishHP('tempHP')"
       />

@@ -301,3 +301,19 @@ it('skips saves when clamped edits, HP actions and progression leave encounter f
   combat.damage(id, 3);
   expect(storage.getItem(ENCOUNTER_KEY)).toBe(downed);
 });
+
+it('saves undo and redo results while reloading always starts fresh history', () => {
+  const storage = memoryStorage();
+  const combat = createPersistedCombat(storage);
+  const id = combat.addCreature();
+  combat.editCreature(id, { maxHP: 12, tempHP: 3 });
+  combat.damage(id, 7);
+  combat.undo();
+  const restored = createPersistedCombat(storage);
+  expect(restored.hp(id)?.current).toBe(15);
+  expect(restored.history).toMatchObject({ undoCount: 0, redoCount: 0 });
+  restored.undo();
+  expect(restored.hp(id)?.current).toBe(15);
+  combat.redo();
+  expect(createPersistedCombat(storage).hp(id)?.current).toBe(8);
+});

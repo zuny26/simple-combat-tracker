@@ -3,7 +3,7 @@ import { initiative } from './rules';
 import type {
   Combat,
   CombatInitialState,
-  CombatState,
+  CombatObserver,
   Creature,
   ReadonlyCombatState,
 } from './combat';
@@ -132,7 +132,7 @@ function restore(value: unknown): CombatInitialState | undefined {
 
 export function createPersistedCombat(
   storage: EncounterStorage,
-  observe: (state: CombatState) => CombatState = (state) => state,
+  observe: CombatObserver = (value) => value,
 ): Combat {
   let initial: CombatInitialState | undefined;
   try {

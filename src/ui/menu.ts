@@ -6,4 +6,5 @@ export interface MenuItem {
   theme?: Theme;
   checked?: boolean;
   danger?: boolean;
+  disabled?: boolean;
 }

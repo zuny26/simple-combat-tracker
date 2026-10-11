@@ -23,13 +23,16 @@ const { open, trigger, panel, position, show, close, runAfterClose } = usePanelL
 });
 const menuId = useId();
 const buttons = () =>
-  Array.from(panel.value?.querySelectorAll<HTMLButtonElement>('[role^="menuitem"]') ?? []);
+  Array.from(
+    panel.value?.querySelectorAll<HTMLButtonElement>('[role^="menuitem"]:not(:disabled)') ?? [],
+  );
 
 async function toggle() {
   if (open.value) return close();
   await show();
 }
 function select(id: string) {
+  if (props.items.find((item) => item.id === id)?.disabled) return;
   return runAfterClose(() => {
     if (trigger.value) emit('select', id, trigger.value);
   });
@@ -90,6 +93,7 @@ function keydown(event: KeyboardEvent) {
         ]"
         :role="item.theme ? 'menuitemradio' : 'menuitem'"
         :aria-checked="item.theme ? item.checked : undefined"
+        :disabled="item.disabled"
         tabindex="-1"
         @click="select(item.id)"
       >

@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import EncounterTracker from '../../src/ui/EncounterTracker.vue';
 import { createVueCombat } from '../../src/combat/vueCombat';
 
@@ -459,6 +459,146 @@ it('supplies readable captions for the responsive creature fields', () => {
       'Other',
       'Actions',
     ]);
+  } finally {
+    wrapper.unmount();
+  }
+});
+
+it('groups field inputs and refreshes order and HP drafts through undo and redo controls', async () => {
+  const combat = createVueCombat();
+  const first = combat.addCreature();
+  combat.editCreature(first, { init: '20', name: 'Goblin', maxHP: 12, tempHP: 3 });
+  const second = combat.addCreature();
+  combat.editCreature(second, { init: '10', name: 'Orc' });
+  const wrapper = mount(EncounterTracker, { props: { combat } });
+  try {
+    const row = () => wrapper.get(`tr[data-id="${first}"]`);
+    await row().get('.f-init').trigger('focus');
+    await row().get('.f-init').setValue('');
+    await row().get('.f-init').setValue('5');
+    await row().get('.f-init').trigger('blur');
+    expect(wrapper.findAll('tr[data-id]').map((entry) => entry.attributes('data-id'))).toEqual([
+      '2',
+      '1',
+    ]);
+    await wrapper.get('#undo-btn').trigger('click');
+    expect(row().get<HTMLInputElement>('.f-init').element.value).toBe('20');
+    expect(wrapper.findAll('tr[data-id]').map((entry) => entry.attributes('data-id'))).toEqual([
+      '1',
+      '2',
+    ]);
+    await wrapper.get('#redo-btn').trigger('click');
+    expect(row().get<HTMLInputElement>('.f-init').element.value).toBe('5');
+    await row().get('.f-maxhp').trigger('focus');
+    await row().get('.f-maxhp').setValue('1');
+    await row().get('.f-maxhp').setValue('10');
+    await wrapper.get('#undo-btn').trigger('click');
+    expect(row().get<HTMLInputElement>('.f-maxhp').element.value).toBe('12');
+    await wrapper.get('#redo-btn').trigger('click');
+    expect(row().get<HTMLInputElement>('.f-maxhp').element.value).toBe('10');
+    await row().get('.f-adjust').setValue('5');
+    await row().get('.r-dmg').trigger('click');
+    expect(row().get<HTMLInputElement>('.f-temphp').element.value).toBe('');
+    await wrapper.get('#undo-btn').trigger('click');
+    expect(row().get<HTMLInputElement>('.f-temphp').element.value).toBe('3');
+    expect(row().get('.hp-number').text()).toBe('13 / 10');
+  } finally {
+    wrapper.unmount();
+  }
+});
+
+it.each([
+  ['.f-init', '20', '2', '25', '30'],
+  ['.f-name', 'Goblin', 'G', 'Goblin scout', 'Goblin chief'],
+  ['.f-ac', '12', '1', '15', '18'],
+  ['.f-maxhp', '12', '1', '15', '18'],
+  ['.f-temphp', '3', '1', '5', '8'],
+])(
+  'groups typing in %s and separates a return visit',
+  async (selector, initial, draft, value, revisit) => {
+    const combat = createVueCombat();
+    const id = combat.addCreature();
+    combat.editCreature(id, { init: '20', name: 'Goblin', ac: '12', maxHP: 12, tempHP: 3 });
+    const wrapper = mount(EncounterTracker, { props: { combat } });
+    try {
+      const input = () => wrapper.get<HTMLInputElement>(selector);
+      const before = combat.history.undoCount;
+      await input().trigger('focus');
+      await input().setValue(draft);
+      await input().setValue(value);
+      expect(combat.history.undoCount).toBe(before + 1);
+      await input().trigger('blur');
+      await input().trigger('focus');
+      await input().setValue(revisit);
+      await input().trigger('blur');
+      expect(combat.history.undoCount).toBe(before + 2);
+      await wrapper.get('#undo-btn').trigger('click');
+      expect(input().element.value).toBe(value);
+      await wrapper.get('#undo-btn').trigger('click');
+      expect(input().element.value).toBe(initial);
+    } finally {
+      wrapper.unmount();
+    }
+  },
+);
+
+it('separates edits when focus switches fields or creatures and when the encounter unmounts', async () => {
+  const combat = createVueCombat();
+  const first = combat.addCreature();
+  const second = combat.addCreature();
+  const wrapper = mount(EncounterTracker, { props: { combat } });
+  try {
+    for (const [id, selector, value] of [
+      [first, '.f-name', 'Goblin'],
+      [first, '.f-ac', '12'],
+      [second, '.f-ac', '15'],
+    ] as const) {
+      const input = wrapper.get(`tr[data-id="${id}"] ${selector}`);
+      await input.trigger('focus');
+      await input.setValue(value);
+      await input.trigger('blur');
+    }
+    await wrapper.get('#undo-btn').trigger('click');
+    expect(combat.state.creatures[1]?.ac).toBe('');
+    expect(combat.state.creatures[0]).toMatchObject({ name: 'Goblin', ac: '12' });
+    await wrapper.get('#undo-btn').trigger('click');
+    expect(combat.state.creatures[0]).toMatchObject({ name: 'Goblin', ac: '' });
+    const name = wrapper.get(`tr[data-id="${first}"] .f-name`);
+    await name.trigger('focus');
+    await name.setValue('Scout');
+  } finally {
+    wrapper.unmount();
+  }
+  const before = combat.history.undoCount;
+  combat.editCreature(first, { name: 'Chief' });
+  expect(combat.history.undoCount).toBe(before + 1);
+  combat.undo();
+  expect(combat.state.creatures[0]?.name).toBe('Scout');
+});
+
+it('ignores focus and blur on pending adjustment and tag-picker inputs', async () => {
+  const combat = createVueCombat();
+  combat.addCreature();
+  const beginEdit = vi.spyOn(combat, 'beginEdit');
+  const endEdit = vi.spyOn(combat, 'endEdit');
+  const wrapper = mount(EncounterTracker, { props: { combat } });
+  try {
+    const before = combat.history.undoCount;
+    const adjustment = wrapper.get('.f-adjust');
+    await adjustment.trigger('focus');
+    await adjustment.setValue('5');
+    await adjustment.trigger('blur');
+    for (const cell of ['.cell-conditions', '.cell-other']) {
+      await wrapper.get(`${cell} .cond-add`).trigger('click');
+      const search = wrapper.get(`${cell} .cond-search`);
+      await search.trigger('focus');
+      await search.setValue('unsaved');
+      await search.trigger('blur');
+      await wrapper.get('.cond-backdrop').trigger('click');
+    }
+    expect(beginEdit).not.toHaveBeenCalled();
+    expect(endEdit).not.toHaveBeenCalled();
+    expect(combat.history.undoCount).toBe(before);
   } finally {
     wrapper.unmount();
   }

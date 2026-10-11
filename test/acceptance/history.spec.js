@@ -14,7 +14,7 @@ test('encounter toolbar stays on one row through the compact 800px cutoff', asyn
 
   for (const started of [false, true]) {
     if (started) await page.locator('#start-next-btn').click();
-    for (const width of [640, 641, 768, 790, 800, 801]) {
+    for (const width of [320, 360, 375, 640, 641, 768, 790, 800, 801]) {
       await page.setViewportSize({ width, height: 900 });
       const bounds = [];
       for (const selector of [
@@ -55,6 +55,10 @@ test('encounter toolbar stays on one row through the compact 800px cutoff', asyn
         'position',
         width <= 640 ? 'absolute' : 'static',
       );
+      if (started && width <= 640) {
+        const round = await page.locator('.turn-group .round').boundingBox();
+        expect(round.width).toBeGreaterThanOrEqual(round.height);
+      }
       if (width > 640) {
         const resetRight = bounds.at(-1).x + bounds.at(-1).width;
         const toolbarRight = await page.locator('.tier2').evaluate((el) => {

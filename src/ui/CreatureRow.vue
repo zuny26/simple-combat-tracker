@@ -24,9 +24,10 @@ const bookmarkLabel = computed(
 const emit = defineEmits<{
   'edit-finished': [event: FocusEvent];
   remove: [id: number, trigger: HTMLElement];
+  bookmark: [id: number, trigger: HTMLElement];
 }>();
 function rowAction(action: string, trigger: HTMLElement) {
-  if (action === 'bookmark') profiles.save(creature);
+  if (action === 'bookmark') emit('bookmark', creature.id, trigger);
   else if (action === 'duplicate') combat.duplicateCreature(creature.id);
   else emit('remove', creature.id, trigger);
 }
@@ -238,7 +239,7 @@ function beginHP(field: HPField) {
           :aria-label="bookmarkLabel"
           :title="bookmarkLabel"
           :disabled="!creature.name.trim()"
-          @click="profiles.save(creature)"
+          @click="$emit('bookmark', creature.id, $event.currentTarget as HTMLElement)"
         >
           <BookmarkIcon :state="bookmarkState" />
         </button>

@@ -1355,6 +1355,12 @@ tr.downed .f-name {
   font: 400 14px/1.5 var(--font-body);
   color: var(--color-neutral-800);
 }
+.confirm-body p {
+  margin: 0;
+}
+.confirm-body li {
+  overflow-wrap: anywhere;
+}
 .confirm-actions {
   display: flex;
   justify-content: flex-end;

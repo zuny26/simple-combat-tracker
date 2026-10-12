@@ -44,7 +44,7 @@ for (const width of [320, 768, 1400, 1600]) {
       await bookmark.focus();
       await page.keyboard.press('Enter');
       await expect(page.getByRole('menu')).toHaveCount(0);
-      if (compact) await expect(menuTrigger).toBeFocused();
+      if (compact && label !== 'Update profile') await expect(menuTrigger).toBeFocused();
     }
     await inspectBookmark('Save profile', async (button) => expect(button).toBeDisabled());
     await row.locator('.f-name').fill(' Goblin 2 3 ');
@@ -79,6 +79,8 @@ for (const width of [320, 768, 1400, 1600]) {
         await expect(button.locator('.bookmark-difference')).toBeVisible();
       });
       await activateBookmark('Update profile');
+      await expect(page.getByRole('dialog', { name: 'Update profile?' })).toBeVisible();
+      await page.keyboard.press('Escape');
       await expect(page.getByRole('dialog')).toHaveCount(0);
       await row.locator('.f-name').fill('Orc');
       await inspectBookmark('Save profile', async (button) => {
@@ -103,5 +105,82 @@ for (const width of [320, 768, 1400, 1600]) {
     await row.locator('.f-maxhp').fill('7');
     await inspectBookmark('Profile saved');
     await expectNoOverflow(page);
+  });
+}
+
+for (const width of [320, 1600]) {
+  test(`profile overwrites contain focus, restore it, and persist independently at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('./');
+    await page.locator('#usage-dismiss-btn').click();
+    await page.locator('#add-btn').click();
+    const row = page.locator('tr[data-id]').first();
+    await row.locator('.f-name').fill('Goblin');
+    await row.locator('.f-ac').fill('13');
+    await row.locator('.f-maxhp').fill('7');
+    const compact = width === 320;
+    const trigger = compact ? row.locator('.btn-menu') : row.locator('.btn-bookmark');
+    async function bookmark(label) {
+      await trigger.focus();
+      await page.keyboard.press('Enter');
+      if (compact) {
+        await page.getByRole('menuitem', { name: label, exact: true }).focus();
+        await page.keyboard.press('Enter');
+        await expect(page.getByRole('menu')).toHaveCount(0);
+      }
+    }
+    await bookmark('Save profile');
+    await row.locator('.f-name').fill('Goblin 2');
+    await row.locator('.f-ac').fill('15');
+    await row.locator('.f-maxhp').fill('12');
+    await row.locator('.f-temphp').fill('3');
+    await row.locator('.f-adjust').fill('4');
+    await row.getByRole('button', { name: 'Damage', exact: true }).click();
+    const encounter = await page.evaluate(() => localStorage.getItem('dnd-combat-tracker-v1'));
+    const saved = await page.evaluate(() => localStorage.getItem('dnd-saved-profiles-v1'));
+    const dialog = page.getByRole('dialog', { name: 'Update profile?' });
+    const cancel = page.getByRole('button', { name: 'Cancel', exact: true });
+    const accept = page.locator('#confirm-ok-btn');
+    await bookmark('Update profile');
+    await expect(dialog).toContainText('Update saved profile Goblin?');
+    await expect(dialog.locator('li')).toHaveText(['AC: 13 → 15', 'Total HP: 7 → 12']);
+    await expect(cancel).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expect(accept).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(cancel).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(accept).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(cancel).toBeFocused();
+    await expect(page.locator('.app-card')).toHaveAttribute('inert', '');
+    await expectNoOverflow(page);
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+    expect(await page.evaluate(() => localStorage.getItem('dnd-saved-profiles-v1'))).toBe(saved);
+    await bookmark('Update profile');
+    await page.keyboard.press('Enter');
+    await expect(dialog).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+    expect(await page.evaluate(() => localStorage.getItem('dnd-saved-profiles-v1'))).toBe(saved);
+    await bookmark('Update profile');
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Enter');
+    await expect(dialog).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+    expect(await page.evaluate(() => localStorage.getItem('dnd-combat-tracker-v1'))).toBe(
+      encounter,
+    );
+    await page.reload();
+    await expect(row.locator('.f-name')).toHaveValue('Goblin 2');
+    await expect(row.locator('.hp-number')).toHaveText('11 / 12');
+    await bookmark('Profile saved');
+    await expect(dialog).toHaveCount(0);
+    expect(
+      await page.evaluate(() => JSON.parse(localStorage.getItem('dnd-saved-profiles-v1')).profiles),
+    ).toEqual([{ name: 'Goblin', ac: '15', maxHP: 12 }]);
   });
 }

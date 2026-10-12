@@ -59,6 +59,32 @@ function removeCreature(id: number, trigger: HTMLElement) {
   );
 }
 
+function bookmarkCreature(id: number, trigger: HTMLElement) {
+  const creature = combat.state.creatures.find((creature) => creature.id === id);
+  if (!creature) return;
+  const saved = profiles.find(creature.name);
+  if (!saved || profiles.bookmarkState(creature) === 'matching') {
+    profiles.save(creature);
+    return;
+  }
+  const proposed = { name: creature.name, ac: creature.ac, maxHP: creature.maxHP };
+  const changes: string[] = [];
+  if (saved.ac !== proposed.ac) changes.push(`AC: ${saved.ac || '—'} → ${proposed.ac || '—'}`);
+  if (saved.maxHP !== proposed.maxHP) changes.push(`Total HP: ${saved.maxHP} → ${proposed.maxHP}`);
+  return confirmation.value?.confirm(
+    {
+      title: 'Update profile?',
+      message: `Update saved profile ${saved.name}?`,
+      changes,
+      acceptLabel: 'Update profile',
+      destructive: false,
+      required: true,
+      onAccept: () => profiles.overwrite(proposed),
+    },
+    trigger,
+  );
+}
+
 function newCombat(trigger: HTMLElement) {
   return confirmation.value?.confirm(
     {
@@ -275,6 +301,7 @@ function newCombat(trigger: HTMLElement) {
               :creature="creature"
               :combat="combat"
               :profiles="profiles"
+              @bookmark="bookmarkCreature"
               @edit-finished="finishEdit"
               @remove="removeCreature"
             />

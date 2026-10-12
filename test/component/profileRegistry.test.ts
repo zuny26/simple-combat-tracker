@@ -201,3 +201,30 @@ it('round trips profiles independently and does not write equivalent or conflict
   expect(storage.getItem('dnd-combat-tracker-v1')).toBe('encounter');
   expect(storage.getItem('dnd-ct-theme')).toBe('dark');
 });
+
+it('explicitly overwrites one normalized profile, preserving its name and encounter data across reload', () => {
+  const storage = memoryStorage();
+  const combat = createPersistedCombat(storage);
+  const id = combat.addCreature();
+  combat.editCreature(id, { name: 'Goblin 2', ac: '15', maxHP: 12, tempHP: 3 });
+  combat.damage(id, 4);
+  const creature = combat.state.creatures[0]!;
+  const before = JSON.stringify(combat.state);
+  const profiles = createProfileRegistry(storage);
+  profiles.save(validProfile);
+  expect(profiles.find(creature.name)).toEqual(validProfile);
+  profiles.overwrite(creature);
+  expect([...createProfileRegistry(storage).state.profiles.values()]).toEqual([
+    { name: 'Goblin', ac: '15', maxHP: 12 },
+  ]);
+  expect(profiles.bookmarkState(creature)).toBe('matching');
+  expect(profiles.bookmarkState(validProfile)).toBe('different');
+  expect(JSON.stringify(combat.state)).toBe(before);
+  expect(createPersistedCombat(storage).state).toEqual(JSON.parse(before));
+  const saved = storage.getItem(PROFILES_KEY);
+  profiles.save({ name: ' goblin 3 ', ac: '15', maxHP: 12 });
+  profiles.overwrite({ name: ' goblin 3 ', ac: '15', maxHP: 12 });
+  profiles.overwrite({ name: 'Orc', ac: '10', maxHP: 5 });
+  expect(storage.getItem(PROFILES_KEY)).toBe(saved);
+  expect(profiles.state.profiles.size).toBe(1);
+});

@@ -14,7 +14,9 @@ export type BookmarkState = 'unsaved' | 'matching' | 'different';
 export interface ProfileRegistry {
   readonly state: { readonly profiles: ReadonlyMap<string, SavedProfile> };
   bookmarkState(creature: SavedProfile): BookmarkState;
+  find(name: string): SavedProfile | undefined;
   save(creature: SavedProfile): void;
+  overwrite(creature: SavedProfile): void;
 }
 
 function displayName(name: string): string {
@@ -59,8 +61,11 @@ export function createProfileRegistry(storage?: EncounterStorage): ProfileRegist
     }
   }
   const state = reactive({ profiles: load() });
+  function find(name: string): SavedProfile | undefined {
+    return readonly(state).profiles.get(identity(name));
+  }
   function bookmarkState(creature: SavedProfile): BookmarkState {
-    const profile = state.profiles.get(identity(creature.name));
+    const profile = find(creature.name);
     if (!profile) return 'unsaved';
     return profile.ac === creature.ac && profile.maxHP === creature.maxHP
       ? 'matching'
@@ -70,6 +75,19 @@ export function createProfileRegistry(storage?: EncounterStorage): ProfileRegist
     const name = displayName(creature.name);
     if (!name || bookmarkState(creature) !== 'unsaved') return;
     state.profiles.set(identity(name), { name, ac: creature.ac, maxHP: creature.maxHP });
+    persist();
+  }
+  function overwrite(creature: SavedProfile) {
+    const profile = find(creature.name);
+    if (!profile || bookmarkState(creature) !== 'different') return;
+    state.profiles.set(identity(creature.name), {
+      name: profile.name,
+      ac: creature.ac,
+      maxHP: creature.maxHP,
+    });
+    persist();
+  }
+  function persist() {
     try {
       storage?.setItem(
         PROFILES_KEY,
@@ -79,5 +97,5 @@ export function createProfileRegistry(storage?: EncounterStorage): ProfileRegist
       /* Remain usable in memory. */
     }
   }
-  return { state: readonly(state), bookmarkState, save };
+  return { state: readonly(state), find, bookmarkState, save, overwrite };
 }

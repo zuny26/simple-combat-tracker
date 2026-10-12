@@ -63,8 +63,12 @@ function bookmarkCreature(id: number, trigger: HTMLElement) {
   const creature = combat.state.creatures.find((creature) => creature.id === id);
   if (!creature) return;
   const saved = profiles.find(creature.name);
-  if (!saved || profiles.bookmarkState(creature) === 'matching') {
+  if (!saved) {
     profiles.save(creature);
+    return;
+  }
+  if (profiles.bookmarkState(creature) === 'matching') {
+    profiles.delete(creature.name);
     return;
   }
   const proposed = { name: creature.name, ac: creature.ac, maxHP: creature.maxHP };

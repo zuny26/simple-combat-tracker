@@ -21,7 +21,7 @@ for (const width of [320, 768, 1400, 1600]) {
     const inlineBookmark = row.locator('.btn-bookmark');
     const menuTrigger = row.getByRole('button', { name: 'Creature actions' });
     const bookmark = compact
-      ? row.getByRole('menuitem', { name: /^(Save profile|Update profile|Profile saved)$/ })
+      ? row.getByRole('menuitem', { name: /^(Save profile|Update profile|Unsave profile)$/ })
       : inlineBookmark;
     if (compact) await expect(inlineBookmark).toBeHidden();
     else await expect(menuTrigger).toBeHidden();
@@ -54,11 +54,11 @@ for (const width of [320, 768, 1400, 1600]) {
     await row.locator('.f-adjust').fill('5');
     await row.getByRole('button', { name: 'Damage', exact: true }).click();
     await activateBookmark('Save profile');
-    await inspectBookmark('Profile saved');
+    await inspectBookmark('Unsave profile');
     await expect(row.locator('.f-name')).toHaveValue(' Goblin 2 3 ');
     await expect(row.locator('.hp-number')).toHaveText('5 / 7');
     await page.reload();
-    await inspectBookmark('Profile saved');
+    await inspectBookmark('Unsave profile');
     await expect(row.locator('.hp-number')).toHaveText('5 / 7');
 
     for (const theme of THEMES) {
@@ -79,7 +79,7 @@ for (const width of [320, 768, 1400, 1600]) {
       await page.keyboard.press('Escape');
       await expect(suggestions).toHaveCount(0);
       await expect(row.locator('.f-name')).toBeFocused();
-      await inspectBookmark('Profile saved', async (button) => {
+      await inspectBookmark('Unsave profile', async (button) => {
         await expect(button).toBeVisible();
         await expect(button.locator('.bookmark-shape')).toHaveCSS(
           'fill',
@@ -107,27 +107,40 @@ for (const width of [320, 768, 1400, 1600]) {
       await expectNoOverflow(page);
       await row.locator('.f-name').fill(' goblin 3 ');
       await row.locator('.f-ac').fill('13');
-      await inspectBookmark('Profile saved');
+      await inspectBookmark('Unsave profile');
     }
 
-    await activateBookmark('Profile saved');
+    const encounter = await page.evaluate(() => localStorage.getItem('dnd-combat-tracker-v1'));
+    await activateBookmark('Unsave profile');
     await expect(page.getByRole('dialog')).toHaveCount(0);
+    await inspectBookmark('Save profile');
+    expect(await page.evaluate(() => localStorage.getItem('dnd-combat-tracker-v1'))).toBe(
+      encounter,
+    );
+    await page.reload();
+    await inspectBookmark('Save profile');
+    await row.locator('.f-name').focus();
+    await expect(page.getByRole('grid', { name: 'Saved profiles' })).toHaveCount(0);
+    await expect(row.locator('.f-name')).toHaveValue(' goblin 3 ');
+    await expect(row.locator('.hp-number')).toHaveText('5 / 7');
+    await activateBookmark('Save profile');
+    await inspectBookmark('Unsave profile');
     await page.locator('#reset-btn').click();
     await page.locator('#confirm-ok-btn').click();
     await expect(page.locator('tr[data-id]')).toHaveCount(0);
     await page.reload();
     await page.locator('#add-btn').click();
     await row.locator('.f-name').focus();
-    await expect(page.locator('.profile-choice')).toHaveText(['Goblin']);
+    await expect(page.locator('.profile-choice')).toHaveText(['goblin']);
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
     await expect(page.getByRole('grid')).toHaveCount(0);
-    await expect(row.locator('.f-name')).toHaveValue('Goblin');
+    await expect(row.locator('.f-name')).toHaveValue('goblin');
     await expect(row.locator('.f-name')).toBeFocused();
     await expect(row.locator('.f-ac')).toHaveValue('13');
     await expect(row.locator('.f-maxhp')).toHaveValue('7');
     await expect(row.locator('.hp-number')).toHaveText('7 / 7');
-    await inspectBookmark('Profile saved');
+    await inspectBookmark('Unsave profile');
     await expectNoOverflow(page);
   });
 }
@@ -201,11 +214,14 @@ for (const width of [320, 1600]) {
     await page.reload();
     await expect(row.locator('.f-name')).toHaveValue('Goblin 2');
     await expect(row.locator('.hp-number')).toHaveText('11 / 12');
-    await bookmark('Profile saved');
+    await bookmark('Unsave profile');
     await expect(dialog).toHaveCount(0);
+    expect(await page.evaluate(() => localStorage.getItem('dnd-combat-tracker-v1'))).toBe(
+      encounter,
+    );
     expect(
       await page.evaluate(() => JSON.parse(localStorage.getItem('dnd-saved-profiles-v1')).profiles),
-    ).toEqual([{ name: 'Goblin', ac: '15', maxHP: 12 }]);
+    ).toEqual([]);
   });
 }
 
@@ -280,19 +296,21 @@ test('name autocomplete keeps input focus, filters, navigates, dismisses and app
   await expect(list).toHaveCount(0);
   await expect(name).toBeFocused();
   await expect(name).toHaveValue('Goblin 2');
-  await expect(row.locator('.btn-bookmark')).toHaveAccessibleName('Profile saved');
+  await expect(row.locator('.btn-bookmark')).toHaveAccessibleName('Unsave profile');
   await row.locator('.btn-bookmark').click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(row.locator('.btn-bookmark')).toHaveAccessibleName('Save profile');
+  await row.locator('.btn-bookmark').click();
   await page.locator('#add-btn').click();
   const next = page.locator('tr[data-id]').last();
-  await next.locator('.f-name').focus();
+  await next.locator('.f-name').fill('Gob');
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Enter');
   await expect(next.locator('.f-name')).toHaveValue('Goblin 3');
   await expect(page.locator('tr[data-id]')).toHaveCount(4);
   await page.reload();
   await expect(next.locator('.f-name')).toHaveValue('Goblin 3');
-  await expect(next.locator('.btn-bookmark')).toHaveAccessibleName('Profile saved');
+  await expect(next.locator('.btn-bookmark')).toHaveAccessibleName('Unsave profile');
 });
 
 for (const width of [320, 1600]) {

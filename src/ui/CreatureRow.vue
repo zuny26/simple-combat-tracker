@@ -18,7 +18,7 @@ const bookmarkLabel = computed(
   () =>
     ({
       unsaved: 'Save profile',
-      matching: 'Profile saved',
+      matching: 'Unsave profile',
       different: 'Update profile',
     })[bookmarkState.value],
 );

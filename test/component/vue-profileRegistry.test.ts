@@ -18,10 +18,20 @@ it('saves through the row bookmark and reacts to edits in every row without chan
     const bookmark = () => rows[0]!.get('.btn-bookmark');
     expect(bookmark().attributes('aria-label')).toBe('Save profile');
     await bookmark().trigger('click');
-    expect(bookmark().attributes('aria-label')).toBe('Profile saved');
-    expect(rows[1]!.get('.btn-bookmark').attributes('aria-label')).toBe('Profile saved');
+    expect(bookmark().attributes('aria-label')).toBe('Unsave profile');
+    expect(rows[1]!.get('.btn-bookmark').attributes('aria-label')).toBe('Unsave profile');
     expect(JSON.stringify(combat.state)).toBe(before);
     expect(combat.history.undoCount).toBe(history);
+    await bookmark().trigger('click');
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+    expect(profiles.find('Goblin')).toBeUndefined();
+    for (const row of rows) {
+      expect(row.get('.btn-bookmark').attributes('aria-label')).toBe('Save profile');
+    }
+    expect(JSON.stringify(combat.state)).toBe(before);
+    expect(combat.history.undoCount).toBe(history);
+    await bookmark().trigger('click');
+    expect(bookmark().attributes('aria-label')).toBe('Unsave profile');
     await rows[0]!.get('.f-ac').setValue('15');
     expect(bookmark().attributes('aria-label')).toBe('Update profile');
     await bookmark().trigger('click');
@@ -30,7 +40,7 @@ it('saves through the row bookmark and reacts to edits in every row without chan
     expect([...profiles.state.profiles.values()]).toEqual([{ name: 'Goblin', ac: '13', maxHP: 7 }]);
     await rows[0]!.get('.f-ac').setValue('13');
     await rows[0]!.get('.f-name').setValue(' goblin 3 ');
-    expect(bookmark().attributes('aria-label')).toBe('Profile saved');
+    expect(bookmark().attributes('aria-label')).toBe('Unsave profile');
     await rows[0]!.get('.f-maxhp').setValue('12');
     expect(bookmark().attributes('aria-label')).toBe('Update profile');
     await rows[0]!.get('.f-name').setValue('Orc');
@@ -42,7 +52,7 @@ it('saves through the row bookmark and reacts to edits in every row without chan
   }
 });
 
-it('closes the creature menu before saving and uses the current bookmark label', async () => {
+it('closes the creature menu before saving or unsaving and uses the current bookmark label', async () => {
   const combat = createVueCombat();
   const id = combat.addCreature();
   combat.editCreature(id, { name: 'Goblin', ac: '13', maxHP: 7 });
@@ -63,8 +73,15 @@ it('closes the creature menu before saving and uses the current bookmark label',
     expect(savedAfterClosing).toBe(true);
     expect(profiles.bookmarkState(combat.state.creatures[0]!)).toBe('matching');
     await openMenu();
-    expect(menuItem().text()).toBe('Profile saved');
-    await wrapper.get('.btn-menu').trigger('click');
+    expect(menuItem().text()).toBe('Unsave profile');
+    savedAfterClosing = false;
+    await menuItem().trigger('click');
+    expect(savedAfterClosing).toBe(true);
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+    expect(profiles.find('Goblin')).toBeUndefined();
+    await openMenu();
+    expect(menuItem().text()).toBe('Save profile');
+    await menuItem().trigger('click');
     await wrapper.get('.f-ac').setValue('15');
     await openMenu();
     expect(menuItem().text()).toBe('Update profile');
@@ -111,7 +128,7 @@ it.each([
       expect(profiles.find('Goblin')).toEqual({ name: 'Goblin', ac, maxHP });
       for (const id of [first, second]) {
         expect(wrapper.get(`tr[data-id="${id}"] .btn-bookmark`).attributes('aria-label')).toBe(
-          'Profile saved',
+          'Unsave profile',
         );
       }
       expect(wrapper.get(`tr[data-id="${third}"] .btn-bookmark`).attributes('aria-label')).toBe(
@@ -121,7 +138,9 @@ it.each([
       expect(combat.history.undoCount).toBe(history);
       await bookmark().trigger('click');
       expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
-      expect(profiles.state.profiles.size).toBe(1);
+      expect(profiles.state.profiles.size).toBe(0);
+      expect(JSON.stringify(combat.state)).toBe(before);
+      expect(combat.history.undoCount).toBe(history);
     } finally {
       wrapper.unmount();
     }
@@ -155,7 +174,7 @@ it('closes name suggestions before applying and saving a profile, then updates H
     expect(wrapper.get('.f-name').element).toHaveProperty('value', 'Goblin');
     expect(wrapper.get('.f-ac').element).toHaveProperty('value', '13');
     expect(wrapper.get('.f-maxhp').element).toHaveProperty('value', '7');
-    expect(wrapper.get('.btn-bookmark').attributes('aria-label')).toBe('Profile saved');
+    expect(wrapper.get('.btn-bookmark').attributes('aria-label')).toBe('Unsave profile');
     expect(combat.state.creatures).toHaveLength(1);
     expect(combat.hp(id)?.normal).toBe(7);
   } finally {

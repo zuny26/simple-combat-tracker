@@ -2,6 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import type { Combat, ReadonlyCreature } from '../combat/combat';
 import CreatureTags from './CreatureTags.vue';
+import NameAutocomplete from './NameAutocomplete.vue';
 import ActionMenu from './ActionMenu.vue';
 import BookmarkIcon from './BookmarkIcon.vue';
 import DuplicateIcon from './DuplicateIcon.vue';
@@ -96,15 +97,12 @@ function beginHP(field: HPField) {
       </div>
     </td>
     <td class="cell-name" data-label="Name">
-      <input
-        class="f-name"
-        data-combat-field="name"
-        type="text"
-        aria-label="Name"
-        placeholder="—"
-        :value="creature.name"
+      <NameAutocomplete
+        :name="creature.name"
+        :profiles="profiles"
         @input="editText('name', $event)"
         @blur="$emit('edit-finished', $event)"
+        @select="combat.applyProfile(creature.id, $event)"
       />
     </td>
     <td class="cell-ac" data-label="AC">

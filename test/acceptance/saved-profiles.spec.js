@@ -64,6 +64,18 @@ for (const width of [320, 768, 1400, 1600]) {
     for (const theme of THEMES) {
       await page.locator(width <= 640 ? '#app-menu-btn' : '#theme-trigger').click();
       await page.getByRole('menuitemradio', { name: theme.label }).click();
+      await row.locator('.f-name').focus();
+      const suggestions = page.getByRole('listbox', { name: 'Saved profiles' });
+      await expect(suggestions).toBeVisible();
+      await expect(suggestions.getByRole('option')).toHaveText(['Goblin']);
+      const bounds = await suggestions.boundingBox();
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.y).toBeGreaterThanOrEqual(0);
+      expect(bounds.y + bounds.height).toBeLessThanOrEqual(900);
+      await expectNoOverflow(page);
+      await page.keyboard.press('Escape');
+      await expect(suggestions).toHaveCount(0);
+      await expect(row.locator('.f-name')).toBeFocused();
       await inspectBookmark('Profile saved', async (button) => {
         await expect(button).toBeVisible();
         await expect(button.locator('.bookmark-shape')).toHaveCSS(
@@ -102,9 +114,16 @@ for (const width of [320, 768, 1400, 1600]) {
     await expect(page.locator('tr[data-id]')).toHaveCount(0);
     await page.reload();
     await page.locator('#add-btn').click();
-    await row.locator('.f-name').fill('GOBLIN');
-    await row.locator('.f-ac').fill('13');
-    await row.locator('.f-maxhp').fill('7');
+    await row.locator('.f-name').focus();
+    await expect(page.getByRole('option')).toHaveText(['Goblin']);
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('listbox')).toHaveCount(0);
+    await expect(row.locator('.f-name')).toHaveValue('Goblin');
+    await expect(row.locator('.f-name')).toBeFocused();
+    await expect(row.locator('.f-ac')).toHaveValue('13');
+    await expect(row.locator('.f-maxhp')).toHaveValue('7');
+    await expect(row.locator('.hp-number')).toHaveText('7 / 7');
     await inspectBookmark('Profile saved');
     await expectNoOverflow(page);
   });
@@ -186,3 +205,73 @@ for (const width of [320, 1600]) {
     ).toEqual([{ name: 'Goblin', ac: '15', maxHP: 12 }]);
   });
 }
+
+test('name autocomplete keeps input focus, filters, navigates, dismisses and applies only deliberate selections', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('./');
+  await page.locator('#usage-dismiss-btn').click();
+  for (const [name, ac, maxHP] of [
+    ['Goblin', '13', '7'],
+    ['Orc', '15', '20'],
+  ]) {
+    await page.locator('#add-btn').click();
+    const row = page.locator('tr[data-id]').last();
+    await row.locator('.f-name').fill(name);
+    await row.locator('.f-ac').fill(ac);
+    await row.locator('.f-maxhp').fill(maxHP);
+    await row.locator('.btn-bookmark').click();
+  }
+  await page.locator('#add-btn').click();
+  const row = page.locator('tr[data-id]').last();
+  const name = row.locator('.f-name');
+  const list = page.getByRole('listbox');
+  await name.focus();
+  await expect(list.getByRole('option')).toHaveText(['Goblin', 'Orc']);
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('ArrowDown');
+  await expect(list.getByRole('option', { selected: true })).toHaveText('Orc');
+  await page.keyboard.press('ArrowUp');
+  await expect(list.getByRole('option', { selected: true })).toHaveText('Goblin');
+  await expect(name).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(list).toHaveCount(0);
+  await expect(name).toBeFocused();
+  await expect(name).toHaveValue('');
+  await name.fill(' gOb ');
+  await expect(list.getByRole('option')).toHaveText(['Goblin']);
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Tab');
+  await expect(row.locator('.f-ac')).toBeFocused();
+  await expect(list).toHaveCount(0);
+  await expect(name).toHaveValue(' gOb ');
+  await expect(row.locator('.f-maxhp')).toHaveValue('');
+  await name.focus();
+  await row.locator('.f-init').click();
+  await expect(list).toHaveCount(0);
+  await expect(row.locator('.f-init')).toBeFocused();
+  await name.fill('Dragon');
+  await expect(page.getByRole('option')).toHaveCount(0);
+  await page.keyboard.press('Enter');
+  await expect(name).toHaveValue('Dragon');
+  await name.fill('');
+  await expect(list.getByRole('option')).toHaveText(['Goblin', 'Orc']);
+  await list.getByRole('option', { name: 'Goblin', exact: true }).click();
+  await expect(list).toHaveCount(0);
+  await expect(name).toBeFocused();
+  await expect(name).toHaveValue('Goblin 2');
+  await expect(row.locator('.btn-bookmark')).toHaveAccessibleName('Profile saved');
+  await row.locator('.btn-bookmark').click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.locator('#add-btn').click();
+  const next = page.locator('tr[data-id]').last();
+  await next.locator('.f-name').focus();
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Enter');
+  await expect(next.locator('.f-name')).toHaveValue('Goblin 3');
+  await expect(page.locator('tr[data-id]')).toHaveCount(4);
+  await page.reload();
+  await expect(next.locator('.f-name')).toHaveValue('Goblin 3');
+  await expect(next.locator('.btn-bookmark')).toHaveAccessibleName('Profile saved');
+});

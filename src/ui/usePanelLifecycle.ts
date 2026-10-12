@@ -11,9 +11,9 @@ interface PanelOptions {
   selectionFocus?: 'before' | 'after';
 }
 
-export interface PanelLifecycle {
+export interface PanelLifecycle<T extends HTMLElement = HTMLButtonElement> {
   readonly open: Readonly<Ref<boolean>>;
-  readonly trigger: Ref<HTMLButtonElement | undefined>;
+  readonly trigger: Ref<T | undefined>;
   readonly panel: Ref<HTMLDivElement | undefined>;
   readonly position: Ref<{ left: string; top: string }>;
   show(): Promise<void>;
@@ -23,9 +23,11 @@ export interface PanelLifecycle {
   runAfterClose(action: () => void): Promise<void>;
 }
 
-export function usePanelLifecycle(options: PanelOptions): PanelLifecycle {
+export function usePanelLifecycle<T extends HTMLElement = HTMLButtonElement>(
+  options: PanelOptions,
+): PanelLifecycle<T> {
   const open = ref(false);
-  const trigger = ref<HTMLButtonElement>();
+  const trigger = ref<T>() as Ref<T | undefined>;
   const panel = ref<HTMLDivElement>();
   const position = ref({ left: '8px', top: '8px' });
   let revision = 0;

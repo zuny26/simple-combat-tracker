@@ -228,3 +228,24 @@ it('explicitly overwrites one normalized profile, preserving its name and encoun
   expect(storage.getItem(PROFILES_KEY)).toBe(saved);
   expect(profiles.state.profiles.size).toBe(1);
 });
+
+it('browses all profiles and filters normalized names by case-insensitive substring', () => {
+  const profiles = createProfileRegistry();
+  profiles.save({ name: ' Goblin 2 ', ac: '13', maxHP: 7 });
+  profiles.save({ name: 'Hobgoblin', ac: '18', maxHP: 11 });
+  profiles.save({ name: 'Orc', ac: '13', maxHP: 15 });
+  expect(profiles.matching('').map((profile) => profile.name)).toEqual([
+    'Goblin',
+    'Hobgoblin',
+    'Orc',
+  ]);
+  expect(profiles.matching('  GoB  ').map((profile) => profile.name)).toEqual([
+    'Goblin',
+    'Hobgoblin',
+  ]);
+  expect(profiles.matching(' goblin 3 ').map((profile) => profile.name)).toEqual([
+    'Goblin',
+    'Hobgoblin',
+  ]);
+  expect(profiles.matching('dragon')).toEqual([]);
+});

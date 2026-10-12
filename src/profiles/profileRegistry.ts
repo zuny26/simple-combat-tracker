@@ -1,4 +1,5 @@
 import { reactive, readonly } from 'vue';
+import { profileName as displayName, profileIdentity as identity } from './names';
 import type { EncounterStorage } from '../combat/persistence';
 
 export const PROFILES_KEY = 'dnd-saved-profiles-v1';
@@ -15,19 +16,9 @@ export interface ProfileRegistry {
   readonly state: { readonly profiles: ReadonlyMap<string, SavedProfile> };
   bookmarkState(creature: SavedProfile): BookmarkState;
   find(name: string): SavedProfile | undefined;
+  matching(query: string): readonly SavedProfile[];
   save(creature: SavedProfile): void;
   overwrite(creature: SavedProfile): void;
-}
-
-function displayName(name: string): string {
-  return name
-    .trim()
-    .replace(/\s[\s\d]+$/, '')
-    .trim();
-}
-
-function identity(name: string): string {
-  return displayName(name).toLowerCase();
 }
 
 export function createProfileRegistry(storage?: EncounterStorage): ProfileRegistry {
@@ -97,5 +88,11 @@ export function createProfileRegistry(storage?: EncounterStorage): ProfileRegist
       /* Remain usable in memory. */
     }
   }
-  return { state: readonly(state), find, bookmarkState, save, overwrite };
+  function matching(query: string): readonly SavedProfile[] {
+    const key = identity(query);
+    return [...readonly(state).profiles.values()].filter((profile) =>
+      identity(profile.name).includes(key),
+    );
+  }
+  return { state: readonly(state), find, matching, bookmarkState, save, overwrite };
 }

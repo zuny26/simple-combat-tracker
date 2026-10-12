@@ -1,5 +1,7 @@
 import { displayOrder, duplicateName, hp, initiative, turnOrder } from './rules';
 import type { HP } from './rules';
+import { allocateProfileName } from '../profiles/names';
+import type { SavedProfile } from '../profiles/profileRegistry';
 
 export interface Creature {
   id: number;
@@ -47,6 +49,7 @@ export interface Combat {
   readonly displayOrder: readonly ReadonlyCreature[];
   addCreature(): number;
   editCreature(id: number, edits: CreatureEdits): void;
+  applyProfile(id: number, profile: SavedProfile): void;
   duplicateCreature(id: number): number | null;
   removeCreature(id: number): void;
   addTag(id: number, field: 'conditions' | 'other', value: string): void;
@@ -229,6 +232,17 @@ export function createCombat(
       creature.damageTaken = Math.min(creature.damageTaken, creature.maxHP);
       if (state.activeId === id && initiative(creature.init) === null) reassign(previousIndex);
       changed();
+    },
+    applyProfile(id, profile) {
+      endEdit();
+      this.editCreature(id, {
+        ac: profile.ac,
+        maxHP: profile.maxHP,
+        name: allocateProfileName(
+          profile.name,
+          state.creatures.filter((creature) => creature.id !== id).map((creature) => creature.name),
+        ),
+      });
     },
     duplicateCreature(id: number) {
       endEdit();

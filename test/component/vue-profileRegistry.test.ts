@@ -127,3 +127,38 @@ it.each([
     }
   },
 );
+
+it('closes name suggestions before applying and saving a profile, then updates HP drafts and bookmarks', async () => {
+  let applying = false;
+  let closedAtSave = false;
+  const combat = createVueCombat({
+    getItem: () => null,
+    setItem: () => {
+      if (applying) closedAtSave = !wrapper.find('[role="listbox"]').exists();
+    },
+  });
+  const id = combat.addCreature();
+  const profiles = createProfileRegistry();
+  profiles.save({ name: 'Goblin', ac: '13', maxHP: 7 });
+  const wrapper = mount(EncounterTracker, {
+    props: { combat, profiles },
+    global: { stubs: { Teleport: true } },
+  });
+  try {
+    await wrapper.get('.f-name').trigger('focus');
+    expect(wrapper.get('[role="option"]').text()).toContain('Goblin');
+    applying = true;
+    await wrapper.get('[role="option"]').trigger('click');
+    await flushPromises();
+    expect(closedAtSave).toBe(true);
+    expect(wrapper.find('[role="listbox"]').exists()).toBe(false);
+    expect(wrapper.get('.f-name').element).toHaveProperty('value', 'Goblin');
+    expect(wrapper.get('.f-ac').element).toHaveProperty('value', '13');
+    expect(wrapper.get('.f-maxhp').element).toHaveProperty('value', '7');
+    expect(wrapper.get('.btn-bookmark').attributes('aria-label')).toBe('Profile saved');
+    expect(combat.state.creatures).toHaveLength(1);
+    expect(combat.hp(id)?.normal).toBe(7);
+  } finally {
+    wrapper.unmount();
+  }
+});

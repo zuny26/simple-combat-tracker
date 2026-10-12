@@ -53,12 +53,9 @@ test('the built tracker creates and advances an encounter, edits with Tab/click,
   await first.locator('.f-init').fill('1');
   expect(await order(page)).toEqual(['1', '2', '3']); // no sorting during input
   await first.locator('.f-init').press('Tab');
-  await expect(first.locator('.btn-bookmark')).toBeFocused();
+  await expect(first.locator('.f-name')).toBeFocused();
   expect(await order(page)).toEqual(['2', '1', '3']);
   await expect(first).toHaveClass(/active/); // identity survives sorting
-  await first.locator('.btn-bookmark').press('Tab');
-  await expect(first.locator('.f-name')).toBeFocused();
-  await first.locator('.f-name').press('End'); // native Tab selects the existing name
   await first.locator('.f-name').pressSequentially(' captain');
   await first.locator('.f-init').fill('30');
   await second.locator('.f-name').click();

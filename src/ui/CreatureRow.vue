@@ -92,39 +92,16 @@ function beginHP(field: HPField) {
       </div>
     </td>
     <td class="cell-name" data-label="Name">
-      <div class="name-wrap">
-        <button
-          type="button"
-          class="btn-bookmark"
-          :data-bookmark-state="bookmarkState"
-          :aria-label="bookmarkLabel"
-          :title="bookmarkLabel"
-          :disabled="!creature.name.trim()"
-          @click="profiles.save(creature)"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path class="bookmark-shape" d="M6 3h12v18l-6-4-6 4z" />
-            <path class="bookmark-difference" d="M12 7v4m0 3h.01" />
-          </svg>
-        </button>
-        <input
-          class="f-name"
-          data-combat-field="name"
-          type="text"
-          aria-label="Name"
-          placeholder="—"
-          :value="creature.name"
-          @input="editText('name', $event)"
-          @blur="$emit('edit-finished', $event)"
-        />
-      </div>
+      <input
+        class="f-name"
+        data-combat-field="name"
+        type="text"
+        aria-label="Name"
+        placeholder="—"
+        :value="creature.name"
+        @input="editText('name', $event)"
+        @blur="$emit('edit-finished', $event)"
+      />
     </td>
     <td class="cell-ac" data-label="AC">
       <div class="ac-wrap">
@@ -253,7 +230,28 @@ function beginHP(field: HPField) {
       <div class="row-actions">
         <button
           type="button"
-          class="btn-dupe"
+          class="row-action btn-bookmark"
+          :data-bookmark-state="bookmarkState"
+          :aria-label="bookmarkLabel"
+          :title="bookmarkLabel"
+          :disabled="!creature.name.trim()"
+          @click="profiles.save(creature)"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path class="bookmark-shape" d="M6 3h12v18l-6-4-6 4z" />
+            <path class="bookmark-difference" d="M12 7v4m0 3h.01" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="row-action btn-dupe"
           aria-label="Duplicate creature"
           title="Duplicate creature"
           @click="combat.duplicateCreature(creature.id)"
@@ -271,7 +269,7 @@ function beginHP(field: HPField) {
         </button>
         <button
           type="button"
-          class="btn-remove"
+          class="row-action btn-remove"
           aria-label="Remove creature"
           title="Remove creature"
           @click="$emit('remove', creature.id, $event.currentTarget as HTMLElement)"
@@ -279,7 +277,7 @@ function beginHP(field: HPField) {
           ×
         </button>
         <ActionMenu
-          trigger-class="btn-menu"
+          trigger-class="row-action btn-menu"
           panel-class="row-menu"
           label="Creature actions"
           :items="[

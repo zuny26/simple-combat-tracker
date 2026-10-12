@@ -593,8 +593,8 @@ body {
   min-width: 150px;
 }
 .col-actions {
-  width: 92px;
-} /* holds the duplicate + remove buttons */
+  width: 130px;
+} /* holds bookmark, duplicate, and remove buttons */
 
 @media (min-width: 1401px) {
   .combat-table {
@@ -645,42 +645,6 @@ body {
 .f-name {
   font-weight: 700;
   text-align: left;
-}
-.name-wrap {
-  display: flex;
-  align-items: center;
-}
-.name-wrap .f-name {
-  min-width: 0;
-}
-.btn-bookmark {
-  flex: none;
-  width: var(--control-h);
-  height: var(--row-control-h, var(--control-h));
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-accent-700);
-  cursor: pointer;
-}
-.btn-bookmark svg {
-  width: 20px;
-  height: 20px;
-}
-.btn-bookmark:hover {
-  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
-}
-.btn-bookmark:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: -2px;
-}
-.btn-bookmark:disabled {
-  opacity: 0.5;
-  cursor: default;
 }
 .bookmark-difference {
   display: none;
@@ -1062,7 +1026,7 @@ tr.downed .f-name {
   color: color-mix(in srgb, var(--color-text) 45%, transparent);
 }
 
-/* ---- Row actions (duplicate + remove) ---- */
+/* ---- Row actions (bookmark, duplicate, remove, and compact menu) ---- */
 .vue-tags .cond-pill {
   max-width: 100%;
   white-space: normal;
@@ -1099,10 +1063,9 @@ tr.downed .f-name {
   justify-content: center;
   gap: 2px;
 }
-.btn-dupe,
-.btn-remove {
-  width: 36px;
-  height: 36px;
+.row-action {
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
   padding: 0;
   border-radius: 999px;
   border: none;
@@ -1115,21 +1078,23 @@ tr.downed .f-name {
   align-items: center;
   justify-content: center;
 }
-.btn-dupe:hover,
-.btn-remove:hover {
+.row-action:enabled:hover {
   background: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
-.btn-dupe:focus-visible,
-.btn-remove:focus-visible {
+.row-action:focus-visible {
   outline: 1px solid var(--color-accent);
   outline-offset: 1px;
 }
-.btn-dupe svg {
+.row-action:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.row-action svg {
   width: 17px;
   height: 17px;
 }
 
-/* Tablet and mobile use the creature menu; desktop shows duplicate and remove buttons. */
+/* Bookmark stays visible; CSS selects the remaining actions or their compact menu. */
 .btn-menu {
   display: none;
 }
@@ -1456,24 +1421,15 @@ tr.downed .f-name {
   .cell-actions .btn-remove {
     display: none;
   }
+  .row-action {
+    width: var(--row-control-h);
+    height: var(--row-control-h);
+  }
   .btn-menu {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: var(--row-control-h);
-    padding: 0;
-    border: none;
-    border-radius: 999px;
-    background: transparent;
-    color: color-mix(in srgb, var(--color-text) 60%, transparent);
-    cursor: pointer;
   }
-  .btn-menu:hover {
-    background: color-mix(in srgb, var(--color-text) 8%, transparent);
-  }
-  .btn-menu:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 1px;
+  .row-action:focus-visible {
+    outline-width: 2px;
   }
   .cell-current .hp-track {
     height: 11px;
@@ -1498,7 +1454,7 @@ tr.downed .f-name {
   }
   .combat-table {
     --tablet-columns: 52px minmax(0, 2fr) repeat(3, minmax(54px, 0.5fr)) minmax(112px, 1fr)
-      minmax(174px, 1fr) 46px;
+      minmax(174px, 1fr) 94px;
   }
   .combat-table tbody tr:not(.empty-row) {
     display: grid;
@@ -1899,7 +1855,7 @@ tr.downed .f-name {
     order: 3;
   }
   .cell-actions {
-    flex: 0 0 46px;
+    flex: 0 0 94px;
     order: 4;
   }
   .cell-maxhp,

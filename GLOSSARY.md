@@ -6,6 +6,8 @@ A tracker for a DM to manage creatures, hit points, conditions, and turns in a c
 
 **Creature**: An encounter participant, including player characters and monsters. _Avoid_: Entity, combatant
 
+**Saved profile**: A reusable name, AC, and Total HP for a player character, NPC, or monster, independent of its participation in an encounter.
+
 **Initiative**: A creature's numeric priority in the turn order; higher initiative acts earlier, with names breaking ties alphabetically.
 
 **Parked creature**: A creature with blank, nonnumeric, or non-finite initiative; remains visible without taking turns.

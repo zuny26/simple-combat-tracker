@@ -69,6 +69,9 @@ for (const width of [320, 768, 1400, 1600]) {
       await expect(suggestions).toBeVisible();
       await expect(suggestions.getByRole('option')).toHaveText(['Goblin']);
       const bounds = await suggestions.boundingBox();
+      const inputBounds = await row.locator('.f-name').boundingBox();
+      expect(bounds.width).toBeCloseTo(inputBounds.width, 1);
+      expect(bounds.x).toBeCloseTo(inputBounds.x, 1);
       expect(bounds.x).toBeGreaterThanOrEqual(0);
       expect(bounds.y).toBeGreaterThanOrEqual(0);
       expect(bounds.y + bounds.height).toBeLessThanOrEqual(900);
@@ -229,6 +232,18 @@ test('name autocomplete keeps input focus, filters, navigates, dismisses and app
   const list = page.getByRole('listbox');
   await name.focus();
   await expect(list.getByRole('option')).toHaveText(['Goblin', 'Orc']);
+  for (const width of [768, 320, 1600]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect
+      .poll(async () => {
+        const inputBounds = await name.boundingBox();
+        const panelBounds = await list.boundingBox();
+        return panelBounds.width - inputBounds.width;
+      })
+      .toBeCloseTo(0, 1);
+    await expect(name).toBeFocused();
+    await expectNoOverflow(page);
+  }
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('ArrowDown');
   await expect(list.getByRole('option', { selected: true })).toHaveText('Orc');

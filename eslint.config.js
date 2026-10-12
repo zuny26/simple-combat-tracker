@@ -13,6 +13,7 @@ const browserGlobals = {
   window: 'readonly',
   localStorage: 'readonly',
   getComputedStyle: 'readonly',
+  ResizeObserver: 'readonly',
 };
 
 const nodeGlobals = {

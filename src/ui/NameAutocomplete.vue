@@ -15,6 +15,7 @@ const listId = useId();
 const { open, trigger, panel, position, show, close, reposition, runAfterClose } =
   usePanelLifecycle<HTMLInputElement>({
     alignment: 'left',
+    matchTriggerWidth: true,
     focusOnShow: () => {},
     onClose: () => {
       selected.value = -1;

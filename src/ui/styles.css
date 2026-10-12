@@ -1939,7 +1939,6 @@ tr.downed .f-name {
 }
 
 .profile-suggestions {
-  max-width: calc(100vw - 2 * var(--space-2));
   max-height: min(280px, calc(100dvh - 2 * var(--space-2)));
   overflow-y: auto;
 }

@@ -6,12 +6,12 @@ Saved profiles belong to the app-scoped registry in [profileRegistry.ts](../src/
 
 The registry owns a Vue-reactive `Map<string, SavedProfile>` and exposes it through read-only state. Named operations own registry mutations; `find`, `matching`, and `bookmarkState` provide read-only access and derived results. Each registry instance loads its own map when created.
 
-| Value | Purpose |
-| --- | --- |
-| Map key | The normalized, lowercase profile identity. |
-| `name` | The normalized profile name, retaining its original capitalization. |
-| `ac` | AC stored as a string, including an empty string. |
-| `maxHP` | Maximum normal HP stored as a number. |
+| Value   | Purpose                                                             |
+| ------- | ------------------------------------------------------------------- |
+| Map key | The normalized, lowercase profile identity.                         |
+| `name`  | The normalized profile name, retaining its original capitalization. |
+| `ac`    | AC stored as a string, including an empty string.                   |
+| `maxHP` | Maximum normal HP stored as a number.                               |
 
 Saving copies only these three profile fields into a new object. Creature IDs, initiative, damage, Temp HP, conditions, notes, and turn state never enter the registry. Later encounter edits cannot mutate a saved profile, and registry changes do not modify encounter creatures.
 
@@ -19,7 +19,7 @@ The registry uses Vue reactivity directly. The combat module imports the `SavedP
 
 ## Name identity and lookup
 
-[names.ts](../src/profiles/names.ts) defines the normalization shared by registry operations and encounter name allocation. `profileName` trims surrounding whitespace and removes a trailing whitespace-separated sequence of digits and whitespace. `profileIdentity` lowercases that result. For example, ` Goblin 2 3 ` and `goblin` both identify `goblin`, while `R2D2` retains its embedded digits. Repeated normalization leaves the same result.
+[names.ts](../src/profiles/names.ts) defines the normalization shared by registry operations and encounter name allocation. `profileName` trims surrounding whitespace and removes a trailing whitespace-separated sequence of digits and whitespace. `profileIdentity` lowercases that result. For example, `Goblin 2 3` and `goblin` both identify `goblin`, while `R2D2` retains its embedded digits. Repeated normalization leaves the same result.
 
 The normalized identity allows multiple numbered encounter creatures to share one saved profile. Names differing only in capitalization, surrounding whitespace, or numeric suffixes cannot create separate registry entries. Using a `Map` also permits names such as `__proto__` and `constructor` without treating them as object properties.
 
@@ -29,11 +29,11 @@ The normalized identity allows multiple numbered encounter creatures to share on
 
 `bookmarkState(creature)` derives the relationship between supplied creature values and the registry:
 
-| Result | Meaning |
-| --- | --- |
-| `unsaved` | No profile exists for the normalized name. |
-| `matching` | A profile exists with exactly equal AC and Max HP. |
-| `different` | A profile exists, but AC or Max HP differs. |
+| Result      | Meaning                                            |
+| ----------- | -------------------------------------------------- |
+| `unsaved`   | No profile exists for the normalized name.         |
+| `matching`  | A profile exists with exactly equal AC and Max HP. |
+| `different` | A profile exists, but AC or Max HP differs.        |
 
 Encounter-only fields have no effect on this comparison. Renaming a creature to a different identity changes which profile is compared; it does not rename or remove the previously saved profile.
 

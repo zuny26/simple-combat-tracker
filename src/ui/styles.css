@@ -1094,7 +1094,7 @@ tr.downed .f-name {
   height: 17px;
 }
 
-/* Bookmark stays visible; CSS selects the remaining actions or their compact menu. */
+/* CSS selects the desktop actions or their compact menu. */
 .btn-menu {
   display: none;
 }
@@ -1417,6 +1417,7 @@ tr.downed .f-name {
   .combat-table td.cell-ac input.f-ac {
     padding: 0;
   }
+  .cell-actions .btn-bookmark,
   .cell-actions .btn-dupe,
   .cell-actions .btn-remove {
     display: none;
@@ -1454,7 +1455,7 @@ tr.downed .f-name {
   }
   .combat-table {
     --tablet-columns: 52px minmax(0, 2fr) repeat(3, minmax(54px, 0.5fr)) minmax(112px, 1fr)
-      minmax(174px, 1fr) 94px;
+      minmax(174px, 1fr) 46px;
   }
   .combat-table tbody tr:not(.empty-row) {
     display: grid;
@@ -1855,7 +1856,7 @@ tr.downed .f-name {
     order: 3;
   }
   .cell-actions {
-    flex: 0 0 94px;
+    flex: 0 0 46px;
     order: 4;
   }
   .cell-maxhp,

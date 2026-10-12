@@ -40,7 +40,7 @@ The bookmark icon must visually distinguish three states, using the same normali
 
 Differences in capitalization, surrounding whitespace, or the trailing numeric suffix do not count as differences in permanent characteristics. Encounter-only values do not affect the bookmark state.
 
-The state reflects the current creature and saved profile values, including after row edits, saving, and profile deletion. Use an outline bookmark for not saved, a filled bookmark for saved and matching, and an outline bookmark containing an exclamation mark for saved with differences. Each button has an accessible description and a tooltip for its state.
+The state reflects the current creature and saved profile values, including after row edits, saving, and profile deletion. Use an outline bookmark labeled "Save profile" for not saved, a filled bookmark labeled "Profile saved" for saved and matching, and an outline bookmark containing an exclamation mark labeled "Update profile" for saved with differences. Desktop shows the bookmark beside Duplicate and Remove, with its label as an accessible name and tooltip. Tablet and mobile put the same labeled bookmark action inside the three-dot creature menu.
 
 ## Name autocomplete
 

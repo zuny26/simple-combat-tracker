@@ -72,7 +72,7 @@ for (const width of [1600, 768, 320]) {
     const rowTrigger = row.getByRole('button', { name: 'Creature actions' });
     if (width <= 1400) {
       await rowTrigger.click();
-      await expect(page.getByRole('menuitem', { name: 'Duplicate creature' })).toBeFocused();
+      await expect(page.getByRole('menuitem', { name: 'Save profile' })).toBeFocused();
       await page.keyboard.press('Escape');
       await expect(rowTrigger).toBeFocused();
       await rowTrigger.click();

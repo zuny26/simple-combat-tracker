@@ -3,6 +3,7 @@ import { computed, reactive, ref, watch } from 'vue';
 import type { Combat, ReadonlyCreature } from '../combat/combat';
 import CreatureTags from './CreatureTags.vue';
 import ActionMenu from './ActionMenu.vue';
+import BookmarkIcon from './BookmarkIcon.vue';
 import type { ProfileRegistry } from '../profiles/profileRegistry';
 
 const { combat, creature, profiles } = defineProps<{
@@ -14,9 +15,9 @@ const bookmarkState = computed(() => profiles.bookmarkState(creature));
 const bookmarkLabel = computed(
   () =>
     ({
-      unsaved: 'Save profile: not saved',
-      matching: 'Saved profile: matching',
-      different: 'Saved profile: differences; existing profile kept',
+      unsaved: 'Save profile',
+      matching: 'Profile saved',
+      different: 'Update profile',
     })[bookmarkState.value],
 );
 const emit = defineEmits<{
@@ -24,7 +25,8 @@ const emit = defineEmits<{
   remove: [id: number, trigger: HTMLElement];
 }>();
 function rowAction(action: string, trigger: HTMLElement) {
-  if (action === 'duplicate') combat.duplicateCreature(creature.id);
+  if (action === 'bookmark') profiles.save(creature);
+  else if (action === 'duplicate') combat.duplicateCreature(creature.id);
   else emit('remove', creature.id, trigger);
 }
 const health = computed(() => combat.hp(creature.id)!);
@@ -237,17 +239,7 @@ function beginHP(field: HPField) {
           :disabled="!creature.name.trim()"
           @click="profiles.save(creature)"
         >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path class="bookmark-shape" d="M6 3h12v18l-6-4-6 4z" />
-            <path class="bookmark-difference" d="M12 7v4m0 3h.01" />
-          </svg>
+          <BookmarkIcon :state="bookmarkState" />
         </button>
         <button
           type="button"
@@ -281,12 +273,17 @@ function beginHP(field: HPField) {
           panel-class="row-menu"
           label="Creature actions"
           :items="[
+            { id: 'bookmark', label: bookmarkLabel, disabled: !creature.name.trim() },
             { id: 'duplicate', label: 'Duplicate creature' },
             { id: 'remove', label: 'Remove creature', danger: true },
           ]"
           @select="rowAction"
-          >⋮</ActionMenu
         >
+          ⋮
+          <template #item-icon="{ item }">
+            <BookmarkIcon v-if="item.id === 'bookmark'" :state="bookmarkState" />
+          </template>
+        </ActionMenu>
       </div>
     </td>
   </tr>

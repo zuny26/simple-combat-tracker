@@ -12,7 +12,7 @@ async function addCreature(page, id) {
   const row = page.locator(`tr[data-id="${id}"]`);
   await row.getByRole('textbox', { name: 'Initiative', exact: true }).fill(String(21 - id));
   await row
-    .getByRole('textbox', { name: 'Name', exact: true })
+    .getByRole('combobox', { name: 'Name', exact: true })
     .fill('Ancient copper dragon guarding the mountain pass');
   await row.getByRole('textbox', { name: 'AC', exact: true }).fill('18');
   await row.getByRole('textbox', { name: 'Max HP', exact: true }).fill('125');
@@ -115,7 +115,7 @@ async function expectRowCaptions(row) {
     ),
   );
   expect(captions.every((caption) => caption.display !== 'none')).toBe(true);
-  const name = row.getByRole('textbox', { name: 'Name', exact: true });
+  const name = row.getByRole('combobox', { name: 'Name', exact: true });
   const captionHeight = await name.evaluate((el) => {
     const cell = el.closest('td');
     return el.getBoundingClientRect().top - cell.getBoundingClientRect().top;

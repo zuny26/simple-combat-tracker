@@ -220,7 +220,7 @@ it.each([
     proportions: [0.5, 0],
   },
 ])(
-  'derives coherent HP facts for Total HP $total, Temp HP $temporary, and damage $damage',
+  'derives coherent HP facts for Max HP $total, Temp HP $temporary, and damage $damage',
   ({
     total,
     temporary,
@@ -456,4 +456,86 @@ it('keeps removal and parking before combat in pre-combat', () => {
   combat.editCreature(second, { init: '' });
   expect(combat.state).toMatchObject({ round: 0, activeId: null, started: false });
   expect(combat.displayOrder.map((creature) => creature.id)).toEqual([second]);
+});
+
+it('applies a profile in place, caps damage, preserves encounter values and saves one completed change', () => {
+  const changes: string[] = [];
+  const combat = createCombat(undefined, {
+    onChange: (state) => changes.push(JSON.stringify(state)),
+  });
+  const id = combat.addCreature();
+  combat.editCreature(id, { name: 'Old name', init: '20', ac: '9', maxHP: 30 });
+  combat.damage(id, 15);
+  combat.editCreature(id, { tempHP: 4 });
+  combat.addTag(id, 'conditions', 'Poisoned');
+  combat.addTag(id, 'other', 'watch');
+  combat.start();
+  const before = changes.length;
+  combat.applyProfile(id, { name: 'Goblin', ac: '13', maxHP: 10 });
+  expect(combat.state.creatures).toEqual([
+    {
+      id,
+      name: 'Goblin',
+      init: '20',
+      ac: '13',
+      maxHP: 10,
+      damageTaken: 10,
+      tempHP: 4,
+      conditions: ['Poisoned'],
+      other: ['watch'],
+    },
+  ]);
+  expect(combat.hp(id)).toMatchObject({ normal: 0, temporary: 4 });
+  expect(combat.state).toMatchObject({ activeId: id, started: true, round: 1 });
+  expect(changes).toHaveLength(before + 1);
+  combat.undo();
+  expect(combat.state.creatures[0]).toMatchObject({ name: 'Old name', maxHP: 30, damageTaken: 15 });
+});
+
+it('allocates profile names from other normalized names and starts blank rows at full HP', () => {
+  const combat = createCombat();
+  const profile = { name: 'Goblin', ac: '13', maxHP: 7 };
+  const first = combat.addCreature();
+  combat.editCreature(first, { name: ' goblin 3 ' });
+  combat.applyProfile(first, profile);
+  expect(combat.state.creatures[0]?.name).toBe('Goblin');
+  expect(combat.hp(first)?.normal).toBe(7);
+  const second = combat.addCreature();
+  combat.editCreature(second, { name: ' GOBLIN\t003 ' });
+  const third = combat.addCreature();
+  combat.applyProfile(third, profile);
+  expect(combat.state.creatures.map((creature) => creature.name)).toEqual([
+    'Goblin',
+    ' GOBLIN\t003 ',
+    'Goblin 4',
+  ]);
+  combat.applyProfile(third, profile);
+  expect(combat.state.creatures[2]?.name).toBe('Goblin 4');
+  const fourth = combat.addCreature();
+  combat.applyProfile(fourth, profile);
+  expect(combat.state.creatures[3]?.name).toBe('Goblin 5');
+});
+
+it('applies only reusable characteristics even when the supplied profile has encounter fields', () => {
+  const combat = createCombat();
+  const id = combat.addCreature();
+  combat.editCreature(id, { init: '20', tempHP: 4 });
+  const profile = { name: 'Goblin', ac: '13', maxHP: 10, init: '1', tempHP: 99 };
+  combat.applyProfile(id, profile);
+  expect(combat.state.creatures[0]).toMatchObject({
+    name: 'Goblin',
+    ac: '13',
+    maxHP: 10,
+    init: '20',
+    tempHP: 4,
+  });
+});
+
+it('allocates one above a zero suffix when no unsuffixed creature exists', () => {
+  const combat = createCombat();
+  const first = combat.addCreature();
+  combat.editCreature(first, { name: 'Goblin 0' });
+  const second = combat.addCreature();
+  combat.applyProfile(second, { name: 'Goblin', ac: '13', maxHP: 7 });
+  expect(combat.state.creatures[1]?.name).toBe('Goblin 1');
 });

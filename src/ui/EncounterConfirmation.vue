@@ -6,8 +6,10 @@ const { focusFallback } = defineProps<{ focusFallback: () => void }>();
 
 interface ConfirmationRequest {
   title: string;
-  message: string;
+  message?: string;
   acceptLabel: string;
+  changes?: readonly string[];
+  destructive?: boolean;
   required: boolean;
   onAccept: () => void;
 }
@@ -75,7 +77,14 @@ defineExpose<EncounterConfirmation>({
       <h2 id="confirm-title" class="confirm-title">
         {{ pending.title }}
       </h2>
-      <p id="confirm-body" class="confirm-body">{{ pending.message }}</p>
+      <div id="confirm-body" class="confirm-body">
+        <p v-if="pending.message">{{ pending.message }}</p>
+        <ul v-if="pending.changes?.length">
+          <li v-for="change in pending.changes" :key="change">
+            <strong>{{ change }}</strong>
+          </li>
+        </ul>
+      </div>
       <div class="confirm-actions">
         <button
           id="confirm-cancel-btn"
@@ -90,7 +99,8 @@ defineExpose<EncounterConfirmation>({
           id="confirm-ok-btn"
           ref="acceptButton"
           type="button"
-          class="btn btn-danger"
+          class="btn"
+          :class="pending.destructive === false ? 'btn-primary' : 'btn-danger'"
           @click="closeConfirmation(true)"
         >
           {{ pending.acceptLabel }}

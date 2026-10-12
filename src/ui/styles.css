@@ -593,8 +593,8 @@ body {
   min-width: 150px;
 }
 .col-actions {
-  width: 92px;
-} /* holds the duplicate + remove buttons */
+  width: 130px;
+} /* holds bookmark, duplicate, and remove buttons */
 
 @media (min-width: 1401px) {
   .combat-table {
@@ -645,6 +645,15 @@ body {
 .f-name {
   font-weight: 700;
   text-align: left;
+}
+.bookmark-difference {
+  display: none;
+}
+[data-bookmark-state='matching'] .bookmark-shape {
+  fill: currentColor;
+}
+[data-bookmark-state='different'] .bookmark-difference {
+  display: block;
 }
 .f-ac,
 .f-maxhp,
@@ -1017,7 +1026,7 @@ tr.downed .f-name {
   color: color-mix(in srgb, var(--color-text) 45%, transparent);
 }
 
-/* ---- Row actions (duplicate + remove) ---- */
+/* ---- Row actions (bookmark, duplicate, remove, and compact menu) ---- */
 .vue-tags .cond-pill {
   max-width: 100%;
   white-space: normal;
@@ -1054,10 +1063,9 @@ tr.downed .f-name {
   justify-content: center;
   gap: 2px;
 }
-.btn-dupe,
-.btn-remove {
-  width: 36px;
-  height: 36px;
+.row-action {
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
   padding: 0;
   border-radius: 999px;
   border: none;
@@ -1070,21 +1078,23 @@ tr.downed .f-name {
   align-items: center;
   justify-content: center;
 }
-.btn-dupe:hover,
-.btn-remove:hover {
+.row-action:enabled:hover {
   background: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
-.btn-dupe:focus-visible,
-.btn-remove:focus-visible {
+.row-action:focus-visible {
   outline: 1px solid var(--color-accent);
   outline-offset: 1px;
 }
-.btn-dupe svg {
+.row-action:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.row-action svg {
   width: 17px;
   height: 17px;
 }
 
-/* Tablet and mobile use the creature menu; desktop shows duplicate and remove buttons. */
+/* CSS selects the desktop actions or their compact menu. */
 .btn-menu {
   display: none;
 }
@@ -1112,11 +1122,20 @@ tr.downed .f-name {
   text-align: left;
   cursor: pointer;
 }
-.row-menu-item svg {
+.row-menu-item svg,
+.row-menu-item .remove-icon {
   flex: none;
   width: 16px;
   height: 16px;
   color: var(--color-accent-700);
+}
+.remove-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1;
 }
 .row-menu-item:hover,
 .row-menu-item:focus-visible {
@@ -1124,7 +1143,8 @@ tr.downed .f-name {
   background: color-mix(in srgb, var(--color-text) 7%, transparent);
 }
 .row-menu-item.is-danger,
-.row-menu-item.is-danger svg {
+.row-menu-item.is-danger svg,
+.row-menu-item.is-danger .remove-icon {
   color: var(--downed);
 }
 .row-menu-item.is-danger:hover,
@@ -1335,6 +1355,12 @@ tr.downed .f-name {
   font: 400 14px/1.5 var(--font-body);
   color: var(--color-neutral-800);
 }
+.confirm-body p {
+  margin: 0;
+}
+.confirm-body li {
+  overflow-wrap: anywhere;
+}
 .confirm-actions {
   display: flex;
   justify-content: flex-end;
@@ -1407,28 +1433,20 @@ tr.downed .f-name {
   .combat-table td.cell-ac input.f-ac {
     padding: 0;
   }
+  .cell-actions .btn-bookmark,
   .cell-actions .btn-dupe,
   .cell-actions .btn-remove {
     display: none;
   }
+  .row-action {
+    width: var(--row-control-h);
+    height: var(--row-control-h);
+  }
   .btn-menu {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: var(--row-control-h);
-    padding: 0;
-    border: none;
-    border-radius: 999px;
-    background: transparent;
-    color: color-mix(in srgb, var(--color-text) 60%, transparent);
-    cursor: pointer;
   }
-  .btn-menu:hover {
-    background: color-mix(in srgb, var(--color-text) 8%, transparent);
-  }
-  .btn-menu:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 1px;
+  .row-action:focus-visible {
+    outline-width: 2px;
   }
   .cell-current .hp-track {
     height: 11px;
@@ -1918,4 +1936,46 @@ tr.downed .f-name {
   opacity: 0.45;
   cursor: default;
   pointer-events: none;
+}
+
+.profile-suggestions {
+  max-height: min(280px, calc(100dvh - 2 * var(--space-2)));
+  overflow-y: auto;
+}
+.profile-suggestions .cond-opt {
+  min-height: var(--control-h);
+  overflow-wrap: anywhere;
+}
+.profile-suggestion {
+  display: flex;
+  align-items: stretch;
+}
+.profile-choice {
+  flex: 1;
+  min-width: 0;
+}
+.profile-choice .cond-opt {
+  width: 100%;
+}
+.profile-delete {
+  display: grid;
+  place-items: center;
+  width: var(--control-h);
+  min-height: var(--control-h);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--downed);
+  cursor: pointer;
+}
+.profile-delete:hover {
+  background: var(--color-accent-100);
+}
+.profile-delete svg {
+  width: var(--space-4);
+  height: var(--space-4);
+}
+.profile-choice[aria-selected='true'] .cond-opt {
+  background: var(--color-accent-100);
+  color: var(--color-accent-800);
 }

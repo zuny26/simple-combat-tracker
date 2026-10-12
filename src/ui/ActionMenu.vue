@@ -97,6 +97,7 @@ function keydown(event: KeyboardEvent) {
         tabindex="-1"
         @click="select(item.id)"
       >
+        <slot name="item-icon" :item="item" />
         <span
           v-if="item.theme"
           class="theme-swatch"

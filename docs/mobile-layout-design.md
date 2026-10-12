@@ -16,7 +16,7 @@ Use continuous creature rows with horizontal separators, repeated field captions
 
 Max HP and Temp HP share equal widths; Damage / Heal takes the remaining space. Its amount input, Dmg button, and Heal button each occupy one third of the control. When the two HP fields and the complete Damage / Heal control cannot fit comfortably, the HP fields share one line and Damage / Heal fills the following line. Conditions and Other retain their lines and Add controls when empty. The Current HP caption has the same gap below the preceding inputs as the Max HP caption.
 
-The UI's Max HP label refers to Total HP in the glossary. The responsive layout changes presentation only, using the same DOM at every viewport. Combat actions, keyboard editing behavior, and persistence keep their existing behavior.
+The responsive layout changes presentation only, using the same DOM at every viewport. Combat actions, keyboard editing behavior, and persistence keep their existing behavior.
 
 ## Validation
 

@@ -2,15 +2,35 @@
 import { computed, reactive, ref, watch } from 'vue';
 import type { Combat, ReadonlyCreature } from '../combat/combat';
 import CreatureTags from './CreatureTags.vue';
+import NameAutocomplete from './NameAutocomplete.vue';
 import ActionMenu from './ActionMenu.vue';
+import BookmarkIcon from './BookmarkIcon.vue';
+import DuplicateIcon from './DuplicateIcon.vue';
+import type { ProfileRegistry, SavedProfile } from '../profiles/profileRegistry';
 
-const { combat, creature } = defineProps<{ combat: Combat; creature: ReadonlyCreature }>();
+const { combat, creature, profiles } = defineProps<{
+  combat: Combat;
+  creature: ReadonlyCreature;
+  profiles: ProfileRegistry;
+}>();
+const bookmarkState = computed(() => profiles.bookmarkState(creature));
+const bookmarkLabel = computed(
+  () =>
+    ({
+      unsaved: 'Save profile',
+      matching: 'Unsave profile',
+      different: 'Update profile',
+    })[bookmarkState.value],
+);
 const emit = defineEmits<{
   'edit-finished': [event: FocusEvent];
   remove: [id: number, trigger: HTMLElement];
+  bookmark: [id: number, trigger: HTMLElement];
+  'delete-profile': [profile: SavedProfile, trigger: HTMLElement];
 }>();
 function rowAction(action: string, trigger: HTMLElement) {
-  if (action === 'duplicate') combat.duplicateCreature(creature.id);
+  if (action === 'bookmark') emit('bookmark', creature.id, trigger);
+  else if (action === 'duplicate') combat.duplicateCreature(creature.id);
   else emit('remove', creature.id, trigger);
 }
 const health = computed(() => combat.hp(creature.id)!);
@@ -78,15 +98,13 @@ function beginHP(field: HPField) {
       </div>
     </td>
     <td class="cell-name" data-label="Name">
-      <input
-        class="f-name"
-        data-combat-field="name"
-        type="text"
-        aria-label="Name"
-        placeholder="—"
-        :value="creature.name"
+      <NameAutocomplete
+        :name="creature.name"
+        :profiles="profiles"
         @input="editText('name', $event)"
         @blur="$emit('edit-finished', $event)"
+        @select="combat.applyProfile(creature.id, $event)"
+        @delete="(profile, trigger) => emit('delete-profile', profile, trigger)"
       />
     </td>
     <td class="cell-ac" data-label="AC">
@@ -216,42 +234,51 @@ function beginHP(field: HPField) {
       <div class="row-actions">
         <button
           type="button"
-          class="btn-dupe"
+          class="row-action btn-bookmark"
+          :data-bookmark-state="bookmarkState"
+          :aria-label="bookmarkLabel"
+          :title="bookmarkLabel"
+          :disabled="!creature.name.trim()"
+          @click="$emit('bookmark', creature.id, $event.currentTarget as HTMLElement)"
+        >
+          <BookmarkIcon :state="bookmarkState" />
+        </button>
+        <button
+          type="button"
+          class="row-action btn-dupe"
           aria-label="Duplicate creature"
           title="Duplicate creature"
           @click="combat.duplicateCreature(creature.id)"
         >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            aria-hidden="true"
-          >
-            <rect x="8" y="8" width="12" height="12" rx="2" />
-            <path d="M16 8V4H4v12h4" />
-          </svg>
+          <DuplicateIcon />
         </button>
         <button
           type="button"
-          class="btn-remove"
+          class="row-action btn-remove"
           aria-label="Remove creature"
           title="Remove creature"
           @click="$emit('remove', creature.id, $event.currentTarget as HTMLElement)"
         >
-          ×
+          <span class="remove-icon" aria-hidden="true">×</span>
         </button>
         <ActionMenu
-          trigger-class="btn-menu"
+          trigger-class="row-action btn-menu"
           panel-class="row-menu"
           label="Creature actions"
           :items="[
+            { id: 'bookmark', label: bookmarkLabel, disabled: !creature.name.trim() },
             { id: 'duplicate', label: 'Duplicate creature' },
             { id: 'remove', label: 'Remove creature', danger: true },
           ]"
           @select="rowAction"
-          >⋮</ActionMenu
         >
+          ⋮
+          <template #item-icon="{ item }">
+            <BookmarkIcon v-if="item.id === 'bookmark'" :state="bookmarkState" />
+            <DuplicateIcon v-else-if="item.id === 'duplicate'" />
+            <span v-else-if="item.id === 'remove'" class="remove-icon" aria-hidden="true">×</span>
+          </template>
+        </ActionMenu>
       </div>
     </td>
   </tr>

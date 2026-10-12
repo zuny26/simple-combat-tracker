@@ -9,11 +9,19 @@ import { THEMES } from './themes';
 import { useDisplayedCreatureOrder } from './useDisplayedCreatureOrder';
 import { useCombatEditGrouping } from './useCombatEditGrouping';
 import type { EncounterStorage } from '../combat/persistence';
+import { createProfileRegistry } from '../profiles/profileRegistry';
+import type { ProfileRegistry, SavedProfile } from '../profiles/profileRegistry';
 
-const { combat, preferenceStorage } = defineProps<{
+const {
+  combat,
+  preferenceStorage,
+  profiles: providedProfiles,
+} = defineProps<{
   combat: Combat;
   preferenceStorage?: EncounterStorage;
+  profiles?: ProfileRegistry;
 }>();
+const profiles = providedProfiles ?? createProfileRegistry();
 const preferences = createPreferences(preferenceStorage);
 const themeItems = computed(() =>
   THEMES.map((theme) => ({
@@ -46,6 +54,48 @@ function removeCreature(id: number, trigger: HTMLElement) {
       acceptLabel: 'Remove',
       required: !combat.isEmptyCreature(id),
       onAccept: () => combat.removeCreature(id),
+    },
+    trigger,
+  );
+}
+
+function bookmarkCreature(id: number, trigger: HTMLElement) {
+  const creature = combat.state.creatures.find((creature) => creature.id === id);
+  if (!creature) return;
+  const saved = profiles.find(creature.name);
+  if (!saved) {
+    profiles.save(creature);
+    return;
+  }
+  if (profiles.bookmarkState(creature) === 'matching') {
+    profiles.delete(creature.name);
+    return;
+  }
+  const proposed = { name: creature.name, ac: creature.ac, maxHP: creature.maxHP };
+  const changes: string[] = [];
+  if (saved.ac !== proposed.ac) changes.push(`AC: ${saved.ac || '—'} → ${proposed.ac || '—'}`);
+  if (saved.maxHP !== proposed.maxHP) changes.push(`Max HP: ${saved.maxHP} → ${proposed.maxHP}`);
+  return confirmation.value?.confirm(
+    {
+      title: `Update saved profile ${saved.name}?`,
+      changes,
+      acceptLabel: 'Update profile',
+      destructive: false,
+      required: true,
+      onAccept: () => profiles.overwrite(proposed),
+    },
+    trigger,
+  );
+}
+
+function deleteProfile(profile: SavedProfile, trigger: HTMLElement) {
+  return confirmation.value?.confirm(
+    {
+      title: `Delete saved profile ${profile.name}?`,
+      message: 'Creatures already in the encounter will keep their values.',
+      acceptLabel: 'Delete profile',
+      required: true,
+      onAccept: () => profiles.delete(profile.name),
     },
     trigger,
   );
@@ -266,6 +316,9 @@ function newCombat(trigger: HTMLElement) {
               :key="creature.id"
               :creature="creature"
               :combat="combat"
+              :profiles="profiles"
+              @bookmark="bookmarkCreature"
+              @delete-profile="deleteProfile"
               @edit-finished="finishEdit"
               @remove="removeCreature"
             />

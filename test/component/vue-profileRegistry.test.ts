@@ -2,11 +2,11 @@ import { mount } from '@vue/test-utils';
 import { expect, it } from 'vitest';
 import EncounterTracker from '../../src/ui/EncounterTracker.vue';
 import { createVueCombat } from '../../src/combat/vueCombat';
-import { createSavedProfiles } from '../../src/profiles/savedProfiles';
+import { createProfileRegistry } from '../../src/profiles/profileRegistry';
 
 it('saves through the row bookmark and reacts to edits in every row without changing combat', async () => {
   const combat = createVueCombat();
-  const profiles = createSavedProfiles();
+  const profiles = createProfileRegistry();
   const first = combat.addCreature();
   combat.editCreature(first, { name: 'Goblin', ac: '13', maxHP: 7 });
   combat.duplicateCreature(first);
@@ -28,7 +28,7 @@ it('saves through the row bookmark and reacts to edits in every row without chan
     );
     await bookmark().trigger('click');
     expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
-    expect(profiles.state.profiles).toEqual([{ name: 'Goblin', ac: '13', maxHP: 7 }]);
+    expect([...profiles.state.profiles.values()]).toEqual([{ name: 'Goblin', ac: '13', maxHP: 7 }]);
     await rows[0]!.get('.f-ac').setValue('13');
     await rows[0]!.get('.f-name').setValue(' goblin 3 ');
     expect(bookmark().attributes('aria-label')).toBe('Saved profile: matching');

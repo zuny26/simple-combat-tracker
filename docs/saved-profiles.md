@@ -15,7 +15,7 @@ A **saved profile** contains those reusable values. A **creature** is a particip
 
 ## Name normalization and identity
 
-Identify saved profiles by normalized name: trim surrounding whitespace, remove a trailing number separated from the name by whitespace, trim again, and compare without regard to capitalization. Preserve capitalization for display and omit the numeric suffix from the saved profile name.
+Identify saved profiles by normalized name: trim surrounding whitespace, remove trailing whitespace-separated numeric suffixes, trim again, and compare without regard to capitalization. Preserve capitalization for display and omit the numeric suffixes from the saved profile name. Normalization is idempotent: `Goblin 2 3` becomes `Goblin`, and normalizing `Goblin` again leaves it unchanged.
 
 For example, `Goblin`, `goblin`, `Goblin 2`, and Goblin surrounded by spaces identify the same saved profile. `R2D2` retains its digits because they are not separated by whitespace. The trailing-number rule also applies to names typed manually.
 

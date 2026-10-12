@@ -19,7 +19,7 @@ for (const width of [320, 768, 1400, 1600]) {
     const row = page.locator('tr[data-id]').first();
     const bookmark = row.locator('.btn-bookmark');
     await expect(bookmark).toBeDisabled();
-    await row.locator('.f-name').fill(' Goblin 2 ');
+    await row.locator('.f-name').fill(' Goblin 2 3 ');
     await row.locator('.f-ac').fill('13');
     await row.locator('.f-maxhp').fill('7');
     await row.locator('.f-temphp').fill('3');
@@ -29,7 +29,7 @@ for (const width of [320, 768, 1400, 1600]) {
     await bookmark.focus();
     await page.keyboard.press('Enter');
     await expect(bookmark).toHaveAccessibleName('Saved profile: matching');
-    await expect(row.locator('.f-name')).toHaveValue(' Goblin 2 ');
+    await expect(row.locator('.f-name')).toHaveValue(' Goblin 2 3 ');
     await expect(row.locator('.hp-number')).toHaveText('5 / 7');
     await page.reload();
     await expect(bookmark).toHaveAccessibleName('Saved profile: matching');

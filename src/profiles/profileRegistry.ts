@@ -11,8 +11,8 @@ export interface SavedProfile {
 
 export type BookmarkState = 'unsaved' | 'matching' | 'different';
 
-export interface SavedProfiles {
-  readonly state: { readonly profiles: readonly SavedProfile[] };
+export interface ProfileRegistry {
+  readonly state: { readonly profiles: ReadonlyMap<string, SavedProfile> };
   bookmarkState(creature: SavedProfile): BookmarkState;
   save(creature: SavedProfile): void;
 }
@@ -20,7 +20,7 @@ export interface SavedProfiles {
 function displayName(name: string): string {
   return name
     .trim()
-    .replace(/\s+\d+$/, '')
+    .replace(/\s[\s\d]+$/, '')
     .trim();
 }
 
@@ -28,17 +28,14 @@ function identity(name: string): string {
   return displayName(name).toLowerCase();
 }
 
-// Stored names are already bases: normalizing them again could remove a second
-// suffix (saving "Goblin 2 3" produces the valid base "Goblin 2").
-
-export function createSavedProfiles(storage?: EncounterStorage): SavedProfiles {
-  function load(): SavedProfile[] {
+export function createProfileRegistry(storage?: EncounterStorage): ProfileRegistry {
+  function load(): Map<string, SavedProfile> {
     try {
       const saved = storage?.getItem(PROFILES_KEY);
-      if (!saved) return [];
+      if (!saved) return new Map();
       const data = JSON.parse(saved);
-      if (data.version !== 1 || !Array.isArray(data.profiles)) return [];
-      const identities = new Set<string>();
+      if (data.version !== 1 || !Array.isArray(data.profiles)) return new Map();
+      const profiles = new Map<string, SavedProfile>();
       for (const profile of data.profiles) {
         if (
           !profile ||
@@ -48,26 +45,22 @@ export function createSavedProfiles(storage?: EncounterStorage): SavedProfiles {
           typeof profile.ac !== 'string' ||
           typeof profile.maxHP !== 'number' ||
           !Number.isFinite(profile.maxHP) ||
-          profile.maxHP < 0 ||
-          identities.has(profile.name.toLowerCase())
+          profile.maxHP < 0
         )
-          return [];
-        identities.add(profile.name.toLowerCase());
+          return new Map();
+        const name = displayName(profile.name);
+        const key = identity(name);
+        if (!name || profiles.has(key)) return new Map();
+        profiles.set(key, { name, ac: profile.ac, maxHP: profile.maxHP });
       }
-      return data.profiles.map((profile: SavedProfile) => ({
-        name: profile.name,
-        ac: profile.ac,
-        maxHP: profile.maxHP,
-      }));
+      return profiles;
     } catch {
-      return [];
+      return new Map();
     }
   }
   const state = reactive({ profiles: load() });
   function bookmarkState(creature: SavedProfile): BookmarkState {
-    const profile = state.profiles.find(
-      (profile) => profile.name.toLowerCase() === identity(creature.name),
-    );
+    const profile = state.profiles.get(identity(creature.name));
     if (!profile) return 'unsaved';
     return profile.ac === creature.ac && profile.maxHP === creature.maxHP
       ? 'matching'
@@ -76,9 +69,12 @@ export function createSavedProfiles(storage?: EncounterStorage): SavedProfiles {
   function save(creature: SavedProfile) {
     const name = displayName(creature.name);
     if (!name || bookmarkState(creature) !== 'unsaved') return;
-    state.profiles.push({ name, ac: creature.ac, maxHP: creature.maxHP });
+    state.profiles.set(identity(name), { name, ac: creature.ac, maxHP: creature.maxHP });
     try {
-      storage?.setItem(PROFILES_KEY, JSON.stringify({ version: 1, profiles: state.profiles }));
+      storage?.setItem(
+        PROFILES_KEY,
+        JSON.stringify({ version: 1, profiles: [...state.profiles.values()] }),
+      );
     } catch {
       /* Remain usable in memory. */
     }

@@ -9,8 +9,8 @@ import { THEMES } from './themes';
 import { useDisplayedCreatureOrder } from './useDisplayedCreatureOrder';
 import { useCombatEditGrouping } from './useCombatEditGrouping';
 import type { EncounterStorage } from '../combat/persistence';
-import { createSavedProfiles } from '../profiles/savedProfiles';
-import type { SavedProfiles } from '../profiles/savedProfiles';
+import { createProfileRegistry } from '../profiles/profileRegistry';
+import type { ProfileRegistry } from '../profiles/profileRegistry';
 
 const {
   combat,
@@ -19,9 +19,9 @@ const {
 } = defineProps<{
   combat: Combat;
   preferenceStorage?: EncounterStorage;
-  profiles?: SavedProfiles;
+  profiles?: ProfileRegistry;
 }>();
-const profiles = providedProfiles ?? createSavedProfiles();
+const profiles = providedProfiles ?? createProfileRegistry();
 const preferences = createPreferences(preferenceStorage);
 const themeItems = computed(() =>
   THEMES.map((theme) => ({

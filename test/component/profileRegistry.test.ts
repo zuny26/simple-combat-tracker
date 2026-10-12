@@ -1,10 +1,10 @@
 // @vitest-environment node
 import { expect, it } from 'vitest';
-import { createSavedProfiles, PROFILES_KEY } from '../../src/profiles/savedProfiles';
+import { createProfileRegistry, PROFILES_KEY } from '../../src/profiles/profileRegistry';
 import { createBrowserStorage, createPersistedCombat } from '../../src/combat/persistence';
 
 it('saves only reusable characteristics with a normalized display name without changing the creature', () => {
-  const profiles = createSavedProfiles();
+  const profiles = createProfileRegistry();
   const creature = {
     name: ' Goblin 2 ',
     ac: '13',
@@ -18,7 +18,7 @@ it('saves only reusable characteristics with a normalized display name without c
   const before = structuredClone(creature);
   expect(profiles.bookmarkState(creature)).toBe('unsaved');
   profiles.save(creature);
-  expect(profiles.state.profiles).toEqual([{ name: 'Goblin', ac: '13', maxHP: 7 }]);
+  expect([...profiles.state.profiles.values()]).toEqual([{ name: 'Goblin', ac: '13', maxHP: 7 }]);
   expect(profiles.bookmarkState(creature)).toBe('matching');
   expect(creature).toEqual(before);
 });
@@ -43,13 +43,14 @@ it.each([
   ].map((profile) => JSON.stringify({ version: 1, profiles: [profile] })),
   '{"version":1,"profiles":[{"name":"Goblin","ac":"13","maxHP":1e400}]}',
   JSON.stringify({ version: 1, profiles: [validProfile, { ...validProfile, name: 'goblin' }] }),
+  JSON.stringify({ version: 1, profiles: [validProfile, { ...validProfile, name: 'Goblin 2 3' }] }),
 ])('recovers malformed profile storage %s and can save again', (saved) => {
   const storage = memoryStorage();
   storage.setItem(PROFILES_KEY, saved);
-  const profiles = createSavedProfiles(storage);
-  expect(profiles.state.profiles).toEqual([]);
+  const profiles = createProfileRegistry(storage);
+  expect([...profiles.state.profiles.values()]).toEqual([]);
   profiles.save(validProfile);
-  expect(createSavedProfiles(storage).state.profiles).toEqual([validProfile]);
+  expect([...createProfileRegistry(storage).state.profiles.values()]).toEqual([validProfile]);
 });
 
 it.each(['read', 'write', 'both'])(
@@ -67,7 +68,7 @@ it.each(['read', 'write', 'both'])(
         memory.setItem(key, value);
       },
     };
-    const profiles = createSavedProfiles(storage);
+    const profiles = createProfileRegistry(storage);
     const combat = createPersistedCombat(storage);
     const id = combat.addCreature();
     combat.editCreature(id, { name: 'Goblin', maxHP: 7 });
@@ -77,7 +78,7 @@ it.each(['read', 'write', 'both'])(
     expect(combat.hp(id)?.current).toBe(5);
     failing = false;
     profiles.save({ name: 'Orc', ac: '', maxHP: 0 });
-    expect(createSavedProfiles(storage).state.profiles).toEqual([
+    expect([...createProfileRegistry(storage).state.profiles.values()]).toEqual([
       validProfile,
       { name: 'Orc', ac: '', maxHP: 0 },
     ]);
@@ -85,7 +86,7 @@ it.each(['read', 'write', 'both'])(
 );
 
 it('defers browser storage access and remains usable when its getter is unavailable', () => {
-  const profiles = createSavedProfiles(createBrowserStorage());
+  const profiles = createProfileRegistry(createBrowserStorage());
   profiles.save(validProfile);
   expect(profiles.bookmarkState(validProfile)).toBe('matching');
 });
@@ -96,37 +97,37 @@ it('strips unknown stored characteristics before saving profiles again', () => {
     PROFILES_KEY,
     JSON.stringify({ version: 1, profiles: [{ ...validProfile, init: '20', tempHP: 4 }] }),
   );
-  const profiles = createSavedProfiles(storage);
-  expect(profiles.state.profiles).toEqual([validProfile]);
+  const profiles = createProfileRegistry(storage);
+  expect([...profiles.state.profiles.values()]).toEqual([validProfile]);
   profiles.save({ name: 'Orc', ac: '', maxHP: 0 });
   expect(JSON.parse(storage.getItem(PROFILES_KEY)!).profiles[0]).toEqual(validProfile);
 });
 
 it('shares identity across manual names and ignores encounter-only changes', () => {
-  const profiles = createSavedProfiles();
+  const profiles = createProfileRegistry();
   profiles.save({ name: 'Goblin', ac: '13', maxHP: 7 });
   for (const name of ['Goblin', 'goblin', ' Goblin ', 'Goblin 2', ' gObLiN\t003 ']) {
     const creature = { name, ac: '13', maxHP: 7, init: '4', damageTaken: 7, tempHP: 8 };
     expect(profiles.bookmarkState(creature)).toBe('matching');
     profiles.save(creature);
   }
-  expect(profiles.state.profiles).toEqual([{ name: 'Goblin', ac: '13', maxHP: 7 }]);
+  expect([...profiles.state.profiles.values()]).toEqual([{ name: 'Goblin', ac: '13', maxHP: 7 }]);
   profiles.save({ name: ' R2D2 ', ac: '', maxHP: 0 });
-  expect(profiles.state.profiles[1]?.name).toBe('R2D2');
+  expect(profiles.state.profiles.get('r2d2')?.name).toBe('R2D2');
   expect(profiles.bookmarkState({ name: 'R2D', ac: '', maxHP: 0 })).toBe('unsaved');
   profiles.save({ name: '   ', ac: '10', maxHP: 5 });
-  expect(profiles.state.profiles).toHaveLength(2);
+  expect(profiles.state.profiles.size).toBe(2);
 });
 
 it('tracks changed names, AC and Total HP while preserving existing profiles on conflicting saves', () => {
-  const profiles = createSavedProfiles();
+  const profiles = createProfileRegistry();
   const creature = { name: 'Goblin', ac: '13', maxHP: 7 };
   profiles.save(creature);
   for (const change of [{ ac: '15' }, { maxHP: 12 }]) {
     const edited = { ...creature, ...change };
     expect(profiles.bookmarkState(edited)).toBe('different');
     profiles.save(edited);
-    expect(profiles.state.profiles).toEqual([creature]);
+    expect([...profiles.state.profiles.values()]).toEqual([creature]);
   }
   expect(profiles.bookmarkState({ ...creature, name: 'Orc' })).toBe('unsaved');
   expect(profiles.bookmarkState(creature)).toBe('matching');
@@ -142,23 +143,48 @@ function memoryStorage() {
   };
 }
 
-it('removes only one trailing number and retains that base identity after reload', () => {
+it('normalizes repeated numeric suffixes idempotently across saves and reloads', () => {
   const storage = memoryStorage();
-  const profiles = createSavedProfiles(storage);
+  const profiles = createProfileRegistry(storage);
   const creature = { name: ' Goblin 2 3 ', ac: '13', maxHP: 7 };
   profiles.save(creature);
-  expect(profiles.state.profiles).toEqual([{ name: 'Goblin 2', ac: '13', maxHP: 7 }]);
-  const restored = createSavedProfiles(storage);
+  expect([...profiles.state.profiles.values()]).toEqual([{ name: 'Goblin', ac: '13', maxHP: 7 }]);
+  expect(profiles.bookmarkState({ ...creature, name: 'Goblin' })).toBe('matching');
+  expect(profiles.state.profiles.get('goblin')).toEqual(validProfile);
+  const restored = createProfileRegistry(storage);
   expect(restored.bookmarkState(creature)).toBe('matching');
   restored.save({ ...creature, name: ' goblin 2 4 ' });
-  expect(restored.state.profiles).toHaveLength(1);
+  restored.save({ ...creature, name: ' goblin  2\t4  ' });
+  restored.save(restored.state.profiles.get('goblin')!);
+  expect(restored.state.profiles.size).toBe(1);
+});
+
+it('uses arbitrary creature names as safe registry keys', () => {
+  const profiles = createProfileRegistry();
+  for (const name of ['__proto__', 'constructor', 'toString']) {
+    profiles.save({ name, ac: '13', maxHP: 7 });
+    expect(profiles.state.profiles.get(name.toLowerCase())).toEqual({ name, ac: '13', maxHP: 7 });
+    expect(profiles.bookmarkState({ name: `${name} 2`, ac: '13', maxHP: 7 })).toBe('matching');
+  }
+  expect(profiles.state.profiles.size).toBe(3);
+});
+
+it('normalizes existing stored profile names with the same rules as creature names', () => {
+  const storage = memoryStorage();
+  storage.setItem(
+    PROFILES_KEY,
+    JSON.stringify({ version: 1, profiles: [{ ...validProfile, name: 'Goblin 2' }] }),
+  );
+  const profiles = createProfileRegistry(storage);
+  expect([...profiles.state.profiles.values()]).toEqual([validProfile]);
+  expect(profiles.bookmarkState({ ...validProfile, name: 'goblin 2 3' })).toBe('matching');
 });
 
 it('round trips profiles independently and does not write equivalent or conflicting saves', () => {
   const storage = memoryStorage();
   storage.setItem('dnd-combat-tracker-v1', 'encounter');
   storage.setItem('dnd-ct-theme', 'dark');
-  const profiles = createSavedProfiles(storage);
+  const profiles = createProfileRegistry(storage);
   profiles.save({ name: ' Goblin 2 ', ac: '13', maxHP: 7 });
   const saved = storage.getItem(PROFILES_KEY)!;
   expect(JSON.parse(saved)).toEqual({
@@ -167,7 +193,7 @@ it('round trips profiles independently and does not write equivalent or conflict
   });
   const formatted = JSON.stringify(JSON.parse(saved), null, 2);
   storage.setItem(PROFILES_KEY, formatted);
-  const restored = createSavedProfiles(storage);
+  const restored = createProfileRegistry(storage);
   expect(restored.state.profiles).toEqual(profiles.state.profiles);
   restored.save({ name: ' goblin 3 ', ac: '13', maxHP: 7 });
   restored.save({ name: 'Goblin', ac: '15', maxHP: 12 });

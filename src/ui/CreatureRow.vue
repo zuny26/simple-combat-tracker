@@ -3,12 +3,12 @@ import { computed, reactive, ref, watch } from 'vue';
 import type { Combat, ReadonlyCreature } from '../combat/combat';
 import CreatureTags from './CreatureTags.vue';
 import ActionMenu from './ActionMenu.vue';
-import type { SavedProfiles } from '../profiles/savedProfiles';
+import type { ProfileRegistry } from '../profiles/profileRegistry';
 
 const { combat, creature, profiles } = defineProps<{
   combat: Combat;
   creature: ReadonlyCreature;
-  profiles: SavedProfiles;
+  profiles: ProfileRegistry;
 }>();
 const bookmarkState = computed(() => profiles.bookmarkState(creature));
 const bookmarkLabel = computed(

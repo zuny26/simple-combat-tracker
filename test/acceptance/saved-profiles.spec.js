@@ -251,8 +251,12 @@ test('name autocomplete keeps input focus, filters, navigates, dismisses and app
   await row.locator('.f-init').click();
   await expect(list).toHaveCount(0);
   await expect(row.locator('.f-init')).toBeFocused();
+  await name.fill('gOb');
+  await expect(list.getByRole('option')).toHaveText(['Goblin']);
   await name.fill('Dragon');
-  await expect(page.getByRole('option')).toHaveCount(0);
+  await expect(list).toHaveCount(0);
+  await expect(name).toHaveAttribute('aria-expanded', 'false');
+  await expect(name).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(name).toHaveValue('Dragon');
   await name.fill('');

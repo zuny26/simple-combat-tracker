@@ -39,7 +39,8 @@ watch(
   suggestions,
   () => {
     selected.value = -1;
-    reposition();
+    if (!suggestions.value.length) void close(false);
+    else reposition();
   },
   { flush: 'post' },
 );
@@ -130,7 +131,6 @@ async function keydown(event: KeyboardEvent) {
       >
         {{ profile.name }}
       </button>
-      <div v-if="!suggestions.length" class="cond-empty">No matching profiles</div>
     </div>
   </Teleport>
 </template>

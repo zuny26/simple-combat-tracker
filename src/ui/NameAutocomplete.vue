@@ -8,10 +8,12 @@ const emit = defineEmits<{
   input: [event: Event];
   blur: [event: FocusEvent];
   select: [profile: SavedProfile];
+  delete: [profile: SavedProfile, trigger: HTMLElement];
 }>();
 const suggestions = computed(() => profiles.matching(name));
 const selected = ref(-1);
 const listId = useId();
+let skipNextFocus = false;
 const { open, trigger, panel, position, show, close, reposition, runAfterClose } =
   usePanelLifecycle<HTMLInputElement>({
     alignment: 'left',
@@ -49,22 +51,50 @@ watch(
 function browse() {
   if (suggestions.value.length) void show();
 }
+function focus() {
+  if (skipNextFocus) skipNextFocus = false;
+  else browse();
+}
 async function input(event: Event) {
   emit('input', event);
   await nextTick();
   browse();
 }
 function blur(event: FocusEvent) {
-  void close(false);
+  if (!panel.value?.contains(event.relatedTarget as Node | null)) void close(false);
   emit('blur', event);
+}
+async function deleteProfile(profile: SavedProfile) {
+  if (!(await close(false)) || !trigger.value) return;
+  // The suggestion is gone; restore modal focus to Name without reopening the picker.
+  skipNextFocus = true;
+  emit('delete', profile, trigger.value);
 }
 function select(profile: SavedProfile) {
   return runAfterClose(() => emit('select', profile));
+}
+function deleteKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    skipNextFocus = true;
+    return;
+  }
+  if (event.key !== 'Tab') return;
+  skipNextFocus = true;
+  trigger.value?.focus();
+  void close(false);
+  if (event.shiftKey) event.preventDefault();
 }
 async function keydown(event: KeyboardEvent) {
   if (event.isComposing) return;
   if (event.key === 'Tab') {
     void close(false);
+    return;
+  }
+  if (event.key === 'ArrowRight' && open.value && selected.value >= 0) {
+    event.preventDefault();
+    panel.value
+      ?.querySelector<HTMLButtonElement>(`[data-delete-index="${selected.value}"]`)
+      ?.focus();
     return;
   }
   if (event.key === 'Enter' && open.value && selected.value >= 0) {
@@ -96,14 +126,14 @@ async function keydown(event: KeyboardEvent) {
     role="combobox"
     aria-label="Name"
     aria-autocomplete="list"
-    aria-haspopup="listbox"
+    aria-haspopup="grid"
     :aria-expanded="open"
     :aria-controls="open ? listId : undefined"
     :aria-activedescendant="open && selected >= 0 ? `${listId}-${selected}` : undefined"
     autocomplete="off"
     placeholder="—"
     :value="name"
-    @focus="browse"
+    @focus="focus"
     @input="input"
     @blur="blur"
     @keydown="keydown"
@@ -115,23 +145,57 @@ async function keydown(event: KeyboardEvent) {
       ref="panel"
       class="cond-pop profile-suggestions"
       :style="position"
-      role="listbox"
+      role="grid"
       aria-label="Saved profiles"
+      @focusout="open && !panel?.contains($event.relatedTarget as Node | null) && close(false)"
     >
-      <button
+      <div
         v-for="(profile, index) in suggestions"
-        :id="`${listId}-${index}`"
         :key="profile.name"
-        type="button"
-        role="option"
-        class="cond-opt"
-        :aria-selected="selected === index"
-        tabindex="-1"
-        @pointerdown.prevent
-        @click="select(profile)"
+        class="profile-suggestion"
+        role="row"
       >
-        {{ profile.name }}
-      </button>
+        <div
+          :id="`${listId}-${index}`"
+          role="gridcell"
+          class="profile-choice"
+          :aria-selected="selected === index"
+        >
+          <button
+            type="button"
+            class="cond-opt"
+            tabindex="-1"
+            @pointerdown.prevent
+            @click="select(profile)"
+          >
+            {{ profile.name }}
+          </button>
+        </div>
+        <div role="gridcell">
+          <button
+            type="button"
+            class="profile-delete"
+            :aria-label="`Delete saved profile ${profile.name}`"
+            :data-delete-index="index"
+            tabindex="-1"
+            @pointerdown.prevent
+            @click="deleteProfile(profile)"
+            @keydown="deleteKeydown"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7" />
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
   </Teleport>
 </template>

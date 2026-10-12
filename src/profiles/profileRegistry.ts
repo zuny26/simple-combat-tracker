@@ -19,6 +19,7 @@ export interface ProfileRegistry {
   matching(query: string): readonly SavedProfile[];
   save(creature: SavedProfile): void;
   overwrite(creature: SavedProfile): void;
+  delete(name: string): void;
 }
 
 export function createProfileRegistry(storage?: EncounterStorage): ProfileRegistry {
@@ -88,11 +89,22 @@ export function createProfileRegistry(storage?: EncounterStorage): ProfileRegist
       /* Remain usable in memory. */
     }
   }
+  function deleteProfile(name: string) {
+    if (state.profiles.delete(identity(name))) persist();
+  }
   function matching(query: string): readonly SavedProfile[] {
     const key = identity(query);
     return [...readonly(state).profiles.values()].filter((profile) =>
       identity(profile.name).includes(key),
     );
   }
-  return { state: readonly(state), find, matching, bookmarkState, save, overwrite };
+  return {
+    state: readonly(state),
+    find,
+    matching,
+    bookmarkState,
+    save,
+    overwrite,
+    delete: deleteProfile,
+  };
 }

@@ -10,7 +10,7 @@ import { useDisplayedCreatureOrder } from './useDisplayedCreatureOrder';
 import { useCombatEditGrouping } from './useCombatEditGrouping';
 import type { EncounterStorage } from '../combat/persistence';
 import { createProfileRegistry } from '../profiles/profileRegistry';
-import type { ProfileRegistry } from '../profiles/profileRegistry';
+import type { ProfileRegistry, SavedProfile } from '../profiles/profileRegistry';
 
 const {
   combat,
@@ -79,6 +79,19 @@ function bookmarkCreature(id: number, trigger: HTMLElement) {
       destructive: false,
       required: true,
       onAccept: () => profiles.overwrite(proposed),
+    },
+    trigger,
+  );
+}
+
+function deleteProfile(profile: SavedProfile, trigger: HTMLElement) {
+  return confirmation.value?.confirm(
+    {
+      title: `Delete saved profile ${profile.name}?`,
+      message: 'Creatures already in the encounter will keep their values.',
+      acceptLabel: 'Delete profile',
+      required: true,
+      onAccept: () => profiles.delete(profile.name),
     },
     trigger,
   );
@@ -301,6 +314,7 @@ function newCombat(trigger: HTMLElement) {
               :combat="combat"
               :profiles="profiles"
               @bookmark="bookmarkCreature"
+              @delete-profile="deleteProfile"
               @edit-finished="finishEdit"
               @remove="removeCreature"
             />

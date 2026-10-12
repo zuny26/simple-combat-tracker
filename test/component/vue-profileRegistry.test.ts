@@ -134,7 +134,7 @@ it('closes name suggestions before applying and saving a profile, then updates H
   const combat = createVueCombat({
     getItem: () => null,
     setItem: () => {
-      if (applying) closedAtSave = !wrapper.find('[role="listbox"]').exists();
+      if (applying) closedAtSave = !wrapper.find('[role="grid"]').exists();
     },
   });
   const id = combat.addCreature();
@@ -146,18 +146,67 @@ it('closes name suggestions before applying and saving a profile, then updates H
   });
   try {
     await wrapper.get('.f-name').trigger('focus');
-    expect(wrapper.get('[role="option"]').text()).toContain('Goblin');
+    expect(wrapper.get('.profile-choice .cond-opt').text()).toContain('Goblin');
     applying = true;
-    await wrapper.get('[role="option"]').trigger('click');
+    await wrapper.get('.profile-choice .cond-opt').trigger('click');
     await flushPromises();
     expect(closedAtSave).toBe(true);
-    expect(wrapper.find('[role="listbox"]').exists()).toBe(false);
+    expect(wrapper.find('[role="grid"]').exists()).toBe(false);
     expect(wrapper.get('.f-name').element).toHaveProperty('value', 'Goblin');
     expect(wrapper.get('.f-ac').element).toHaveProperty('value', '13');
     expect(wrapper.get('.f-maxhp').element).toHaveProperty('value', '7');
     expect(wrapper.get('.btn-bookmark').attributes('aria-label')).toBe('Profile saved');
     expect(combat.state.creatures).toHaveLength(1);
     expect(combat.hp(id)?.normal).toBe(7);
+  } finally {
+    wrapper.unmount();
+  }
+});
+
+it('cancels or confirms profile deletion without applying suggestions or changing any encounter creature', async () => {
+  const combat = createVueCombat();
+  const profiles = createProfileRegistry();
+  profiles.save({ name: 'Goblin', ac: '13', maxHP: 7 });
+  profiles.save({ name: 'Orc', ac: '15', maxHP: 20 });
+  const first = combat.addCreature();
+  combat.applyProfile(first, profiles.find('Goblin')!);
+  combat.duplicateCreature(first);
+  const third = combat.addCreature();
+  combat.editCreature(third, { ac: '18', maxHP: 30, tempHP: 4 });
+  const before = JSON.stringify(combat.state);
+  const history = combat.history.undoCount;
+  const wrapper = mount(EncounterTracker, {
+    attachTo: document.body,
+    props: { combat, profiles },
+    global: { stubs: { Teleport: true } },
+  });
+  try {
+    const name = wrapper.get(`tr[data-id="${third}"] .f-name`);
+    const requestDeletion = async () => {
+      await name.trigger('focus');
+      await wrapper.get('button[aria-label="Delete saved profile Goblin"]').trigger('click');
+      await flushPromises();
+      expect(wrapper.find('[role="grid"]').exists()).toBe(false);
+      expect(wrapper.get('[role="dialog"] h2').text()).toBe('Delete saved profile Goblin?');
+      expect(JSON.stringify(combat.state)).toBe(before);
+    };
+    await requestDeletion();
+    await wrapper.get('#confirm-cancel-btn').trigger('click');
+    expect(profiles.find('Goblin')).toBeDefined();
+    await requestDeletion();
+    await wrapper.get('#confirm-ok-btn').trigger('click');
+    expect(profiles.find('Goblin')).toBeUndefined();
+    for (const id of [first, combat.state.creatures[1]!.id]) {
+      expect(wrapper.get(`tr[data-id="${id}"] .btn-bookmark`).attributes('aria-label')).toBe(
+        'Save profile',
+      );
+    }
+    expect(JSON.stringify(combat.state)).toBe(before);
+    expect(combat.history.undoCount).toBe(history);
+    await name.trigger('focus');
+    expect(wrapper.findAll('.profile-choice .cond-opt').map((option) => option.text())).toEqual([
+      'Orc',
+    ]);
   } finally {
     wrapper.unmount();
   }

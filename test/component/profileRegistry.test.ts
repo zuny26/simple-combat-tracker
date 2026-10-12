@@ -249,3 +249,31 @@ it('browses all profiles and filters normalized names by case-insensitive substr
   ]);
   expect(profiles.matching('dragon')).toEqual([]);
 });
+
+it('deletes only the identified profile across reloads without changing encounters or preferences', () => {
+  const storage = memoryStorage();
+  const combat = createPersistedCombat(storage);
+  const id = combat.addCreature();
+  combat.editCreature(id, { name: 'Goblin 2', ac: '13', maxHP: 7, tempHP: 3 });
+  combat.damage(id, 4);
+  storage.setItem('dnd-ct-theme', 'dark');
+  const before = JSON.stringify(combat.state);
+  const profiles = createProfileRegistry(storage);
+  profiles.save(validProfile);
+  profiles.save({ name: 'Orc', ac: '15', maxHP: 20 });
+  profiles.delete(' goblin 3 ');
+  expect(profiles.find('Goblin')).toBeUndefined();
+  expect(profiles.bookmarkState(combat.state.creatures[0]!)).toBe('unsaved');
+  expect(profiles.matching('')).toEqual([{ name: 'Orc', ac: '15', maxHP: 20 }]);
+  expect(createProfileRegistry(storage).matching('')).toEqual([
+    { name: 'Orc', ac: '15', maxHP: 20 },
+  ]);
+  expect(JSON.stringify(combat.state)).toBe(before);
+  expect(createPersistedCombat(storage).state).toEqual(JSON.parse(before));
+  expect(storage.getItem('dnd-ct-theme')).toBe('dark');
+  const saved = storage.getItem(PROFILES_KEY);
+  profiles.delete('Missing');
+  expect(storage.getItem(PROFILES_KEY)).toBe(saved);
+  profiles.delete('Orc');
+  expect(createProfileRegistry(storage).matching('')).toEqual([]);
+});

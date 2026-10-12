@@ -6,7 +6,7 @@ import NameAutocomplete from './NameAutocomplete.vue';
 import ActionMenu from './ActionMenu.vue';
 import BookmarkIcon from './BookmarkIcon.vue';
 import DuplicateIcon from './DuplicateIcon.vue';
-import type { ProfileRegistry } from '../profiles/profileRegistry';
+import type { ProfileRegistry, SavedProfile } from '../profiles/profileRegistry';
 
 const { combat, creature, profiles } = defineProps<{
   combat: Combat;
@@ -26,6 +26,7 @@ const emit = defineEmits<{
   'edit-finished': [event: FocusEvent];
   remove: [id: number, trigger: HTMLElement];
   bookmark: [id: number, trigger: HTMLElement];
+  'delete-profile': [profile: SavedProfile, trigger: HTMLElement];
 }>();
 function rowAction(action: string, trigger: HTMLElement) {
   if (action === 'bookmark') emit('bookmark', creature.id, trigger);
@@ -103,6 +104,7 @@ function beginHP(field: HPField) {
         @input="editText('name', $event)"
         @blur="$emit('edit-finished', $event)"
         @select="combat.applyProfile(creature.id, $event)"
+        @delete="(profile, trigger) => emit('delete-profile', profile, trigger)"
       />
     </td>
     <td class="cell-ac" data-label="AC">

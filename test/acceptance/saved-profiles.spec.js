@@ -65,9 +65,9 @@ for (const width of [320, 768, 1400, 1600]) {
       await page.locator(width <= 640 ? '#app-menu-btn' : '#theme-trigger').click();
       await page.getByRole('menuitemradio', { name: theme.label }).click();
       await row.locator('.f-name').focus();
-      const suggestions = page.getByRole('listbox', { name: 'Saved profiles' });
+      const suggestions = page.getByRole('grid', { name: 'Saved profiles' });
       await expect(suggestions).toBeVisible();
-      await expect(suggestions.getByRole('option')).toHaveText(['Goblin']);
+      await expect(suggestions.locator('.profile-choice')).toHaveText(['Goblin']);
       const bounds = await suggestions.boundingBox();
       const inputBounds = await row.locator('.f-name').boundingBox();
       expect(bounds.width).toBeCloseTo(inputBounds.width, 1);
@@ -118,10 +118,10 @@ for (const width of [320, 768, 1400, 1600]) {
     await page.reload();
     await page.locator('#add-btn').click();
     await row.locator('.f-name').focus();
-    await expect(page.getByRole('option')).toHaveText(['Goblin']);
+    await expect(page.locator('.profile-choice')).toHaveText(['Goblin']);
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
-    await expect(page.getByRole('listbox')).toHaveCount(0);
+    await expect(page.getByRole('grid')).toHaveCount(0);
     await expect(row.locator('.f-name')).toHaveValue('Goblin');
     await expect(row.locator('.f-name')).toBeFocused();
     await expect(row.locator('.f-ac')).toHaveValue('13');
@@ -229,9 +229,9 @@ test('name autocomplete keeps input focus, filters, navigates, dismisses and app
   await page.locator('#add-btn').click();
   const row = page.locator('tr[data-id]').last();
   const name = row.locator('.f-name');
-  const list = page.getByRole('listbox');
+  const list = page.getByRole('grid');
   await name.focus();
-  await expect(list.getByRole('option')).toHaveText(['Goblin', 'Orc']);
+  await expect(list.locator('.profile-choice')).toHaveText(['Goblin', 'Orc']);
   for (const width of [768, 320, 1600]) {
     await page.setViewportSize({ width, height: 900 });
     await expect
@@ -246,16 +246,16 @@ test('name autocomplete keeps input focus, filters, navigates, dismisses and app
   }
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('ArrowDown');
-  await expect(list.getByRole('option', { selected: true })).toHaveText('Orc');
+  await expect(list.getByRole('gridcell', { selected: true })).toHaveText('Orc');
   await page.keyboard.press('ArrowUp');
-  await expect(list.getByRole('option', { selected: true })).toHaveText('Goblin');
+  await expect(list.getByRole('gridcell', { selected: true })).toHaveText('Goblin');
   await expect(name).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(list).toHaveCount(0);
   await expect(name).toBeFocused();
   await expect(name).toHaveValue('');
   await name.fill(' gOb ');
-  await expect(list.getByRole('option')).toHaveText(['Goblin']);
+  await expect(list.locator('.profile-choice')).toHaveText(['Goblin']);
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('Tab');
   await expect(row.locator('.f-ac')).toBeFocused();
@@ -267,7 +267,7 @@ test('name autocomplete keeps input focus, filters, navigates, dismisses and app
   await expect(list).toHaveCount(0);
   await expect(row.locator('.f-init')).toBeFocused();
   await name.fill('gOb');
-  await expect(list.getByRole('option')).toHaveText(['Goblin']);
+  await expect(list.locator('.profile-choice')).toHaveText(['Goblin']);
   await name.fill('Dragon');
   await expect(list).toHaveCount(0);
   await expect(name).toHaveAttribute('aria-expanded', 'false');
@@ -275,8 +275,8 @@ test('name autocomplete keeps input focus, filters, navigates, dismisses and app
   await page.keyboard.press('Enter');
   await expect(name).toHaveValue('Dragon');
   await name.fill('');
-  await expect(list.getByRole('option')).toHaveText(['Goblin', 'Orc']);
-  await list.getByRole('option', { name: 'Goblin', exact: true }).click();
+  await expect(list.locator('.profile-choice')).toHaveText(['Goblin', 'Orc']);
+  await list.getByRole('gridcell', { name: 'Goblin', exact: true }).click();
   await expect(list).toHaveCount(0);
   await expect(name).toBeFocused();
   await expect(name).toHaveValue('Goblin 2');
@@ -294,3 +294,154 @@ test('name autocomplete keeps input focus, filters, navigates, dismisses and app
   await expect(next.locator('.f-name')).toHaveValue('Goblin 3');
   await expect(next.locator('.btn-bookmark')).toHaveAccessibleName('Profile saved');
 });
+
+for (const width of [320, 1600]) {
+  test(`profile deletion closes suggestions, preserves creatures, and restores focus at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('./');
+    await page.locator('#usage-dismiss-btn').click();
+    for (const [name, ac, maxHP] of [
+      ['Goblin', '13', '7'],
+      ['Orc', '15', '20'],
+    ]) {
+      await page.locator('#add-btn').click();
+      const row = page.locator('tr[data-id]').last();
+      await row.locator('.f-name').fill(name);
+      await row.locator('.f-ac').fill(ac);
+      await row.locator('.f-maxhp').fill(maxHP);
+      if (width === 320) {
+        await row.getByRole('button', { name: 'Creature actions' }).click();
+        await page.getByRole('menuitem', { name: 'Save profile', exact: true }).click();
+      } else await row.locator('.btn-bookmark').click();
+    }
+    await page.locator('#add-btn').click();
+    const reusedId = await page.locator('tr[data-id]').last().getAttribute('data-id');
+    const reused = page.locator(`tr[data-id="${reusedId}"]`);
+    await reused.locator('.f-name').focus();
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    await expect(reused.locator('.f-name')).toHaveValue('Goblin 2');
+    await page.locator('#add-btn').click();
+    const rowId = await page.locator('tr[data-id]').last().getAttribute('data-id');
+    const row = page.locator(`tr[data-id="${rowId}"]`);
+    const name = row.locator('.f-name');
+    await row.locator('.f-ac').fill('18');
+    await row.locator('.f-maxhp').fill('30');
+    await name.fill('gob');
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
+    const encounter = await page.evaluate(() => localStorage.getItem('dnd-combat-tracker-v1'));
+    const saved = await page.evaluate(() => localStorage.getItem('dnd-saved-profiles-v1'));
+    // Observe the picker at the moment the dialog is inserted, not just the final DOM.
+    await page.evaluate(() => {
+      window.profileDeletionObservations = [];
+      let pickerPresent = document.querySelector('[role="grid"]') !== null;
+      const containsRole = (node, role) =>
+        node instanceof window.Element &&
+        (node.matches(`[role="${role}"]`) || node.querySelector(`[role="${role}"]`));
+      new window.MutationObserver((records) => {
+        for (const record of records) {
+          for (const node of record.removedNodes) {
+            if (containsRole(node, 'grid')) pickerPresent = false;
+          }
+          for (const node of record.addedNodes) {
+            if (containsRole(node, 'grid')) pickerPresent = true;
+            if (containsRole(node, 'dialog')) {
+              window.profileDeletionObservations.push(!pickerPresent);
+            }
+          }
+        }
+      }).observe(document.body, { childList: true, subtree: true });
+    });
+    const picker = page.getByRole('grid', { name: 'Saved profiles' });
+    const trash = picker.getByRole('button', { name: 'Delete saved profile Goblin' });
+    const dialog = page.getByRole('dialog', { name: 'Delete saved profile Goblin?' });
+    const cancel = page.getByRole('button', { name: 'Cancel', exact: true });
+    const accept = page.getByRole('button', { name: 'Delete profile', exact: true });
+    async function unchanged() {
+      await expect(name).toHaveValue('gob');
+      await expect(row.locator('.f-ac')).toHaveValue('18');
+      await expect(row.locator('.f-maxhp')).toHaveValue('30');
+      expect(await page.evaluate(() => localStorage.getItem('dnd-combat-tracker-v1'))).toBe(
+        encounter,
+      );
+    }
+    await name.focus();
+    await trash.click();
+    await expect(picker).toHaveCount(0);
+    await expect(dialog).toBeVisible();
+    await expect(cancel).toBeFocused();
+    await unchanged();
+    await cancel.click();
+    await expect(name).toBeFocused();
+    await expect(picker).toHaveCount(0);
+    expect(await page.evaluate(() => localStorage.getItem('dnd-saved-profiles-v1'))).toBe(saved);
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowRight');
+    await expect(trash).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(picker).toHaveCount(0);
+    await expect(name).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Shift+Tab');
+    await expect(picker).toHaveCount(0);
+    await expect(name).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Tab');
+    await expect(picker).toHaveCount(0);
+    await expect(row.locator('.f-ac')).toBeFocused();
+    await name.focus();
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Enter');
+    await expect(cancel).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expect(accept).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(cancel).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await expect(name).toBeFocused();
+    await expect(picker).toHaveCount(0);
+    expect(await page.evaluate(() => localStorage.getItem('dnd-saved-profiles-v1'))).toBe(saved);
+    await unchanged();
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Space');
+    await expect(cancel).toBeFocused();
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Enter');
+    await expect(dialog).toHaveCount(0);
+    await expect(name).toBeFocused();
+    await expect(picker).toHaveCount(0);
+    await unchanged();
+    expect(await page.evaluate(() => window.profileDeletionObservations)).toEqual([
+      true,
+      true,
+      true,
+    ]);
+    for (const creature of [page.locator('tr[data-id]').first(), reused]) {
+      if (width === 320) {
+        await creature.getByRole('button', { name: 'Creature actions' }).click();
+        await expect(
+          page.getByRole('menuitem', { name: 'Save profile', exact: true }),
+        ).toBeVisible();
+        await page.keyboard.press('Escape');
+      } else await expect(creature.locator('.btn-bookmark')).toHaveAccessibleName('Save profile');
+    }
+    await name.fill('');
+    await expect(picker.locator('.profile-choice')).toHaveText(['Orc']);
+    await expectNoOverflow(page);
+    await page.keyboard.press('Escape');
+    await page.reload();
+    await expect(reused.locator('.f-name')).toHaveValue('Goblin 2');
+    await expect(reused.locator('.f-ac')).toHaveValue('13');
+    await expect(reused.locator('.f-maxhp')).toHaveValue('7');
+    await name.focus();
+    await expect(picker.locator('.profile-choice')).toHaveText(['Orc']);
+  });
+}

@@ -1946,7 +1946,36 @@ tr.downed .f-name {
   min-height: var(--control-h);
   overflow-wrap: anywhere;
 }
-.profile-suggestions .cond-opt[aria-selected='true'] {
+.profile-suggestion {
+  display: flex;
+  align-items: stretch;
+}
+.profile-choice {
+  flex: 1;
+  min-width: 0;
+}
+.profile-choice .cond-opt {
+  width: 100%;
+}
+.profile-delete {
+  display: grid;
+  place-items: center;
+  width: var(--control-h);
+  min-height: var(--control-h);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--downed);
+  cursor: pointer;
+}
+.profile-delete:hover {
+  background: var(--color-accent-100);
+}
+.profile-delete svg {
+  width: var(--space-4);
+  height: var(--space-4);
+}
+.profile-choice[aria-selected='true'] .cond-opt {
   background: var(--color-accent-100);
   color: var(--color-accent-800);
 }

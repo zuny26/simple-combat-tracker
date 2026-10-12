@@ -9,11 +9,19 @@ import { THEMES } from './themes';
 import { useDisplayedCreatureOrder } from './useDisplayedCreatureOrder';
 import { useCombatEditGrouping } from './useCombatEditGrouping';
 import type { EncounterStorage } from '../combat/persistence';
+import { createSavedProfiles } from '../profiles/savedProfiles';
+import type { SavedProfiles } from '../profiles/savedProfiles';
 
-const { combat, preferenceStorage } = defineProps<{
+const {
+  combat,
+  preferenceStorage,
+  profiles: providedProfiles,
+} = defineProps<{
   combat: Combat;
   preferenceStorage?: EncounterStorage;
+  profiles?: SavedProfiles;
 }>();
+const profiles = providedProfiles ?? createSavedProfiles();
 const preferences = createPreferences(preferenceStorage);
 const themeItems = computed(() =>
   THEMES.map((theme) => ({
@@ -266,6 +274,7 @@ function newCombat(trigger: HTMLElement) {
               :key="creature.id"
               :creature="creature"
               :combat="combat"
+              :profiles="profiles"
               @edit-finished="finishEdit"
               @remove="removeCreature"
             />

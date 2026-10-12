@@ -17,7 +17,7 @@ A **saved profile** contains those reusable values. A **creature** is a particip
 
 Identify saved profiles by normalized name: trim surrounding whitespace, remove a trailing number separated from the name by whitespace, trim again, and compare without regard to capitalization. Preserve capitalization for display and omit the numeric suffix from the saved profile name.
 
-For example, `Goblin`, `goblin`, ` Goblin `, and `Goblin 2` identify the same saved profile. `R2D2` retains its digits because they are not separated by whitespace. The trailing-number rule also applies to names typed manually.
+For example, `Goblin`, `goblin`, `Goblin 2`, and Goblin surrounded by spaces identify the same saved profile. `R2D2` retains its digits because they are not separated by whitespace. The trailing-number rule also applies to names typed manually.
 
 ## Saving from a creature
 
@@ -40,7 +40,7 @@ The bookmark icon must visually distinguish three states, using the same normali
 
 Differences in capitalization, surrounding whitespace, or the trailing numeric suffix do not count as differences in permanent characteristics. Encounter-only values do not affect the bookmark state.
 
-The state reflects the current creature and saved profile values, including after row edits, saving, and profile deletion. How to distinguish these states visually is **TBD**.
+The state reflects the current creature and saved profile values, including after row edits, saving, and profile deletion. Use an outline bookmark for not saved, a filled bookmark for saved and matching, and an outline bookmark containing an exclamation mark for saved with differences. Each button has an accessible description and a tooltip for its state.
 
 ## Name autocomplete
 

@@ -12,6 +12,7 @@ const browserGlobals = {
   document: 'readonly',
   window: 'readonly',
   localStorage: 'readonly',
+  getComputedStyle: 'readonly',
 };
 
 const nodeGlobals = {

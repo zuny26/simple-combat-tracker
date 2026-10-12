@@ -646,6 +646,51 @@ body {
   font-weight: 700;
   text-align: left;
 }
+.name-wrap {
+  display: flex;
+  align-items: center;
+}
+.name-wrap .f-name {
+  min-width: 0;
+}
+.btn-bookmark {
+  flex: none;
+  width: var(--control-h);
+  height: var(--row-control-h, var(--control-h));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-accent-700);
+  cursor: pointer;
+}
+.btn-bookmark svg {
+  width: 20px;
+  height: 20px;
+}
+.btn-bookmark:hover {
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+.btn-bookmark:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+.btn-bookmark:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.bookmark-difference {
+  display: none;
+}
+[data-bookmark-state='matching'] .bookmark-shape {
+  fill: currentColor;
+}
+[data-bookmark-state='different'] .bookmark-difference {
+  display: block;
+}
 .f-ac,
 .f-maxhp,
 .f-temphp {

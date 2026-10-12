@@ -3,8 +3,22 @@ import { computed, reactive, ref, watch } from 'vue';
 import type { Combat, ReadonlyCreature } from '../combat/combat';
 import CreatureTags from './CreatureTags.vue';
 import ActionMenu from './ActionMenu.vue';
+import type { SavedProfiles } from '../profiles/savedProfiles';
 
-const { combat, creature } = defineProps<{ combat: Combat; creature: ReadonlyCreature }>();
+const { combat, creature, profiles } = defineProps<{
+  combat: Combat;
+  creature: ReadonlyCreature;
+  profiles: SavedProfiles;
+}>();
+const bookmarkState = computed(() => profiles.bookmarkState(creature));
+const bookmarkLabel = computed(
+  () =>
+    ({
+      unsaved: 'Save profile: not saved',
+      matching: 'Saved profile: matching',
+      different: 'Saved profile: differences; existing profile kept',
+    })[bookmarkState.value],
+);
 const emit = defineEmits<{
   'edit-finished': [event: FocusEvent];
   remove: [id: number, trigger: HTMLElement];
@@ -78,16 +92,39 @@ function beginHP(field: HPField) {
       </div>
     </td>
     <td class="cell-name" data-label="Name">
-      <input
-        class="f-name"
-        data-combat-field="name"
-        type="text"
-        aria-label="Name"
-        placeholder="—"
-        :value="creature.name"
-        @input="editText('name', $event)"
-        @blur="$emit('edit-finished', $event)"
-      />
+      <div class="name-wrap">
+        <button
+          type="button"
+          class="btn-bookmark"
+          :data-bookmark-state="bookmarkState"
+          :aria-label="bookmarkLabel"
+          :title="bookmarkLabel"
+          :disabled="!creature.name.trim()"
+          @click="profiles.save(creature)"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path class="bookmark-shape" d="M6 3h12v18l-6-4-6 4z" />
+            <path class="bookmark-difference" d="M12 7v4m0 3h.01" />
+          </svg>
+        </button>
+        <input
+          class="f-name"
+          data-combat-field="name"
+          type="text"
+          aria-label="Name"
+          placeholder="—"
+          :value="creature.name"
+          @input="editText('name', $event)"
+          @blur="$emit('edit-finished', $event)"
+        />
+      </div>
     </td>
     <td class="cell-ac" data-label="AC">
       <div class="ac-wrap">

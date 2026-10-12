@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] Every suggestion has an accessible trashcan button. Activating it identifies the profile in a deletion confirmation without applying the suggestion or changing the current creature's Name, AC, or Total HP.
+- [ ] Every suggestion has an accessible trashcan button. Activating it identifies the profile in a deletion confirmation without applying the suggestion or changing the current creature's Name, AC, or Max HP.
 - [ ] Close the autocomplete before opening confirmation. Keyboard and pointer activation both keep deletion distinct from selecting a suggestion.
 - [ ] Canceling, including Escape cancellation, retains the profile. Confirming removes only the identified profile and persists deletion across reloads.
 - [ ] Updating autocomplete contents and bookmark states reflects confirmed deletion immediately; every creature already in the encounter keeps its values, including creatures previously filled from the deleted profile.

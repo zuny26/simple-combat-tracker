@@ -6,7 +6,7 @@ A tracker for a DM to manage creatures, hit points, conditions, and turns in a c
 
 **Creature**: An encounter participant, including player characters and monsters. _Avoid_: Entity, combatant
 
-**Saved profile**: A reusable name, AC, and Total HP for a player character, NPC, or monster, independent of its participation in an encounter.
+**Saved profile**: A reusable name, AC, and Max HP for a player character, NPC, or monster, independent of its participation in an encounter.
 
 **Initiative**: A creature's numeric priority in the turn order; higher initiative acts earlier, with names breaking ties alphabetically.
 
@@ -20,7 +20,7 @@ A tracker for a DM to manage creatures, hit points, conditions, and turns in a c
 
 **Encounter confirmation**: A request for the DM to accept or cancel removing a creature with meaningful data or clearing an encounter with meaningful data.
 
-**Total HP**: A creature's maximum normal hit points, excluding Temp HP.
+**Max HP**: A creature's maximum normal hit points, excluding Temp HP.
 
 **Temp HP**: Additional hit points consumed before normal HP when taking damage.
 
@@ -28,7 +28,7 @@ A tracker for a DM to manage creatures, hit points, conditions, and turns in a c
 
 **Damage**: An amount deducted from Temp HP first, then normal HP, stopping at zero.
 
-**Heal**: An amount restored to normal HP up to Total HP, leaving Temp HP unchanged.
+**Heal**: An amount restored to normal HP up to Max HP, leaving Temp HP unchanged.
 
 **Condition**: An offered or custom named status attached to a creature.
 

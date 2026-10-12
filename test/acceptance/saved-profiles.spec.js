@@ -79,7 +79,9 @@ for (const width of [320, 768, 1400, 1600]) {
         await expect(button.locator('.bookmark-difference')).toBeVisible();
       });
       await activateBookmark('Update profile');
-      await expect(page.getByRole('dialog', { name: 'Update profile?' })).toBeVisible();
+      await expect(
+        page.getByRole('dialog', { name: 'Update saved profile Goblin?' }),
+      ).toBeVisible();
       await page.keyboard.press('Escape');
       await expect(page.getByRole('dialog')).toHaveCount(0);
       await row.locator('.f-name').fill('Orc');
@@ -140,12 +142,12 @@ for (const width of [320, 1600]) {
     await row.getByRole('button', { name: 'Damage', exact: true }).click();
     const encounter = await page.evaluate(() => localStorage.getItem('dnd-combat-tracker-v1'));
     const saved = await page.evaluate(() => localStorage.getItem('dnd-saved-profiles-v1'));
-    const dialog = page.getByRole('dialog', { name: 'Update profile?' });
+    const dialog = page.getByRole('dialog', { name: 'Update saved profile Goblin?' });
     const cancel = page.getByRole('button', { name: 'Cancel', exact: true });
     const accept = page.locator('#confirm-ok-btn');
     await bookmark('Update profile');
     await expect(dialog).toContainText('Update saved profile Goblin?');
-    await expect(dialog.locator('li')).toHaveText(['AC: 13 → 15', 'Total HP: 7 → 12']);
+    await expect(dialog.locator('li')).toHaveText(['AC: 13 → 15', 'Max HP: 7 → 12']);
     await expect(cancel).toBeFocused();
     await page.keyboard.press('Shift+Tab');
     await expect(accept).toBeFocused();

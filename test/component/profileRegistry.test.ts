@@ -119,7 +119,7 @@ it('shares identity across manual names and ignores encounter-only changes', () 
   expect(profiles.state.profiles.size).toBe(2);
 });
 
-it('tracks changed names, AC and Total HP while preserving existing profiles on conflicting saves', () => {
+it('tracks changed names, AC and Max HP while preserving existing profiles on conflicting saves', () => {
   const profiles = createProfileRegistry();
   const creature = { name: 'Goblin', ac: '13', maxHP: 7 };
   profiles.save(creature);

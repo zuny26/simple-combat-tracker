@@ -79,9 +79,9 @@ it('closes the creature menu before saving and uses the current bookmark label',
 });
 
 it.each([
-  { ac: '15', maxHP: 12, changes: ['AC: 13 → 15', 'Total HP: 7 → 12'] },
+  { ac: '15', maxHP: 12, changes: ['AC: 13 → 15', 'Max HP: 7 → 12'] },
   { ac: '15', maxHP: 7, changes: ['AC: 13 → 15'] },
-  { ac: '13', maxHP: 12, changes: ['Total HP: 7 → 12'] },
+  { ac: '13', maxHP: 12, changes: ['Max HP: 7 → 12'] },
 ])(
   'reviews only changed profile stats before accepting or canceling $changes',
   async ({ ac, maxHP, changes }) => {
@@ -101,7 +101,8 @@ it.each([
       const bookmark = () => wrapper.get(`tr[data-id="${first}"] .btn-bookmark`);
       await bookmark().trigger('click');
       const dialog = wrapper.get('[role="dialog"]');
-      expect(dialog.text()).toContain('Update saved profile Goblin?');
+      expect(dialog.get('h2').text()).toBe('Update saved profile Goblin?');
+      expect(dialog.find('p').exists()).toBe(false);
       expect(dialog.findAll('li').map((item) => item.text())).toEqual(changes);
       await wrapper.get('#confirm-cancel-btn').trigger('click');
       expect(profiles.find('Goblin')).toEqual({ name: 'Goblin', ac: '13', maxHP: 7 });

@@ -220,7 +220,7 @@ it.each([
     proportions: [0.5, 0],
   },
 ])(
-  'derives coherent HP facts for Total HP $total, Temp HP $temporary, and damage $damage',
+  'derives coherent HP facts for Max HP $total, Temp HP $temporary, and damage $damage',
   ({
     total,
     temporary,

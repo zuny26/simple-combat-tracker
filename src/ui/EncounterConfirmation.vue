@@ -6,7 +6,7 @@ const { focusFallback } = defineProps<{ focusFallback: () => void }>();
 
 interface ConfirmationRequest {
   title: string;
-  message: string;
+  message?: string;
   acceptLabel: string;
   changes?: readonly string[];
   destructive?: boolean;
@@ -78,7 +78,7 @@ defineExpose<EncounterConfirmation>({
         {{ pending.title }}
       </h2>
       <div id="confirm-body" class="confirm-body">
-        <p>{{ pending.message }}</p>
+        <p v-if="pending.message">{{ pending.message }}</p>
         <ul v-if="pending.changes?.length">
           <li v-for="change in pending.changes" :key="change">
             <strong>{{ change }}</strong>

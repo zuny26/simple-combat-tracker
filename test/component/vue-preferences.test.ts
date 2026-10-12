@@ -162,7 +162,7 @@ it('closes row menus before duplication saves or removal opens confirmation', as
     await tracker.get('tr[data-id="1"] .btn-menu').trigger('click');
     await tracker
       .findAll('[role="menuitem"]')
-      .find((item) => item.text() === 'Remove creature')!
+      .find((item) => item.get('.app-menu-label').text() === 'Remove creature')!
       .trigger('click');
     await flushPromises();
     expect(tracker.find('[role="menu"]').exists()).toBe(false);

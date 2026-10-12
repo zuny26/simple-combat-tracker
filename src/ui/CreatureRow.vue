@@ -4,6 +4,7 @@ import type { Combat, ReadonlyCreature } from '../combat/combat';
 import CreatureTags from './CreatureTags.vue';
 import ActionMenu from './ActionMenu.vue';
 import BookmarkIcon from './BookmarkIcon.vue';
+import DuplicateIcon from './DuplicateIcon.vue';
 import type { ProfileRegistry } from '../profiles/profileRegistry';
 
 const { combat, creature, profiles } = defineProps<{
@@ -248,16 +249,7 @@ function beginHP(field: HPField) {
           title="Duplicate creature"
           @click="combat.duplicateCreature(creature.id)"
         >
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            aria-hidden="true"
-          >
-            <rect x="8" y="8" width="12" height="12" rx="2" />
-            <path d="M16 8V4H4v12h4" />
-          </svg>
+          <DuplicateIcon />
         </button>
         <button
           type="button"
@@ -266,7 +258,7 @@ function beginHP(field: HPField) {
           title="Remove creature"
           @click="$emit('remove', creature.id, $event.currentTarget as HTMLElement)"
         >
-          ×
+          <span class="remove-icon" aria-hidden="true">×</span>
         </button>
         <ActionMenu
           trigger-class="row-action btn-menu"
@@ -282,6 +274,8 @@ function beginHP(field: HPField) {
           ⋮
           <template #item-icon="{ item }">
             <BookmarkIcon v-if="item.id === 'bookmark'" :state="bookmarkState" />
+            <DuplicateIcon v-else-if="item.id === 'duplicate'" />
+            <span v-else-if="item.id === 'remove'" class="remove-icon" aria-hidden="true">×</span>
           </template>
         </ActionMenu>
       </div>
